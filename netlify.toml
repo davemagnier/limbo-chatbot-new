@@ -4,7 +4,6 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["express", "netlify-lambda"]
 
 [[redirects]]
   from = "/api/*"
@@ -14,7 +13,4 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "no-referrer"
     Access-Control-Allow-Origin = "*"
