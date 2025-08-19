@@ -1150,7 +1150,7 @@
             
             <div class="onboarding-actions">
                 <button class="action-button primary" id="addNetworkBtn" onclick="addTestnetToWallet()" disabled>
-                    Add Youmio Testnet
+                    Add KELLS Testnet
                 </button>
             </div>
         </div>
@@ -1165,13 +1165,13 @@
                 <img src="youmio-logo.png" alt="Youmio" class="youmio-logo">
                 <div class="testnet-badge">
                     <span style="width: 6px; height: 6px; background: #4BBFEB; border-radius: 50%;"></span>
-                    L1 TESTNET
+                    KELLS TESTNET
                 </div>
             </div>
             <div class="network-status">
                 <div class="network-indicator">
                     <span class="network-led"></span>
-                    <span>Youmio Chain Testnet</span>
+                    <span>KELLS Testnet</span>
                 </div>
                 <button class="wallet-button" id="walletButton">
                     Connect Wallet
@@ -1195,12 +1195,12 @@
                         <div class="token-display">
                             <div>
                                 <div class="token-amount" id="tokenBalance">0</div>
-                                <div class="token-label">$TEST</div>
+                                <div class="token-label">$KELLS</div>
                             </div>
                             <div class="module-icon">🪙</div>
                         </div>
                         <button class="faucet-button" id="faucetButton" onclick="claimTokens()">
-                            <span>Claim Test Tokens</span>
+                            <span>Claim KELLS Tokens</span>
                         </button>
                         <div class="limit-text">Daily limit: <span id="claimsLeft">100</span>/100</div>
                     </div>
@@ -1243,7 +1243,7 @@
                         <div class="stats-list">
                             <div class="stat-item">
                                 <span class="stat-label">Testnet Tokens</span>
-                                <span class="stat-value" id="statTokens">0 $TEST</span>
+                                <span class="stat-value" id="statTokens">0 $KELLS</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label">Badge Status</span>
@@ -1298,6 +1298,7 @@
     </div>
     
     <script>
+        // Configuration for KELLS Testnet
         const CONFIG = {
             // Use Netlify Functions URL
             API_PROXY_URL: window.location.hostname === 'localhost' 
@@ -1405,7 +1406,7 @@
                     document.getElementById('step2').classList.add('completed');
                     document.getElementById('step3').classList.add('completed');
                     
-                    showNotification('Testnet added successfully!', 'success');
+                    showNotification('KELLS Testnet added successfully!', 'success');
                     
                     setTimeout(() => {
                         completeOnboarding();
@@ -1560,7 +1561,7 @@
         
         function updateUI() {
             document.getElementById('tokenBalance').textContent = tokenBalance;
-            document.getElementById('statTokens').textContent = `${tokenBalance} $TEST`;
+            document.getElementById('statTokens').textContent = `${tokenBalance} $KELLS`;
             document.getElementById('claimsLeft').textContent = Math.max(0, 100 - claimsToday);
             document.getElementById('statChats').textContent = chatsMinted;
             
@@ -1618,10 +1619,10 @@
                 saveUserData();
                 updateUI();
                 
-                btn.innerHTML = '<span>Claim Test Tokens</span>';
+                btn.innerHTML = '<span>Claim KELLS Tokens</span>';
                 btn.disabled = claimsToday >= 100;
                 
-                showNotification(`Successfully claimed ${claimAmount} $TEST tokens!`, 'success');
+                showNotification(`Successfully claimed ${claimAmount} $KELLS tokens!`, 'success');
             }, 2000);
         }
         
@@ -1660,7 +1661,7 @@
             try {
                 const chainId = await window.ethereum.request({ method: 'eth_chainId' });
                 if (chainId !== CONFIG.TESTNET_CHAIN_ID) {
-                    showNotification('Please switch to Youmio Testnet', 'error');
+                    showNotification('Please switch to KELLS Testnet', 'error');
                     return;
                 }
             } catch (error) {
