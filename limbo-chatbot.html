@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src *; img-src * data: blob:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://*.netlify.app/.netlify/functions/ /.netlify/functions/ https://oaidalleapiprodscus.blob.core.windows.net/ https://*.openai.com;">
     <meta name="referrer" content="no-referrer">
     <title>Chat with Limbo - Youmio</title>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -90,6 +90,28 @@
             display: flex;
             gap: 12px;
             align-items: center;
+        }
+        
+        .mode-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .mode-indicator.local {
+            background: rgba(255, 165, 0, 0.2);
+            border: 2px solid rgba(255, 165, 0, 0.3);
+            color: #FFA500;
+        }
+        
+        .mode-indicator.github {
+            background: rgba(75, 191, 235, 0.2);
+            border: 2px solid rgba(75, 191, 235, 0.3);
+            color: #4BBFEB;
         }
         
         .api-indicator {
@@ -325,18 +347,22 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 11px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.1) 0%, rgba(166, 104, 196, 0.1) 100%);
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
             color: #C668A8;
             text-decoration: none;
-            border: 2px solid rgba(198, 104, 168, 0.2);
+            transition: all 0.3s;
         }
         
         .admin-link:hover {
-            background: rgba(0, 0, 0, 0.7);
-            border-color: rgba(198, 104, 168, 0.3);
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.15) 0%, rgba(166, 104, 196, 0.15) 100%);
+            border-color: rgba(198, 104, 168, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(198, 104, 168, 0.2);
         }
         
         .notification {
@@ -408,6 +434,9 @@
                 <div class="header-subtitle">Shoot the breeze with Limbo and mint any of her outputs to chain with a click</div>
             </div>
             <div class="header-actions">
+                <div class="mode-indicator" id="modeIndicator">
+                    <span>🧪 Local</span>
+                </div>
                 <div class="api-indicator">
                     <span class="api-led" id="apiLed"></span>
                     <span id="apiText">API</span>
@@ -456,6 +485,20 @@
         let conversationHistory = [];
         let messageIdCounter = 0;
         const MAX_HISTORY = 20;
+        
+        // Initialize mode indicator
+        function initializeModeIndicator() {
+            const modeIndicator = document.getElementById('modeIndicator');
+            const isLocal = localStorage.getItem('devMode') === 'true';
+            
+            if (isLocal) {
+                modeIndicator.className = 'mode-indicator local';
+                modeIndicator.innerHTML = '<span>🧪 Local</span>';
+            } else {
+                modeIndicator.className = 'mode-indicator github';
+                modeIndicator.innerHTML = '<span>🚀 GitHub</span>';
+            }
+        }
         
         // Check if message is asking for image generation
         function isImageRequest(message) {
@@ -658,7 +701,7 @@
             setTimeout(() => notification.remove(), 5000);
         }
         
-        // Load admin settings
+        // Load admin settings - FIXED TO PRIORITIZE TEXT DUMP
         async function loadAdminSettings() {
             return {
                 personality: JSON.parse(localStorage.getItem('limboPersonality') || '{}'),
@@ -668,29 +711,44 @@
             };
         }
         
-        // Extract knowledge
+        // Extract knowledge - FIXED TO PRIORITIZE TEXT DUMP
         function extractKnowledge(settings) {
             let knowledge = '';
             
-            if (settings.knowledge?.textDump) {
-                knowledge += settings.knowledge.textDump;
+            // PRIORITY 1: Quick Reference Text Dump (HIGHEST PRIORITY)
+            if (settings.knowledge?.textDump && settings.knowledge.textDump.trim()) {
+                knowledge += '=== PRIORITY KNOWLEDGE (CHECK FIRST) ===\n';
+                knowledge += settings.knowledge.textDump.trim();
+                knowledge += '\n\n=== END PRIORITY KNOWLEDGE ===\n\n';
+            }
+            
+            // PRIORITY 2: Additional structured knowledge
+            if (settings.knowledge?.ecosystemFacts && settings.knowledge.ecosystemFacts.trim()) {
+                knowledge += '=== ECOSYSTEM FACTS ===\n';
+                knowledge += settings.knowledge.ecosystemFacts.trim();
                 knowledge += '\n\n';
             }
             
-            if (settings.knowledge?.ecosystemFacts) {
-                knowledge += settings.knowledge.ecosystemFacts;
+            if (settings.knowledge?.importantLinks && settings.knowledge.importantLinks.trim()) {
+                knowledge += '=== IMPORTANT LINKS ===\n';
+                knowledge += settings.knowledge.importantLinks.trim();
                 knowledge += '\n\n';
             }
             
-            if (settings.knowledge?.importantLinks) {
-                knowledge += settings.knowledge.importantLinks;
-                knowledge += '\n\n';
+            // PRIORITY 3: Document content
+            if (settings.documents && settings.documents.length > 0) {
+                knowledge += '=== DOCUMENTS ===\n';
+                settings.documents.forEach(doc => {
+                    knowledge += `--- ${doc.name} ---\n`;
+                    knowledge += doc.content;
+                    knowledge += '\n\n';
+                });
             }
             
-            return knowledge || '[NO KNOWLEDGE CONFIGURED]';
+            return knowledge || '[NO KNOWLEDGE CONFIGURED - Add knowledge in Admin Panel]';
         }
         
-        // Call AI through Netlify Function
+        // Call AI through Netlify Function - UPDATED TO PASS PRIORITY KNOWLEDGE
         async function callAI(message) {
             const settings = await loadAdminSettings();
             const knowledge = extractKnowledge(settings);
@@ -704,7 +762,9 @@
                     body: JSON.stringify({ 
                         prompt: message,
                         knowledge: knowledge,
-                        personality: settings.personality
+                        personality: settings.personality,
+                        behavior: settings.behavior,
+                        conversationHistory: conversationHistory.slice(-10) // Last 10 messages for context
                     })
                 });
                 
@@ -717,11 +777,13 @@
                 
             } catch (error) {
                 console.error('Chat error:', error);
-                // Fallback responses
+                // Fallback responses with personality
                 const fallbacks = [
-                    "api broke",
-                    "something's wrong with the connection",
-                    "technical difficulties"
+                    "api broke lol",
+                    "something's borked with the connection",
+                    "technical difficulties, as usual",
+                    "connection's acting up, typical",
+                    "servers having a moment"
                 ];
                 return fallbacks[Math.floor(Math.random() * fallbacks.length)];
             }
@@ -954,6 +1016,7 @@
         document.getElementById('walletButton').addEventListener('click', connectWallet);
         
         // Initialize
+        initializeModeIndicator();
         testConnection();
         chatInput.focus();
         
