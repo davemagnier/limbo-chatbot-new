@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://*.netlify.app/.netlify/functions/ /.netlify/functions/">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://*.netlify.app/.netlify/functions/ /.netlify/functions/ https://oaidalleapiprodscus.blob.core.windows.net/ https://*.openai.com;">
     <meta name="referrer" content="no-referrer">
     <title>Chat with Limbo - Youmio</title>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -484,7 +484,8 @@
                 'make me', 'make a', 'make an', 'make',
                 'imagine', 'visualize', 'paint', 'design',
                 'show me', 'can you draw', 'please draw',
-                'i want an image of', 'picture of', 'image of'
+                'i want an image of', 'picture of', 'image of',
+                'create an image of', 'generate a picture of'
             ];
             
             let prompt = message.toLowerCase();
@@ -493,6 +494,11 @@
                     prompt = message.substring(prefix.length).trim();
                     break;
                 }
+            }
+            
+            // If no prefix found, use the original message
+            if (prompt === message.toLowerCase()) {
+                prompt = message;
             }
             
             return prompt;
@@ -721,9 +727,11 @@
             }
         }
         
-        // Generate image through Netlify Function
+        // Generate image through Netlify Function - FIXED
         async function generateImage(prompt) {
             try {
+                console.log('Generating image for prompt:', prompt);
+                
                 const response = await fetch(`${CONFIG.API_PROXY_URL}/image`, {
                     method: 'POST',
                     headers: {
@@ -733,10 +741,20 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Image API error');
+                    const errorData = await response.json();
+                    console.error('Image API error:', errorData);
+                    throw new Error(errorData.error || 'Image API error');
                 }
                 
                 const data = await response.json();
+                console.log('Image data received:', data);
+                
+                // Ensure we have the URL
+                if (!data.url) {
+                    console.error('No URL in response:', data);
+                    return null;
+                }
+                
                 return data;
                 
             } catch (error) {
@@ -771,7 +789,7 @@
         const chatInput = document.getElementById('chatInput');
         const sendButton = document.getElementById('sendButton');
         
-        // Add message
+        // Add message - FIXED IMAGE DISPLAY
         function addMessage(content, isUser = false, userPrompt = null, imageData = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
@@ -789,14 +807,24 @@
             messageDiv.appendChild(labelDiv);
             messageDiv.appendChild(contentDiv);
             
-            // Add image if provided
-            if (imageData && !isUser) {
+            // Add image if provided - FIXED
+            if (imageData && imageData.url && !isUser) {
+                console.log('Adding image to message:', imageData.url);
+                
                 const imageContainer = document.createElement('div');
                 imageContainer.className = 'message-image';
                 
                 const img = document.createElement('img');
                 img.src = imageData.url;
+                img.alt = 'Generated image';
+                img.style.cursor = 'pointer';
                 img.onclick = () => window.open(imageData.url, '_blank');
+                
+                // Add error handling for image loading
+                img.onerror = () => {
+                    console.error('Failed to load image:', imageData.url);
+                    img.alt = 'Failed to load image';
+                };
                 
                 imageContainer.appendChild(img);
                 messageDiv.appendChild(imageContainer);
@@ -851,7 +879,7 @@
             if (typing) typing.remove();
         }
         
-        // Send message
+        // Send message - FIXED IMAGE HANDLING
         async function sendMessage() {
             const message = chatInput.value.trim();
             if (!message) return;
@@ -873,6 +901,7 @@
             try {
                 if (isImage) {
                     const imagePrompt = extractImagePrompt(message);
+                    console.log('Image request detected. Prompt:', imagePrompt);
                     
                     hideTyping();
                     addMessage("aight, generating that for you...", false, userMessageText);
@@ -882,10 +911,12 @@
                     const imageData = await generateImage(imagePrompt);
                     hideTyping();
                     
-                    if (imageData) {
+                    if (imageData && imageData.url) {
+                        console.log('Image generated successfully:', imageData.url);
                         addMessage("there you go, fresh from my digital brain", false, userMessageText, imageData);
                         conversationHistory.push({ role: 'assistant', content: "there you go, fresh from my digital brain [generated image]" });
                     } else {
+                        console.error('Image generation failed - no data returned');
                         addMessage("image generation broke, api might be having issues", false, userMessageText);
                         conversationHistory.push({ role: 'assistant', content: "image generation broke" });
                     }
@@ -902,6 +933,7 @@
                 }
                 
             } catch (error) {
+                console.error('Message send error:', error);
                 hideTyping();
                 addMessage("something broke", false, userMessageText);
             } finally {
