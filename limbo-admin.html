@@ -55,6 +55,33 @@
             font-size: 14px;
         }
         
+        .mode-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .mode-button {
+            padding: 12px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            border: 2px solid;
+        }
+        
+        .mode-status {
+            text-align: center;
+            padding: 12px 20px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border: 2px solid;
+        }
+        
         .tabs {
             display: flex;
             gap: 12px;
@@ -412,9 +439,14 @@
             position: absolute;
             top: 20px;
             left: 20px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.1) 0%, rgba(166, 104, 196, 0.1) 100%);
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            border-radius: 16px;
             color: #C668A8;
             text-decoration: none;
             font-size: 14px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -422,8 +454,10 @@
         }
         
         .back-link:hover {
-            transform: translateX(-3px);
-            color: #D779B9;
+            transform: translateX(-3px) translateY(-2px);
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.15) 0%, rgba(166, 104, 196, 0.15) 100%);
+            border-color: rgba(198, 104, 168, 0.4);
+            box-shadow: 0 8px 20px rgba(198, 104, 168, 0.2);
         }
     </style>
 </head>
@@ -437,13 +471,21 @@
             <p>Configure personality, knowledge, and behavior for all chatbot instances</p>
         </div>
         
+        <div class="mode-controls">
+            <button class="mode-button" id="localModeBtn" onclick="setMode('local')">🧪 Local Testing</button>
+            <button class="mode-button" id="githubModeBtn" onclick="setMode('github')">🚀 GitHub Production</button>
+        </div>
+        
+        <div class="mode-status" id="modeStatus">Mode: Local Testing</div>
+        
         <div class="tabs">
             <div class="tab active" onclick="switchTab('personality')">Personality</div>
             <div class="tab" onclick="switchTab('knowledge')">Knowledge Base</div>
             <div class="tab" onclick="switchTab('behavior')">Behavior Rules</div>
             <div class="tab" onclick="switchTab('deploy')">Deploy Settings</div>
         </div>
-<!-- Personality Tab -->
+
+        <!-- Personality Tab -->
         <div id="personality-tab" class="tab-content active">
             <div class="grid">
                 <div class="card">
@@ -718,7 +760,7 @@ Limbo: vibing in the digital void, the usual. you?</textarea>
             return text.replace(/[&<>"']/g, m => map[m]);
         }
         
-        // Mode management
+        // Mode management - FIXED
         function setMode(mode) {
             localStorage.setItem('devMode', mode === 'local' ? 'true' : 'false');
             
@@ -737,9 +779,10 @@ Limbo: vibing in the digital void, the usual. you?</textarea>
                 
                 modeStatus.textContent = 'Mode: Local Testing';
                 modeStatus.style.background = 'rgba(255, 165, 0, 0.2)';
+                modeStatus.style.borderColor = 'rgba(255, 165, 0, 0.3)';
                 modeStatus.style.color = '#FFA500';
                 
-                showStatus('Switched to LOCAL mode - Changes affect only your testing');
+                showStatus('🧪 Switched to LOCAL mode - Changes affect only your testing');
             } else {
                 githubBtn.style.background = 'rgba(75, 191, 235, 0.2)';
                 githubBtn.style.border = '2px solid rgba(75, 191, 235, 0.3)';
@@ -751,9 +794,10 @@ Limbo: vibing in the digital void, the usual. you?</textarea>
                 
                 modeStatus.textContent = 'Mode: GitHub Production';
                 modeStatus.style.background = 'rgba(75, 191, 235, 0.2)';
+                modeStatus.style.borderColor = 'rgba(75, 191, 235, 0.3)';
                 modeStatus.style.color = '#4BBFEB';
                 
-                showStatus('Switched to GITHUB mode - Using production settings');
+                showStatus('🚀 Switched to GITHUB mode - Using production settings');
             }
         }
         
@@ -922,7 +966,7 @@ Limbo: vibing in the digital void, the usual. you?</textarea>
             });
             
             savePersonality();
-            showStatus();
+            showStatus(`Applied ${preset} preset!`);
         }
         
         // Save functions
@@ -960,7 +1004,7 @@ Limbo: vibing in the digital void, the usual. you?</textarea>
             };
             
             localStorage.setItem('limboBehavior', JSON.stringify(behavior));
-            showStatus();
+            showStatus('Behavior rules saved!');
         }
         
         function showStatus(message = 'Settings saved successfully!') {
