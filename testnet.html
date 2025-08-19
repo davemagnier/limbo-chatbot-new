@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' http://localhost:3001 https://*.netlify.app/.netlify/functions/">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' http://localhost:3001 https://*.netlify.app/.netlify/functions/ https://subnets.avax.network;">
     <meta name="referrer" content="no-referrer">
     <title>Youmio L1 Testnet - Youmio Chain</title>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -1149,7 +1149,7 @@
             </div>
             
             <div class="onboarding-actions">
-                <button class="action-button primary" id="addNetworkBtn" onclick="addTestnetToWallet()" disabled>
+                <button class="action-button primary" id="addNetworkBtn" onclick="verifyAndAddNetwork()" disabled>
                     Add KELLS Testnet
                 </button>
             </div>
@@ -1304,7 +1304,10 @@
             API_PROXY_URL: window.location.hostname === 'localhost' 
                 ? 'http://localhost:8888/.netlify/functions'
                 : '/.netlify/functions',
-            TESTNET_CHAIN_ID: '0x12CE7',  // 77063 in hex
+            TESTNET_CHAIN_ID: '0x36B55',  // 224085 in hex - Try this first
+            // Alternative chain IDs to try if first doesn't work:
+            // TESTNET_CHAIN_ID: '0x12DD7',  // 77271 in hex
+            // TESTNET_CHAIN_ID: '0x12CE7',  // 77063 in hex
             TESTNET_RPC_URL: 'https://subnets.avax.network/kells/testnet/rpc',
             TESTNET_CHAIN_NAME: 'KELLS Testnet',
             TESTNET_CURRENCY: {
@@ -1373,6 +1376,45 @@
                 tokenBalance += 10;
                 updateUI();
             }, 1500);
+        }
+        
+        // Debug function to check actual chain ID
+        async function checkActualChainId() {
+            try {
+                const response = await fetch(CONFIG.TESTNET_RPC_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'eth_chainId',
+                        params: [],
+                        id: 1
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Actual Chain ID from RPC:', data.result);
+                const actualChainId = parseInt(data.result, 16);
+                console.log('Actual Chain ID (decimal):', actualChainId);
+                return data.result;
+            } catch (error) {
+                console.error('Failed to fetch chain ID:', error);
+                return null;
+            }
+        }
+        
+        async function verifyAndAddNetwork() {
+            // First check what chain ID the RPC actually returns
+            const actualChainId = await checkActualChainId();
+            if (actualChainId && actualChainId !== CONFIG.TESTNET_CHAIN_ID) {
+                console.log('Updating chain ID from', CONFIG.TESTNET_CHAIN_ID, 'to', actualChainId);
+                CONFIG.TESTNET_CHAIN_ID = actualChainId;
+            }
+            
+            // Now proceed with adding the network
+            await addTestnetToWallet();
         }
         
         let isAddingNetwork = false; // Prevent multiple simultaneous requests
