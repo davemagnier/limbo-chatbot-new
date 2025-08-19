@@ -88,7 +88,7 @@ Current user message: ${prompt}
 Remember: You're Limbo. Stay in character. Use the knowledge provided. Be sassy but helpful. Always lowercase.`;
 
     // Call Gemini API - using built-in fetch
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
