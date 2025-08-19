@@ -678,23 +678,6 @@
             text-align: center;
         }
         
-        .badge-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
-            gap: 6px;
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            font-size: 12px;
-        }
-        
-        .badge-status.minted {
-            background: rgba(75, 191, 235, 0.1);
-            border: 2px solid rgba(75, 191, 235, 0.2);
-        }
-        
         .stats-list {
             display: flex;
             flex-direction: column;
@@ -1220,10 +1203,6 @@
                                 <img src="badge-not-minted.png" alt="Badge" id="badgeImage">
                             </div>
                         </div>
-                        <div class="badge-status" id="badgeStatus">
-                            <span>🔐</span>
-                            <span id="badgeText">Not Minted</span>
-                        </div>
                         <button class="mint-badge-button" id="badgeButton" onclick="mintBadge()">
                             <span>Mint Soulbound Badge</span>
                         </button>
@@ -1304,10 +1283,7 @@
             API_PROXY_URL: window.location.hostname === 'localhost' 
                 ? 'http://localhost:8888/.netlify/functions'
                 : '/.netlify/functions',
-            TESTNET_CHAIN_ID: '0x36B55',  // 224085 in hex - Try this first
-            // Alternative chain IDs to try if first doesn't work:
-            // TESTNET_CHAIN_ID: '0x12DD7',  // 77271 in hex
-            // TESTNET_CHAIN_ID: '0x12CE7',  // 77063 in hex
+            TESTNET_CHAIN_ID: '0x12d07',  // 77063 in hex - actual KELLS chain ID
             TESTNET_RPC_URL: 'https://subnets.avax.network/kells/testnet/rpc',
             TESTNET_CHAIN_NAME: 'KELLS Testnet',
             TESTNET_CURRENCY: {
@@ -1315,7 +1291,7 @@
                 symbol: 'KELLS',
                 decimals: 18
             },
-            TESTNET_EXPLORER: '',  // No explorer for KELLS testnet yet
+            TESTNET_EXPLORER: null,  // Use null instead of empty string
             KELLS_TOKEN_ADDRESS: '0x6ACaf9E9EF556E69466362DD8086F25281beD293'
         };
         
@@ -1489,8 +1465,8 @@
                                         chainId: CONFIG.TESTNET_CHAIN_ID,
                                         chainName: CONFIG.TESTNET_CHAIN_NAME,
                                         nativeCurrency: CONFIG.TESTNET_CURRENCY,
-                                        rpcUrls: [CONFIG.TESTNET_RPC_URL],
-                                        blockExplorerUrls: [CONFIG.TESTNET_EXPLORER ? CONFIG.TESTNET_EXPLORER : null]
+                                        rpcUrls: [CONFIG.TESTNET_RPC_URL]
+                                        // Don't include blockExplorerUrls if it's null
                                     }]
                                 });
                                 
@@ -1696,9 +1672,6 @@
                 badgeDisplay.classList.remove('not-minted');
                 badgeImage.src = 'badge-minted.png';
                 
-                document.getElementById('badgeStatus').classList.add('minted');
-                document.getElementById('badgeStatus').innerHTML = '<span>✅</span><span>Minted</span>';
-                document.getElementById('badgeText').textContent = 'Minted';
                 document.getElementById('statBadge').textContent = 'Minted ✅';
                 document.getElementById('badgeButton').disabled = true;
                 document.getElementById('badgeButton').innerHTML = '<span>Badge Already Minted</span>';
