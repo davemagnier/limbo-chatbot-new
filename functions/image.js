@@ -1,13 +1,10 @@
-// netlify/functions/image.js
 exports.handler = async (event, context) => {
-  // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
-  // Handle preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -45,7 +42,6 @@ exports.handler = async (event, context) => {
       };
     }
     
-    // Call OpenAI DALL-E API
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
