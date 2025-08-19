@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; img-src 'self' data:; connect-src 'self';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Referrer-Policy" content="no-referrer">
+    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
+    <title>Youmio - Limbo AI</title>
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/Inter-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/Inter-Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/Inter-SemiBold.woff2') format('woff2');
+            font-weight: 600;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/Inter-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-display: swap;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0A0A0F;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(198, 104, 168, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(166, 104, 196, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 20%, rgba(75, 191, 235, 0.08) 0%, transparent 50%);
+            z-index: 0;
+            animation: floatGradient 20s ease infinite;
+        }
+        
+        @keyframes floatGradient {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 40px;
+            animation: fadeIn 0.8s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo {
+            width: 340px;
+            height: auto;
+            margin-bottom: 32px;
+            animation: shimmer 3s ease infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+        
+        .tagline {
+            font-size: 18px;
+            color: #94969C;
+            font-weight: 500;
+            margin-bottom: 60px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .main-button {
+            position: relative;
+            padding: 20px 48px;
+            font-size: 16px;
+            font-weight: 600;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .main-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .main-button:hover::before {
+            left: 100%;
+        }
+        
+        .primary-button {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            box-shadow: 0 8px 24px rgba(198, 104, 168, 0.25);
+        }
+        
+        .primary-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(198, 104, 168, 0.35);
+            filter: brightness(1.1);
+        }
+        
+        .secondary-button {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .secondary-button:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(198, 104, 168, 0.3);
+            box-shadow: 0 12px 32px rgba(198, 104, 168, 0.2);
+        }
+        
+        .testnet-button {
+            background: linear-gradient(135deg, #FFB347 0%, #FF8C42 50%, #FF6B35 100%);
+            color: white;
+            border: 2px solid rgba(255, 140, 66, 0.3);
+            box-shadow: 0 8px 24px rgba(255, 140, 66, 0.25);
+        }
+        
+        .testnet-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(255, 140, 66, 0.35);
+            filter: brightness(1.1);
+        }
+        
+        .status {
+            margin-top: 60px;
+            font-size: 12px;
+            color: #94969C;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .status-led {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4BBFEB;
+            box-shadow: 0 0 8px rgba(75, 191, 235, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        @media (max-width: 768px) {
+            .logo {
+                width: 240px;
+            }
+            
+            .tagline {
+                font-size: 16px;
+            }
+            
+            .buttons {
+                flex-direction: column;
+                width: 100%;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+            
+            .main-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-gradient"></div>
+    
+    <div class="container">
+        <img src="youmio-logo.png" alt="Youmio" class="logo">
+        <p class="tagline">Try the testnet and chat with Limbo here</p>
+        
+        <div class="buttons">
+            <a href="limbo-chatbot.html" class="main-button primary-button">
+                Launch Chatbot
+            </a>
+            <a href="testnet.html" class="main-button testnet-button">
+                Testnet
+            </a>
+            <a href="limbo-admin.html" class="main-button secondary-button">
+                Admin Panel
+            </a>
+        </div>
+        
+        <div class="status">
+            <span class="status-led"></span>
+            <span id="status-text">System Online</span>
+        </div>
+    </div>
+    
+    <script>
+        // Content Security Policy compliant JavaScript
+        (function() {
+            'use strict';
+            
+            // Simple status check without external dependencies
+            window.addEventListener('load', function() {
+                const statusText = document.getElementById('status-text');
+                if (window.location.protocol === 'file:') {
+                    statusText.textContent = 'Local Environment';
+                } else {
+                    statusText.textContent = 'System Online';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://*.netlify.app/.netlify/functions/ /.netlify/functions/">
+    <meta name="referrer" content="no-referrer">
+    <title>Chat with Limbo - Youmio</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0A0A0F;
+            color: white;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 85vh;
+            background: #1A1A2E;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .chat-header {
+            background: linear-gradient(180deg, #2A2A3E 0%, #1A1A2E 100%);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .limbo-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.2) 0%, rgba(166, 104, 196, 0.2) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .limbo-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .header-info {
+            flex: 1;
+        }
+        
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .header-subtitle {
+            font-size: 13px;
+            color: #94969C;
+            line-height: 1.4;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .api-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #94969C;
+        }
+        
+        .api-led {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4BBFEB;
+            box-shadow: 0 0 4px rgba(75, 191, 235, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        .api-led.error {
+            background: #ff6464;
+            box-shadow: 0 0 4px rgba(255, 100, 100, 0.5);
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .wallet-button {
+            padding: 10px 18px;
+            border-radius: 24px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .wallet-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .wallet-button.connected {
+            background: rgba(75, 191, 235, 0.1);
+            color: #4BBFEB;
+            border-color: rgba(75, 191, 235, 0.2);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #0F0F1A;
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .message {
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .message.user {
+            align-self: flex-end;
+            max-width: 70%;
+        }
+        
+        .message.assistant {
+            align-self: flex-start;
+            max-width: 80%;
+        }
+        
+        .message-content {
+            padding: 14px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .message.user .message-content {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.assistant .message-content {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            color: #E0E0E0;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-label {
+            font-size: 11px;
+            color: #94969C;
+            margin-bottom: 6px;
+            padding: 0 8px;
+        }
+        
+        .message-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            padding-left: 8px;
+        }
+        
+        .mint-button {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 18px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 6px rgba(198, 104, 168, 0.15);
+        }
+        
+        .mint-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(198, 104, 168, 0.25);
+            background: linear-gradient(135deg, #B55898 0%, #9658B4 100%);
+        }
+        
+        .mint-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .mint-button.success {
+            background: linear-gradient(135deg, #4BBFEB 0%, #5B8DEE 100%);
+        }
+        
+        .message.typing {
+            align-self: flex-start;
+        }
+        
+        .typing-dots {
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            color: #94969C;
+        }
+        
+        .chat-input-container {
+            padding: 20px;
+            background: #1A1A2E;
+            border-top: 2px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .chat-input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            color: white;
+            padding: 14px 18px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(198, 104, 168, 0.2);
+        }
+        
+        .send-button {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .send-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(198, 104, 168, 0.3);
+        }
+        
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .admin-link {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            color: #C668A8;
+            text-decoration: none;
+            border: 2px solid rgba(198, 104, 168, 0.2);
+        }
+        
+        .admin-link:hover {
+            background: rgba(0, 0, 0, 0.7);
+            border-color: rgba(198, 104, 168, 0.3);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: #1A1A2E;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100000;
+            max-width: 360px;
+            animation: slideIn 0.4s;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .notification.success {
+            border-color: rgba(75, 191, 235, 0.3);
+        }
+        
+        .notification.error {
+            border-color: rgba(255, 100, 100, 0.3);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        .message-image {
+            margin-top: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 400px;
+        }
+        
+        .message-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: pointer;
+        }
+        
+        .image-prompt-info {
+            font-size: 11px;
+            color: #94969C;
+            margin-top: 8px;
+            padding: 0 8px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <a href="limbo-admin.html" target="_blank" class="admin-link">Admin Panel</a>
+    
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="limbo-avatar">
+                <img src="limbo-selfie.jpg" alt="Limbo" onerror="this.style.display='none'; this.parentElement.innerHTML='L';">
+            </div>
+            <div class="header-info">
+                <div class="header-title">Chat with Limbo</div>
+                <div class="header-subtitle">Shoot the breeze with Limbo and mint any of her outputs to chain with a click</div>
+            </div>
+            <div class="header-actions">
+                <div class="api-indicator">
+                    <span class="api-led" id="apiLed"></span>
+                    <span id="apiText">API</span>
+                </div>
+                <button class="wallet-button" id="walletButton">
+                    Connect Wallet
+                </button>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="message-label">Limbo</div>
+                <div class="message-content">yo</div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="type something..."
+                    autocomplete="off"
+                >
+                <button class="send-button" id="sendButton" type="button">→</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration - Updated for Netlify Functions
+        const CONFIG = {
+            // Use Netlify Functions endpoints
+            API_PROXY_URL: '/.netlify/functions',  // This works for both local and production
+            CHAIN_ID: '0x1'  // Mainnet
+        };
+        
+        // Web3 Configuration
+        let provider = null;
+        let signer = null;
+        let userAddress = null;
+        
+        // Track conversation with memory
+        let conversationHistory = [];
+        let messageIdCounter = 0;
+        const MAX_HISTORY = 20;
+        
+        // Check if message is asking for image generation
+        function isImageRequest(message) {
+            const imageKeywords = [
+                'draw', 'create', 'generate', 'make', 'design', 'paint', 
+                'imagine', 'visualize', 'picture', 'image', 'illustration',
+                'sketch', 'render', 'show me', 'can you draw', 'make me',
+                'create an image', 'generate a picture', 'art'
+            ];
+            
+            const msgLower = message.toLowerCase();
+            
+            if (/chart|price|dex|trading/i.test(msgLower)) {
+                return false;
+            }
+            
+            return imageKeywords.some(keyword => msgLower.includes(keyword));
+        }
+        
+        // Extract image prompt from user message
+        function extractImagePrompt(message) {
+            const prefixes = [
+                'draw me', 'draw a', 'draw an', 'draw',
+                'create me', 'create a', 'create an', 'create',
+                'generate me', 'generate a', 'generate an', 'generate',
+                'make me', 'make a', 'make an', 'make',
+                'imagine', 'visualize', 'paint', 'design',
+                'show me', 'can you draw', 'please draw',
+                'i want an image of', 'picture of', 'image of'
+            ];
+            
+            let prompt = message.toLowerCase();
+            for (const prefix of prefixes) {
+                if (prompt.startsWith(prefix)) {
+                    prompt = message.substring(prefix.length).trim();
+                    break;
+                }
+            }
+            
+            return prompt;
+        }
+        
+        // Connect MetaMask Wallet
+        async function connectWallet() {
+            const walletBtn = document.getElementById('walletButton');
+            
+            if (typeof ethers === 'undefined') {
+                showNotification('Ethers.js not loaded. Please refresh the page.', 'error');
+                return;
+            }
+            
+            if (typeof window.ethereum === 'undefined') {
+                showNotification('MetaMask not detected. Please install MetaMask extension.', 'error');
+                return;
+            }
+            
+            try {
+                walletBtn.innerHTML = '<span class="spinner"></span> Connecting...';
+                walletBtn.disabled = true;
+                
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                if (accounts && accounts.length > 0) {
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+                    userAddress = accounts[0];
+                    
+                    const shortAddress = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+                    walletBtn.textContent = shortAddress;
+                    walletBtn.classList.add('connected');
+                    walletBtn.disabled = false;
+                    
+                    showNotification(`Wallet connected: ${shortAddress}`, 'success');
+                    
+                    window.ethereum.on('accountsChanged', (accounts) => {
+                        if (accounts.length === 0) {
+                            disconnectWallet();
+                        } else {
+                            userAddress = accounts[0];
+                            const shortAddr = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+                            walletBtn.textContent = shortAddr;
+                        }
+                    });
+                }
+            } catch (error) {
+                walletBtn.textContent = 'Connect Wallet';
+                walletBtn.disabled = false;
+                
+                if (error.code === 4001) {
+                    showNotification('Connection request rejected.', 'error');
+                } else {
+                    showNotification(`Connection failed: ${error.message || 'Unknown error'}`, 'error');
+                }
+            }
+        }
+        
+        function disconnectWallet() {
+            provider = null;
+            signer = null;
+            userAddress = null;
+            const walletBtn = document.getElementById('walletButton');
+            walletBtn.textContent = 'Connect Wallet';
+            walletBtn.classList.remove('connected');
+        }
+        
+        // Mint message to blockchain
+        async function mintToChain(messageData, button) {
+            if (!userAddress) {
+                showNotification('Please connect your wallet first!', 'error');
+                await connectWallet();
+                if (!userAddress) return null;
+            }
+            
+            // Verify chain
+            try {
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                if (chainId !== CONFIG.CHAIN_ID) {
+                    showNotification('Please switch to the correct network', 'error');
+                    return;
+                }
+            } catch (error) {
+                showNotification('Chain verification failed', 'error');
+                return;
+            }
+            
+            try {
+                const metadata = {
+                    userMessage: messageData.userMessage,
+                    aiResponse: messageData.aiResponse,
+                    timestamp: new Date().toISOString(),
+                    chatbot: 'Limbo AI',
+                    platform: 'Youmio',
+                    type: messageData.type || 'text',
+                    imageUrl: messageData.imageUrl || null
+                };
+                
+                button.innerHTML = '<span class="spinner"></span> Minting...';
+                
+                // Simulate minting for now
+                setTimeout(() => {
+                    button.textContent = 'Minted!';
+                    button.classList.add('success');
+                    showNotification('Successfully minted!', 'success');
+                }, 2000);
+                
+            } catch (error) {
+                button.textContent = 'Mint to Chain';
+                button.disabled = false;
+                showNotification('Minting failed', 'error');
+            }
+        }
+        
+        // Show notification (SECURE - no innerHTML)
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const content = document.createElement('div');
+            content.style.display = 'flex';
+            content.style.alignItems = 'flex-start';
+            content.style.gap = '12px';
+            
+            const textDiv = document.createElement('div');
+            textDiv.style.flex = '1';
+            
+            const title = document.createElement('div');
+            title.style.fontWeight = '600';
+            title.style.marginBottom = '4px';
+            title.textContent = type === 'success' ? 'Success' : 'Notice';
+            
+            const msg = document.createElement('div');
+            msg.style.fontSize = '14px';
+            msg.style.color = '#94969C';
+            msg.textContent = message;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.style.background = 'transparent';
+            closeBtn.style.border = 'none';
+            closeBtn.style.color = '#94969C';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.style.fontSize = '20px';
+            closeBtn.textContent = '×';
+            closeBtn.onclick = () => notification.remove();
+            
+            textDiv.appendChild(title);
+            textDiv.appendChild(msg);
+            content.appendChild(textDiv);
+            content.appendChild(closeBtn);
+            notification.appendChild(content);
+            
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        }
+        
+        // Load admin settings
+        async function loadAdminSettings() {
+            return {
+                personality: JSON.parse(localStorage.getItem('limboPersonality') || '{}'),
+                knowledge: JSON.parse(localStorage.getItem('limboKnowledge') || '{}'),
+                behavior: JSON.parse(localStorage.getItem('limboBehavior') || '{}'),
+                documents: JSON.parse(localStorage.getItem('limboDocuments') || '[]')
+            };
+        }
+        
+        // Extract knowledge
+        function extractKnowledge(settings) {
+            let knowledge = '';
+            
+            if (settings.knowledge?.textDump) {
+                knowledge += settings.knowledge.textDump;
+                knowledge += '\n\n';
+            }
+            
+            if (settings.knowledge?.ecosystemFacts) {
+                knowledge += settings.knowledge.ecosystemFacts;
+                knowledge += '\n\n';
+            }
+            
+            if (settings.knowledge?.importantLinks) {
+                knowledge += settings.knowledge.importantLinks;
+                knowledge += '\n\n';
+            }
+            
+            return knowledge || '[NO KNOWLEDGE CONFIGURED]';
+        }
+        
+        // Call AI through Netlify Function
+        async function callAI(message) {
+            const settings = await loadAdminSettings();
+            const knowledge = extractKnowledge(settings);
+            
+            try {
+                const response = await fetch(`${CONFIG.API_PROXY_URL}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        prompt: message,
+                        knowledge: knowledge,
+                        personality: settings.personality
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API error');
+                }
+                
+                const data = await response.json();
+                return data.reply;
+                
+            } catch (error) {
+                console.error('Chat error:', error);
+                // Fallback responses
+                const fallbacks = [
+                    "api broke",
+                    "something's wrong with the connection",
+                    "technical difficulties"
+                ];
+                return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+            }
+        }
+        
+        // Generate image through Netlify Function
+        async function generateImage(prompt) {
+            try {
+                const response = await fetch(`${CONFIG.API_PROXY_URL}/image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Image API error');
+                }
+                
+                const data = await response.json();
+                return data;
+                
+            } catch (error) {
+                console.error('Image generation error:', error);
+                return null;
+            }
+        }
+        
+        // Test API connection
+        async function testConnection() {
+            const apiLed = document.getElementById('apiLed');
+            const apiText = document.getElementById('apiText');
+            
+            try {
+                const response = await fetch(`${CONFIG.API_PROXY_URL}/health`);
+                
+                if (response.ok) {
+                    apiLed.classList.remove('error');
+                    apiText.textContent = 'API';
+                } else {
+                    throw new Error('API error');
+                }
+            } catch (error) {
+                apiLed.classList.add('error');
+                apiText.textContent = 'API Error';
+                console.error('Health check failed:', error);
+            }
+        }
+        
+        // DOM elements
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        
+        // Add message
+        function addMessage(content, isUser = false, userPrompt = null, imageData = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            const messageId = `msg-${++messageIdCounter}`;
+            messageDiv.id = messageId;
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'message-label';
+            labelDiv.textContent = isUser ? 'You' : 'Limbo';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(labelDiv);
+            messageDiv.appendChild(contentDiv);
+            
+            // Add image if provided
+            if (imageData && !isUser) {
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'message-image';
+                
+                const img = document.createElement('img');
+                img.src = imageData.url;
+                img.onclick = () => window.open(imageData.url, '_blank');
+                
+                imageContainer.appendChild(img);
+                messageDiv.appendChild(imageContainer);
+            }
+            
+            // Add mint button
+            if (!isUser && (content.length > 10 || imageData)) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'message-actions';
+                
+                const mintBtn = document.createElement('button');
+                mintBtn.className = 'mint-button';
+                mintBtn.textContent = imageData ? 'Mint Image to Chain' : 'Mint to Chain';
+                
+                mintBtn.onclick = async function() {
+                    const mintData = {
+                        userMessage: userPrompt || 'Direct interaction',
+                        aiResponse: content,
+                        messageId: messageId,
+                        imageUrl: imageData ? imageData.url : null,
+                        type: imageData ? 'image' : 'text'
+                    };
+                    
+                    await mintToChain(mintData, mintBtn);
+                };
+                
+                actionsDiv.appendChild(mintBtn);
+                messageDiv.appendChild(actionsDiv);
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Show/hide typing
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message typing';
+            typingDiv.id = 'typingIndicator';
+            
+            const dotsDiv = document.createElement('div');
+            dotsDiv.className = 'typing-dots';
+            dotsDiv.textContent = '...';
+            
+            typingDiv.appendChild(dotsDiv);
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+        
+        // Send message
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            conversationHistory.push({ role: 'user', content: message });
+            if (conversationHistory.length > MAX_HISTORY) {
+                conversationHistory = conversationHistory.slice(-MAX_HISTORY);
+            }
+            
+            addMessage(message, true);
+            const userMessageText = message;
+            chatInput.value = '';
+            sendButton.disabled = true;
+            
+            const isImage = isImageRequest(message) && !/chart|price|dex/i.test(message.toLowerCase());
+            
+            showTyping();
+            
+            try {
+                if (isImage) {
+                    const imagePrompt = extractImagePrompt(message);
+                    
+                    hideTyping();
+                    addMessage("aight, generating that for you...", false, userMessageText);
+                    conversationHistory.push({ role: 'assistant', content: "aight, generating that for you..." });
+                    
+                    showTyping();
+                    const imageData = await generateImage(imagePrompt);
+                    hideTyping();
+                    
+                    if (imageData) {
+                        addMessage("there you go, fresh from my digital brain", false, userMessageText, imageData);
+                        conversationHistory.push({ role: 'assistant', content: "there you go, fresh from my digital brain [generated image]" });
+                    } else {
+                        addMessage("image generation broke, api might be having issues", false, userMessageText);
+                        conversationHistory.push({ role: 'assistant', content: "image generation broke" });
+                    }
+                } else {
+                    const reply = await callAI(message);
+                    hideTyping();
+                    
+                    conversationHistory.push({ role: 'assistant', content: reply });
+                    if (conversationHistory.length > MAX_HISTORY) {
+                        conversationHistory = conversationHistory.slice(-MAX_HISTORY);
+                    }
+                    
+                    addMessage(reply, false, userMessageText);
+                }
+                
+            } catch (error) {
+                hideTyping();
+                addMessage("something broke", false, userMessageText);
+            } finally {
+                sendButton.disabled = false;
+                chatInput.focus();
+            }
+        }
+        
+        // Event listeners
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        sendButton.addEventListener('click', sendMessage);
+        document.getElementById('walletButton').addEventListener('click', connectWallet);
+        
+        // Initialize
+        testConnection();
+        chatInput.focus();
+        
+        // Check for MetaMask on load
+        window.addEventListener('load', () => {
+            if (window.ethereum) {
+                window.ethereum.request({ method: 'eth_accounts' })
+                    .then(accounts => {
+                        if (accounts && accounts.length > 0) {
+                            connectWallet();
+                        }
+                    })
+                    .catch(() => {});
+            }
+        });
+    </script>
+</body>
+</html>

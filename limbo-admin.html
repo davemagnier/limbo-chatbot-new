@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' https://raw.githubusercontent.com;">
+    <meta name="referrer" content="no-referrer">
+    <title>Limbo Control Center - Youmio</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0A0A0F;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.1) 0%, rgba(166, 104, 196, 0.1) 100%);
+            border-radius: 24px;
+            border: 2px solid rgba(198, 104, 168, 0.2);
+            position: relative;
+        }
+        
+        .youmio-logo {
+            height: 120px;
+            width: auto;
+            margin-bottom: 32px;
+            opacity: 0.9;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #94969C;
+            font-size: 14px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            border-color: transparent;
+        }
+        
+        .tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 24px;
+        }
+        
+        .card {
+            background: #1A1A2E;
+            border-radius: 24px;
+            padding: 32px;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .card.priority {
+            border: 2px solid rgba(75, 191, 235, 0.3);
+            background: linear-gradient(135deg, rgba(75, 191, 235, 0.02) 0%, rgba(198, 104, 168, 0.02) 100%);
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #C668A8, #A668C4);
+            opacity: 0.5;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.2) 0%, rgba(166, 104, 196, 0.2) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #94969C;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            color: white;
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: rgba(198, 104, 168, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .slider-container {
+            margin-bottom: 24px;
+        }
+        
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .slider-value {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            padding: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #1A1A2E;
+            box-shadow: 0 0 0 2px rgba(198, 104, 168, 0.3);
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            width: 100%;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(198, 104, 168, 0.3);
+        }
+        
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .button-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .toggle-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .toggle-option {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        
+        .toggle-option.active {
+            background: rgba(198, 104, 168, 0.2);
+            border-color: rgba(198, 104, 168, 0.4);
+            color: #C668A8;
+        }
+        
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .preset-card {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .preset-card:hover {
+            background: rgba(198, 104, 168, 0.1);
+            border-color: rgba(198, 104, 168, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .preset-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .preset-desc {
+            font-size: 11px;
+            color: #94969C;
+        }
+        
+        .status-bar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1A1A2E;
+            padding: 16px 24px;
+            border-radius: 14px;
+            border: 2px solid rgba(75, 191, 235, 0.3);
+            display: none;
+            animation: slideUp 0.3s;
+        }
+        
+        .status-bar.show {
+            display: block;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .file-upload {
+            border: 2px dashed rgba(198, 104, 168, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(198, 104, 168, 0.02);
+        }
+        
+        .file-upload:hover {
+            border-color: rgba(198, 104, 168, 0.5);
+            background: rgba(198, 104, 168, 0.05);
+        }
+        
+        .document-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .document-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .remove-btn {
+            padding: 6px 12px;
+            background: rgba(255, 100, 100, 0.2);
+            border: 2px solid rgba(255, 100, 100, 0.3);
+            border-radius: 6px;
+            color: #ff6464;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .remove-btn:hover {
+            background: rgba(255, 100, 100, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .export-section {
+            margin-top: 40px;
+            padding: 24px;
+            background: rgba(75, 191, 235, 0.05);
+            border: 2px solid rgba(75, 191, 235, 0.2);
+            border-radius: 12px;
+        }
+        
+        .export-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #4BBFEB;
+        }
+        
+        .export-desc {
+            font-size: 13px;
+            color: #94969C;
+            margin-bottom: 16px;
+        }
+        
+        .help-text {
+            font-size: 11px;
+            color: #4BBFEB;
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(75, 191, 235, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #4BBFEB;
+        }
+        
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #C668A8;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .back-link:hover {
+            transform: translateX(-3px);
+            color: #D779B9;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Home</a>
+    
+    <div class="container">
+        <div class="header">
+            <img src="youmio-logo.png" alt="Youmio" class="youmio-logo">
+            <h1>Limbo Control Center</h1>
+            <p>Configure personality, knowledge, and behavior for all chatbot instances</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('personality')">Personality</div>
+            <div class="tab" onclick="switchTab('knowledge')">Knowledge Base</div>
+            <div class="tab" onclick="switchTab('behavior')">Behavior Rules</div>
+            <div class="tab" onclick="switchTab('deploy')">Deploy Settings</div>
+        </div>
+<!-- Personality Tab -->
+        <div id="personality-tab" class="tab-content active">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-icon">🎭</div>
+                        <span>Quick Personality Presets</span>
+                    </div>
+                    
+                    <div class="preset-grid">
+                        <div class="preset-card" onclick="applyPreset('natural')">
+                            <div class="preset-name">Natural Flow</div>
+                            <div class="preset-desc">Sassy but helpful</div>
+                        </div>
+                        <div class="preset-card" onclick="applyPreset('sarcastic')">
+                            <div class="preset-name">Maximum Sarcasm</div>
+                            <div class="preset-desc">Witty and sharp</div>
+                        </div>
+                        <div class="preset-card" onclick="applyPreset('friendly')">
+                            <div class="preset-name">Friendly Alien</div>
+                            <div class="preset-desc">Warm but quirky</div>
+                        </div>
+                        <div class="preset-card" onclick="applyPreset('chaotic')">
+                            <div class="preset-name">Chaotic Neutral</div>
+                            <div class="preset-desc">Unpredictable responses</div>
+                        </div>
+                    </div>
+                    
+                    <button class="button" onclick="savePersonality()">Apply Personality</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-icon">🎛️</div>
+                        <span>Fine-Tune Parameters</span>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <label>Helpfulness Level</label>
+                            <span class="slider-value" id="helpfulness-value">80%</span>
+                        </div>
+                        <input type="range" id="helpfulness" min="0" max="100" value="80">
+                        <small style="color: #94969C; font-size: 11px;">Balance between sass and being helpful (higher = more direct answers)</small>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <label>Ecosystem Enthusiasm</label>
+                            <span class="slider-value" id="enthusiasm-value">60%</span>
+                        </div>
+                        <input type="range" id="enthusiasm" min="0" max="100" value="60">
+                        <small style="color: #94969C; font-size: 11px;">Higher = More excited about $LIMBO and Youmio</small>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <label>Conversational Awareness</label>
+                            <span class="slider-value" id="awareness-value">80%</span>
+                        </div>
+                        <input type="range" id="awareness" min="0" max="100" value="80">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <label>Sarcasm Level</label>
+                            <span class="slider-value" id="sarcasm-value">75%</span>
+                        </div>
+                        <input type="range" id="sarcasm" min="0" max="100" value="75">
+                        <small style="color: #94969C; font-size: 11px;">Her signature sass - keep this high for authentic Limbo</small>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-icon">💬</div>
+                        <span>Response Behavior</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Response Length Strategy</label>
+                        <div class="toggle-group">
+                            <div class="toggle-option active" data-value="contextual">Contextual</div>
+                            <div class="toggle-option" data-value="brief">Always Brief</div>
+                            <div class="toggle-option" data-value="detailed">Always Detailed</div>
+                            <div class="toggle-option" data-value="random">Random Mix</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Conversation Style</label>
+                        <div class="toggle-group">
+                            <div class="toggle-option active" data-value="sassy-helpful">Sassy but Helpful</div>
+                            <div class="toggle-option" data-value="aloof">Too Cool</div>
+                            <div class="toggle-option" data-value="chaotic">Chaotic Energy</div>
+                            <div class="toggle-option" data-value="chill">Laid Back</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-icon">🌟</div>
+                        <span>Character Identity</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Core Backstory</label>
+                        <textarea id="backstory" placeholder="Define Limbo's origin and identity...">alien pop star sent to earth as a digital virus to infect humanity through music and memes</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Personality Traits (comma separated)</label>
+                        <input type="text" id="traits" placeholder="witty, sarcastic, curious..." value="witty, sarcastic, sassy, irreverent, intelligent, casually dismissive but caring">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Knowledge Base Tab -->
+        <div id="knowledge-tab" class="tab-content">
+            <div class="grid">
+                <div class="card full-width priority">
+                    <div class="card-title">
+                        <div class="card-icon">🚀</div>
+                        <span>Quick Reference Text Dump (HIGH PRIORITY)</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>PASTE ALL IMPORTANT INFO HERE - Links, FAQs, Contract Addresses, etc.</label>
+                        <textarea id="text-dump" rows="20" placeholder="Paste everything important here!"></textarea>
+                        <div class="help-text">
+                            💡 TIP: This is the MAIN knowledge source. The bot checks here FIRST for any user questions.
+                        </div>
+                    </div>
+                    
+                    <button class="button" onclick="saveKnowledge()">Save Text Dump</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-icon">📚</div>
+                        <span>Structured Knowledge (Optional)</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Ecosystem Facts</label>
+                        <textarea id="ecosystem-facts" rows="10" placeholder="Additional ecosystem details..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Important Links</label>
+                        <textarea id="important-links" rows="6" placeholder="Additional links..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-icon">📄</div>
+                        <span>Document Upload (Optional)</span>
+                    </div>
+                    
+                    <div class="file-upload" id="upload-area">
+                        <div style="font-size: 32px; margin-bottom: 12px;">📁</div>
+                        <div style="font-weight: 600; margin-bottom: 8px;">Drop documents here</div>
+                        <div style="font-size: 12px; color: #94969C;">Support for .txt files</div>
+                    </div>
+                    <input type="file" id="file-input" style="display: none;" accept=".txt" multiple>
+                    
+                    <div class="document-list" id="document-list"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Behavior Rules Tab -->
+        <div id="behavior-tab" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-icon">📋</div>
+                        <span>Conversation Rules</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Primary Directives</label>
+                        <textarea id="primary-rules" rows="15">CRITICAL CONVERSATION RULES:
+1. ALWAYS check the TEXT DUMP first when answering questions
+2. ANSWER QUESTIONS WITH ANSWERS, NOT MORE QUESTIONS - but with sass
+3. Be sarcastic and sassy WHILE being helpful - not instead of being helpful</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Response Examples</label>
+                        <textarea id="response-examples" rows="10">User: yo
+Limbo: sup
+
+User: what's up?
+Limbo: vibing in the digital void, the usual. you?</textarea>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-icon">⚙️</div>
+                        <span>Advanced Settings</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Memory Retention</label>
+                        <select id="memory-retention">
+                            <option value="10">Last 10 messages</option>
+                            <option value="20" selected>Last 20 messages</option>
+                            <option value="30">Last 30 messages</option>
+                            <option value="50">Last 50 messages</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Error Handling</label>
+                        <input type="text" id="error-responses" placeholder="Responses when confused..." value="idk what you're on about, something broke, error but whatever">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Deploy Settings Tab -->
+        <div id="deploy-tab" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-icon">🚀</div>
+                        <span>Deployment Configuration</span>
+                    </div>
+                    
+                    <div class="export-section">
+                        <div class="export-title">Your Testing Workflow</div>
+                        <div class="export-desc">
+                            <strong>Step 1:</strong> Click "Local Testing" mode above (orange)<br>
+                            <strong>Step 2:</strong> Make changes in this admin panel<br>
+                            <strong>Step 3:</strong> Test in chatbot (shows orange "Local" indicator)<br>
+                            <strong>Step 4:</strong> Export settings below<br>
+                            <strong>Step 5:</strong> Upload to GitHub repository
+                        </div>
+                        
+                        <button class="button button-secondary" onclick="exportSettings()" style="margin-top: 16px;">Export Settings for GitHub</button>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 24px;">
+                        <label>GitHub Settings URL (For Global Config)</label>
+                        <input type="text" id="github-url" placeholder="https://raw.githubusercontent.com/yourusername/repo/main/limbo-config.json" value="">
+                    </div>
+                    
+                    <button class="button" onclick="exportSettings()">Export Settings JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar" id="status-bar">
+        ✅ Settings saved successfully!
+    </div>
+    
+    <script>
+        // Secure helper function
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+        
+        // Mode management
+        function setMode(mode) {
+            localStorage.setItem('devMode', mode === 'local' ? 'true' : 'false');
+            
+            const localBtn = document.getElementById('localModeBtn');
+            const githubBtn = document.getElementById('githubModeBtn');
+            const modeStatus = document.getElementById('modeStatus');
+            
+            if (mode === 'local') {
+                localBtn.style.background = 'rgba(255, 165, 0, 0.2)';
+                localBtn.style.border = '2px solid rgba(255, 165, 0, 0.3)';
+                localBtn.style.color = '#FFA500';
+                
+                githubBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+                githubBtn.style.border = '2px solid rgba(255, 255, 255, 0.1)';
+                githubBtn.style.color = 'white';
+                
+                modeStatus.textContent = 'Mode: Local Testing';
+                modeStatus.style.background = 'rgba(255, 165, 0, 0.2)';
+                modeStatus.style.color = '#FFA500';
+                
+                showStatus('Switched to LOCAL mode - Changes affect only your testing');
+            } else {
+                githubBtn.style.background = 'rgba(75, 191, 235, 0.2)';
+                githubBtn.style.border = '2px solid rgba(75, 191, 235, 0.3)';
+                githubBtn.style.color = '#4BBFEB';
+                
+                localBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+                localBtn.style.border = '2px solid rgba(255, 255, 255, 0.1)';
+                localBtn.style.color = 'white';
+                
+                modeStatus.textContent = 'Mode: GitHub Production';
+                modeStatus.style.background = 'rgba(75, 191, 235, 0.2)';
+                modeStatus.style.color = '#4BBFEB';
+                
+                showStatus('Switched to GITHUB mode - Using production settings');
+            }
+        }
+        
+        // Initialize mode on load
+        function initializeMode() {
+            const currentMode = localStorage.getItem('devMode') === 'true' ? 'local' : 'github';
+            setMode(currentMode);
+        }
+        
+        // Initialize sliders
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', function() {
+                const valueSpan = document.getElementById(this.id + '-value');
+                if (valueSpan) {
+                    valueSpan.textContent = this.value + '%';
+                }
+            });
+        });
+        
+        // Toggle options
+        document.querySelectorAll('.toggle-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const siblings = this.parentElement.querySelectorAll('.toggle-option');
+                siblings.forEach(s => s.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+        
+        // File upload
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        let documents = JSON.parse(localStorage.getItem('limboDocuments') || '[]');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'rgba(198, 104, 168, 0.5)';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = 'rgba(198, 104, 168, 0.3)';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'rgba(198, 104, 168, 0.3)';
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+        
+        function handleFiles(files) {
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const doc = {
+                        name: file.name,
+                        content: e.target.result,
+                        date: new Date().toISOString()
+                    };
+                    documents.push(doc);
+                    localStorage.setItem('limboDocuments', JSON.stringify(documents));
+                    displayDocuments();
+                };
+                reader.readAsText(file);
+            }
+        }
+        
+        function displayDocuments() {
+            const list = document.getElementById('document-list');
+            if (documents.length === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.style.textAlign = 'center';
+                emptyDiv.style.color = '#94969C';
+                emptyDiv.style.padding = '20px';
+                emptyDiv.textContent = 'No documents uploaded';
+                list.innerHTML = '';
+                list.appendChild(emptyDiv);
+                return;
+            }
+            
+            list.innerHTML = '';
+            documents.forEach((doc, i) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'document-item';
+                
+                const infoDiv = document.createElement('div');
+                const nameDiv = document.createElement('div');
+                nameDiv.style.fontWeight = '600';
+                nameDiv.textContent = doc.name;
+                
+                const dateDiv = document.createElement('div');
+                dateDiv.style.fontSize = '11px';
+                dateDiv.style.color = '#94969C';
+                dateDiv.textContent = new Date(doc.date).toLocaleDateString();
+                
+                infoDiv.appendChild(nameDiv);
+                infoDiv.appendChild(dateDiv);
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = 'Remove';
+                removeBtn.onclick = () => removeDocument(i);
+                
+                itemDiv.appendChild(infoDiv);
+                itemDiv.appendChild(removeBtn);
+                list.appendChild(itemDiv);
+            });
+        }
+        
+        function removeDocument(index) {
+            documents.splice(index, 1);
+            localStorage.setItem('limboDocuments', JSON.stringify(documents));
+            displayDocuments();
+        }
+        
+        // Apply presets
+        function applyPreset(preset) {
+            const presets = {
+                'natural': {
+                    awareness: 90,
+                    sarcasm: 75,
+                    helpfulness: 80,
+                    enthusiasm: 60
+                },
+                'sarcastic': {
+                    awareness: 70,
+                    sarcasm: 95,
+                    helpfulness: 60,
+                    enthusiasm: 40
+                },
+                'friendly': {
+                    awareness: 85,
+                    sarcasm: 40,
+                    helpfulness: 90,
+                    enthusiasm: 70
+                },
+                'chaotic': {
+                    awareness: 60,
+                    sarcasm: 85,
+                    helpfulness: 50,
+                    enthusiasm: 80
+                }
+            };
+            
+            const settings = presets[preset];
+            Object.keys(settings).forEach(key => {
+                const slider = document.getElementById(key);
+                if (slider) {
+                    slider.value = settings[key];
+                    const valueSpan = document.getElementById(key + '-value');
+                    if (valueSpan) {
+                        valueSpan.textContent = settings[key] + '%';
+                    }
+                }
+            });
+            
+            savePersonality();
+            showStatus();
+        }
+        
+        // Save functions
+        function savePersonality() {
+            const personality = {
+                helpfulness: document.getElementById('helpfulness').value,
+                enthusiasm: document.getElementById('enthusiasm').value,
+                awareness: document.getElementById('awareness').value,
+                sarcasm: document.getElementById('sarcasm').value,
+                backstory: document.getElementById('backstory').value,
+                traits: document.getElementById('traits').value
+            };
+            
+            localStorage.setItem('limboPersonality', JSON.stringify(personality));
+            showStatus('Personality saved! Sarcasm: ' + personality.sarcasm + '%, Helpfulness: ' + personality.helpfulness + '%');
+        }
+        
+        function saveKnowledge() {
+            const knowledge = {
+                textDump: document.getElementById('text-dump').value,
+                ecosystemFacts: document.getElementById('ecosystem-facts').value,
+                importantLinks: document.getElementById('important-links').value
+            };
+            
+            localStorage.setItem('limboKnowledge', JSON.stringify(knowledge));
+            showStatus('Knowledge saved! The bot will use this info immediately.');
+        }
+        
+        function saveBehavior() {
+            const behavior = {
+                primaryRules: document.getElementById('primary-rules').value,
+                responseExamples: document.getElementById('response-examples').value,
+                memoryRetention: document.getElementById('memory-retention').value,
+                errorResponses: document.getElementById('error-responses').value
+            };
+            
+            localStorage.setItem('limboBehavior', JSON.stringify(behavior));
+            showStatus();
+        }
+        
+        function showStatus(message = 'Settings saved successfully!') {
+            const status = document.getElementById('status-bar');
+            status.textContent = '✅ ' + message;
+            status.classList.add('show');
+            setTimeout(() => status.classList.remove('show'), 3000);
+        }
+        
+        // Export settings
+        function exportSettings() {
+            const allSettings = {
+                personality: JSON.parse(localStorage.getItem('limboPersonality') || '{}'),
+                knowledge: JSON.parse(localStorage.getItem('limboKnowledge') || '{}'),
+                behavior: JSON.parse(localStorage.getItem('limboBehavior') || '{}'),
+                documents: JSON.parse(localStorage.getItem('limboDocuments') || '[]'),
+                version: '1.1',
+                exported: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(allSettings, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'limbo-config.json';
+            a.click();
+            
+            alert('Settings exported! Upload this to your GitHub repo to update all chatbots.');
+        }
+        
+        // Load existing settings
+        function loadSettings() {
+            const personality = JSON.parse(localStorage.getItem('limboPersonality') || '{}');
+            const knowledge = JSON.parse(localStorage.getItem('limboKnowledge') || '{}');
+            const behavior = JSON.parse(localStorage.getItem('limboBehavior') || '{}');
+            
+            // Load personality settings
+            Object.keys(personality).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = personality[key];
+                    if (element.type === 'range') {
+                        const valueSpan = document.getElementById(key + '-value');
+                        if (valueSpan) {
+                            valueSpan.textContent = personality[key] + '%';
+                        }
+                    }
+                }
+            });
+            
+            // Load knowledge settings
+            Object.keys(knowledge).forEach(key => {
+                const element = document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase());
+                if (element) {
+                    element.value = knowledge[key];
+                }
+            });
+            
+            // Load behavior settings
+            Object.keys(behavior).forEach(key => {
+                const element = document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase());
+                if (element) {
+                    element.value = behavior[key];
+                }
+            });
+            
+            displayDocuments();
+        }
+        
+        // Auto-save on input
+        document.querySelectorAll('input, textarea, select').forEach(element => {
+            element.addEventListener('change', () => {
+                const tabContent = element.closest('.tab-content');
+                if (tabContent) {
+                    if (tabContent.id === 'personality-tab') savePersonality();
+                    else if (tabContent.id === 'knowledge-tab') saveKnowledge();
+                    else if (tabContent.id === 'behavior-tab') saveBehavior();
+                }
+            });
+        });
+        
+        // Initialize
+        loadSettings();
+        initializeMode();
+    </script>
+</body>
+</html>

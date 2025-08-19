@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' http://localhost:3001 https://*.netlify.app/.netlify/functions/">
+    <meta name="referrer" content="no-referrer">
+    <title>Youmio L1 Testnet - Youmio Chain</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0A0A0F;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Onboarding Overlay */
+        .onboarding-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.98);
+            backdrop-filter: blur(20px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+            padding: 20px;
+        }
+        
+        .onboarding-container {
+            max-width: 480px;
+            width: 100%;
+            background: #1A1A2E;
+            border-radius: 24px;
+            padding: 32px;
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            box-shadow: 0 20px 60px rgba(198, 104, 168, 0.2);
+            animation: slideUp 0.5s ease;
+        }
+        
+        /* Compact container for step 2 */
+        .onboarding-container.compact {
+            padding: 24px;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .onboarding-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .onboarding-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .onboarding-subtitle {
+            font-size: 14px;
+            color: #94969C;
+            line-height: 1.4;
+        }
+        
+        .youmio-icon-preview {
+            width: 140px;
+            height: 140px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .youmio-icon-preview img {
+            width: 100%;
+            height: auto;
+        }
+        
+        /* Compact wallet requirements */
+        .wallet-requirements {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 16px 0;
+        }
+        
+        .requirement-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #E0E0E0;
+        }
+        
+        .requirement-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .requirement-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #94969C;
+        }
+        
+        .requirement-check {
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            border-radius: 50%;
+            background: rgba(75, 191, 235, 0.1);
+            border: 2px solid rgba(75, 191, 235, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #4BBFEB;
+        }
+        
+        /* Social buttons side by side */
+        .social-connect-section {
+            margin: 16px 0;
+        }
+        
+        .social-connect-title {
+            text-align: center;
+            font-size: 12px;
+            color: #94969C;
+            margin-bottom: 10px;
+        }
+        
+        .social-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .social-button {
+            padding: 10px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .social-button:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .social-button.connected {
+            background: rgba(75, 191, 235, 0.1);
+            border-color: rgba(75, 191, 235, 0.3);
+            color: #4BBFEB;
+        }
+        
+        .social-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        /* Compact steps */
+        .onboarding-steps {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        
+        .onboarding-step {
+            flex: 1;
+            padding: 10px 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .onboarding-step.active {
+            background: rgba(198, 104, 168, 0.1);
+            border-color: rgba(198, 104, 168, 0.3);
+        }
+        
+        .onboarding-step.completed {
+            background: rgba(75, 191, 235, 0.1);
+            border-color: rgba(75, 191, 235, 0.3);
+        }
+        
+        .step-number {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 6px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+        
+        .step-title {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .step-desc {
+            font-size: 10px;
+            color: #94969C;
+        }
+        
+        .onboarding-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .action-button.primary {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+        }
+        
+        .action-button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(198, 104, 168, 0.3);
+        }
+        
+        .action-button.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .action-button.secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        /* Compact checkbox */
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            margin: 12px 0;
+        }
+        
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            border: 2px solid rgba(198, 104, 168, 0.5);
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        
+        .checkbox.checked {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            position: relative;
+        }
+        
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .checkbox-label {
+            font-size: 11px;
+            line-height: 1.4;
+            color: #E0E0E0;
+        }
+        
+        .checkbox-label a {
+            color: #C668A8;
+            text-decoration: none;
+        }
+        
+        .checkbox-label a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Animated background */
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(198, 104, 168, 0.12) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(166, 104, 196, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 20%, rgba(75, 191, 235, 0.06) 0%, transparent 50%);
+            z-index: 0;
+            animation: floatGradient 20s ease infinite;
+        }
+        
+        @keyframes floatGradient {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+        
+        .main-container {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: none;
+            flex-direction: column;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        
+        .main-container.visible {
+            display: flex;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .youmio-logo {
+            height: 48px;
+            width: auto;
+        }
+        
+        .testnet-badge {
+            background: linear-gradient(135deg, rgba(75, 191, 235, 0.2) 0%, rgba(91, 141, 238, 0.2) 100%);
+            border: 2px solid rgba(75, 191, 235, 0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4BBFEB;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .network-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .network-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 13px;
+        }
+        
+        .network-led {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            box-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .wallet-button {
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 13px;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .wallet-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(198, 104, 168, 0.3);
+        }
+        
+        .wallet-button.connected {
+            background: rgba(75, 191, 235, 0.1);
+            color: #4BBFEB;
+            border: 2px solid rgba(75, 191, 235, 0.2);
+        }
+        
+        /* Main Content Layout */
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        /* Sidebar Modules */
+        .sidebar-modules {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        
+        .sidebar-modules::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .sidebar-modules::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .sidebar-modules::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        
+        .module-card {
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .module-card.compact {
+            padding: 16px;
+        }
+        
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #C668A8, #A668C4, #4BBFEB);
+            opacity: 0.5;
+        }
+        
+        .module-card:hover {
+            transform: translateX(2px);
+            border-color: rgba(198, 104, 168, 0.2);
+        }
+        
+        .module-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        
+        .module-title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .module-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.2) 0%, rgba(166, 104, 196, 0.2) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .module-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        /* Enhanced Badge Display */
+        .badge-display-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+        
+        .badge-display {
+            width: 100px;
+            height: 100px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(198, 104, 168, 0.05);
+            box-shadow: 0 8px 24px rgba(198, 104, 168, 0.15);
+            transition: all 0.3s;
+        }
+        
+        .badge-display:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 32px rgba(198, 104, 168, 0.25);
+        }
+        
+        .badge-display img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .badge-display.not-minted {
+            background: rgba(26, 26, 46, 0.8);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .token-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .token-amount {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .token-label {
+            font-size: 11px;
+            color: #94969C;
+            margin-top: 2px;
+        }
+        
+        .faucet-button, .mint-badge-button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .button-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .faucet-button:hover, .mint-badge-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(198, 104, 168, 0.3);
+        }
+        
+        .faucet-button:disabled, .mint-badge-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .limit-text {
+            font-size: 10px;
+            color: #94969C;
+            text-align: center;
+        }
+        
+        .badge-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            gap: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+        }
+        
+        .badge-status.minted {
+            background: rgba(75, 191, 235, 0.1);
+            border: 2px solid rgba(75, 191, 235, 0.2);
+        }
+        
+        .stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #94969C;
+        }
+        
+        .stat-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4BBFEB;
+        }
+        
+        /* Chatbot Container - Main Focus */
+        .chatbot-wrapper {
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .chat-header {
+            background: linear-gradient(180deg, rgba(42, 42, 62, 0.8) 0%, rgba(26, 26, 46, 0.8) 100%);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+        
+        .limbo-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.2) 0%, rgba(166, 104, 196, 0.2) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .limbo-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .chat-header-info {
+            flex: 1;
+        }
+        
+        .chat-header-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .chat-header-subtitle {
+            font-size: 11px;
+            color: #94969C;
+        }
+        
+        .api-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #94969C;
+        }
+        
+        .api-led {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4BBFEB;
+            box-shadow: 0 0 4px rgba(75, 191, 235, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        .api-led.error {
+            background: #ff6464;
+            box-shadow: 0 0 4px rgba(255, 100, 100, 0.5);
+            animation: none;
+        }
+        
+        /* Enhanced Chat Messages Area */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(15, 15, 26, 0.5);
+            min-height: 0;
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .message {
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            align-self: flex-end;
+            max-width: 60%;
+        }
+        
+        .message.assistant {
+            align-self: flex-start;
+            max-width: 70%;
+        }
+        
+        .message-content {
+            padding: 10px 14px;
+            border-radius: 16px;
+            line-height: 1.4;
+            font-size: 13px;
+        }
+        
+        .message.user .message-content {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.assistant .message-content {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            color: #E0E0E0;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-label {
+            font-size: 10px;
+            color: #94969C;
+            margin-bottom: 4px;
+            padding: 0 8px;
+        }
+        
+        .message-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            padding-left: 8px;
+        }
+        
+        .mint-button {
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.2) 0%, rgba(166, 104, 196, 0.2) 100%);
+            color: #C668A8;
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            padding: 4px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 10px;
+            transition: all 0.3s;
+        }
+        
+        .mint-button:hover {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .mint-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .mint-button.success {
+            background: linear-gradient(135deg, #4BBFEB 0%, #5B8DEE 100%);
+            color: white;
+        }
+        
+        .typing-dots {
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+            color: #94969C;
+            font-size: 13px;
+        }
+        
+        .chat-input-container {
+            padding: 16px;
+            background: rgba(26, 26, 46, 0.8);
+            border-top: 2px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+        
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 22px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(198, 104, 168, 0.2);
+        }
+        
+        .send-button {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            border: 2px solid transparent;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .send-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(198, 104, 168, 0.3);
+        }
+        
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: #1A1A2E;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100000;
+            max-width: 360px;
+            animation: slideIn 0.4s;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .notification.success {
+            border-color: rgba(75, 191, 235, 0.3);
+        }
+        
+        .notification.error {
+            border-color: rgba(255, 100, 100, 0.3);
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @media (max-width: 968px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar-modules {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                overflow-y: visible;
+                padding-right: 0;
+                margin-bottom: 12px;
+            }
+            
+            .module-card {
+                padding: 12px;
+            }
+            
+            .badge-display {
+                width: 80px;
+                height: 80px;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .sidebar-modules {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .network-status {
+                justify-content: space-between;
+            }
+            
+            .network-indicator {
+                font-size: 11px;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Enhanced Onboarding Flow -->
+    <div class="onboarding-overlay" id="onboardingOverlay">
+        <div class="onboarding-container" id="onboardingStep1">
+            <div class="onboarding-header">
+                <h1 class="onboarding-title">Youmio Testnet</h1>
+                <p class="onboarding-subtitle">
+                    Experience the future of decentralized interactions. Test our chain, collect badges, and explore with Limbo.
+                </p>
+            </div>
+            
+            <div class="youmio-icon-preview">
+                <img src="youmio-icon.png" alt="Youmio" id="youmioLogo">
+            </div>
+            
+            <div class="onboarding-actions">
+                <button class="action-button primary" onclick="startOnboarding()">
+                    Enter Testnet
+                </button>
+                <button class="action-button secondary" onclick="skipOnboarding()">
+                    I'm already set up
+                </button>
+            </div>
+        </div>
+        
+        <div class="onboarding-container compact" id="onboardingStep2" style="display: none;">
+            <div class="onboarding-header">
+                <h1 class="onboarding-title">Connect & Get Started</h1>
+                <p class="onboarding-subtitle">
+                    Set up your wallet and connect your accounts
+                </p>
+            </div>
+            
+            <div class="wallet-requirements">
+                <div class="requirement-title">Wallet Requirements</div>
+                <ul class="requirement-list">
+                    <li class="requirement-item">
+                        <span class="requirement-check">✓</span>
+                        <span>Minimum 0.03 ETH balance on mainnet</span>
+                    </li>
+                    <li class="requirement-item">
+                        <span class="requirement-check">✓</span>
+                        <span>At least 3 transactions on mainnet</span>
+                    </li>
+                    <li class="requirement-item">
+                        <span class="requirement-check">✓</span>
+                        <span>Maximum 1 request every 6 hours</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="social-connect-section">
+                <div class="social-connect-title">Connect for bonus tokens</div>
+                <div class="social-buttons">
+                    <button class="social-button" id="connectX" onclick="connectSocial('x')">
+                        <span class="social-icon">𝕏</span>
+                        <span>Connect X</span>
+                    </button>
+                    <button class="social-button" id="connectDiscord" onclick="connectSocial('discord')">
+                        <span class="social-icon">💬</span>
+                        <span>Discord</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="onboarding-steps">
+                <div class="onboarding-step" id="step1">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Connect</div>
+                    <div class="step-desc">MetaMask</div>
+                </div>
+                <div class="onboarding-step" id="step2">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Add Network</div>
+                    <div class="step-desc">Youmio</div>
+                </div>
+                <div class="onboarding-step" id="step3">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Get Tokens</div>
+                    <div class="step-desc">Faucet</div>
+                </div>
+            </div>
+            
+            <div class="checkbox-container">
+                <div class="checkbox" id="termsCheckbox" onclick="toggleCheckbox()"></div>
+                <div class="checkbox-label">
+                    I acknowledge that I have read and agree to the <a href="#" target="_blank">Terms of Service</a> and understand that testnet tokens have no real value.
+                </div>
+            </div>
+            
+            <div class="onboarding-actions">
+                <button class="action-button primary" id="addNetworkBtn" onclick="addTestnetToWallet()" disabled>
+                    Add Youmio Testnet
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="background-gradient"></div>
+    
+    <div class="main-container" id="mainContainer">
+        <!-- Header with Larger Logo -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="youmio-logo.png" alt="Youmio" class="youmio-logo">
+                <div class="testnet-badge">
+                    <span style="width: 6px; height: 6px; background: #4BBFEB; border-radius: 50%;"></span>
+                    L1 TESTNET
+                </div>
+            </div>
+            <div class="network-status">
+                <div class="network-indicator">
+                    <span class="network-led"></span>
+                    <span>Youmio Chain Testnet</span>
+                </div>
+                <button class="wallet-button" id="walletButton">
+                    Connect Wallet
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content-wrapper">
+            <!-- Left Sidebar - Enhanced Modules -->
+            <div class="sidebar-modules">
+                <!-- Faucet Module -->
+                <div class="module-card compact">
+                    <div class="module-header">
+                        <div class="module-title">
+                            <div class="module-icon">💧</div>
+                            <span>Test Faucet</span>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <div class="token-display">
+                            <div>
+                                <div class="token-amount" id="tokenBalance">0</div>
+                                <div class="token-label">$TEST</div>
+                            </div>
+                            <div class="module-icon">🪙</div>
+                        </div>
+                        <button class="faucet-button" id="faucetButton" onclick="claimTokens()">
+                            <span>Claim Test Tokens</span>
+                        </button>
+                        <div class="limit-text">Daily limit: <span id="claimsLeft">100</span>/100</div>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Badge Module -->
+                <div class="module-card">
+                    <div class="module-header">
+                        <div class="module-title">
+                            <div class="module-icon">🏆</div>
+                            <span>Soulbound Badge</span>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <div class="badge-display-container">
+                            <div class="badge-display not-minted" id="badgeDisplayContainer">
+                                <img src="badge-not-minted.png" alt="Badge" id="badgeImage">
+                            </div>
+                        </div>
+                        <div class="badge-status" id="badgeStatus">
+                            <span>🔐</span>
+                            <span id="badgeText">Not Minted</span>
+                        </div>
+                        <button class="mint-badge-button" id="badgeButton" onclick="mintBadge()">
+                            <span>Mint Soulbound Badge</span>
+                        </button>
+                        <div class="limit-text">Prove your testnet participation</div>
+                    </div>
+                </div>
+                
+                <!-- Stats Module -->
+                <div class="module-card compact">
+                    <div class="module-header">
+                        <div class="module-title">
+                            <div class="module-icon">📊</div>
+                            <span>Your Stats</span>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <div class="stats-list">
+                            <div class="stat-item">
+                                <span class="stat-label">Testnet Tokens</span>
+                                <span class="stat-value" id="statTokens">0 $TEST</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Badge Status</span>
+                                <span class="stat-value" id="statBadge">Not Minted</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Chats Minted</span>
+                                <span class="stat-value" id="statChats">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Chat Area -->
+            <div class="chatbot-wrapper">
+                <div class="chat-header">
+                    <div class="limbo-avatar">
+                        <img src="limbo-selfie.jpg" alt="Limbo" onerror="this.style.display='none'; this.parentElement.innerHTML='L';">
+                    </div>
+                    <div class="chat-header-info">
+                        <div class="chat-header-title">Chat with Limbo</div>
+                        <div class="chat-header-subtitle">Test the chain by minting conversations</div>
+                    </div>
+                    <div class="api-indicator">
+                        <span class="api-led" id="apiLed"></span>
+                        <span id="apiText">API</span>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-label">Limbo</div>
+                        <div class="message-content">yo, welcome to the testnet. mint some tokens and let's test this chain</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <input 
+                            type="text" 
+                            class="chat-input" 
+                            id="chatInput" 
+                            placeholder="type something..."
+                            autocomplete="off"
+                        >
+                        <button class="send-button" id="sendButton" type="button">→</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration for Netlify deployment
+        const CONFIG = {
+            // Use Netlify Functions URL
+            API_PROXY_URL: window.location.hostname === 'localhost' 
+                ? 'http://localhost:8888/.netlify/functions'
+                : '/.netlify/functions',
+            TESTNET_CHAIN_ID: '0x1234',
+            TESTNET_RPC_URL: 'https://testnet.youmio.io',
+            TESTNET_CHAIN_NAME: 'Youmio Testnet',
+            TESTNET_CURRENCY: {
+                name: 'TEST',
+                symbol: 'TEST',
+                decimals: 18
+            },
+            TESTNET_EXPLORER: 'https://testnet-explorer.youmio.io'
+        };
+        
+        // All JavaScript remains exactly the same
+        let provider = null;
+        let signer = null;
+        let userAddress = null;
+        let tokenBalance = 0;
+        let claimsToday = 0;
+        let hasBadge = false;
+        let chatsMinted = 0;
+        let messageIdCounter = 0;
+        let conversationHistory = [];
+        const MAX_HISTORY = 20;
+        
+        let termsAccepted = false;
+        let socialConnections = {
+            x: false,
+            discord: false
+        };
+        
+        function startOnboarding() {
+            document.getElementById('onboardingStep1').style.display = 'none';
+            document.getElementById('onboardingStep2').style.display = 'block';
+            document.getElementById('step1').classList.add('active');
+        }
+        
+        function toggleCheckbox() {
+            const checkbox = document.getElementById('termsCheckbox');
+            const addBtn = document.getElementById('addNetworkBtn');
+            
+            termsAccepted = !termsAccepted;
+            
+            if (termsAccepted) {
+                checkbox.classList.add('checked');
+                addBtn.disabled = false;
+            } else {
+                checkbox.classList.remove('checked');
+                addBtn.disabled = true;
+            }
+        }
+        
+        function connectSocial(platform) {
+            const button = document.getElementById(platform === 'x' ? 'connectX' : 'connectDiscord');
+            
+            button.innerHTML = '<span class="spinner"></span> Connecting...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                socialConnections[platform] = true;
+                button.classList.add('connected');
+                button.innerHTML = platform === 'x' ? 
+                    '<span class="social-icon">𝕏</span><span>Connected</span>' : 
+                    '<span class="social-icon">💬</span><span>Connected</span>';
+                
+                showNotification(`${platform === 'x' ? 'X' : 'Discord'} account connected! +10 bonus tokens`, 'success');
+                
+                tokenBalance += 10;
+                updateUI();
+            }, 1500);
+        }
+        
+        async function addTestnetToWallet() {
+            if (!window.ethereum) {
+                showNotification('Please install MetaMask to continue', 'error');
+                return;
+            }
+            
+            try {
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts'
+                });
+                
+                if (accounts.length > 0) {
+                    document.getElementById('step1').classList.remove('active');
+                    document.getElementById('step1').classList.add('completed');
+                    document.getElementById('step2').classList.add('active');
+                    
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: CONFIG.TESTNET_CHAIN_ID,
+                            chainName: CONFIG.TESTNET_CHAIN_NAME,
+                            nativeCurrency: CONFIG.TESTNET_CURRENCY,
+                            rpcUrls: [CONFIG.TESTNET_RPC_URL],
+                            blockExplorerUrls: [CONFIG.TESTNET_EXPLORER]
+                        }]
+                    });
+                    
+                    document.getElementById('step2').classList.remove('active');
+                    document.getElementById('step2').classList.add('completed');
+                    document.getElementById('step3').classList.add('completed');
+                    
+                    showNotification('Testnet added successfully!', 'success');
+                    
+                    setTimeout(() => {
+                        completeOnboarding();
+                    }, 1500);
+                }
+            } catch (error) {
+                showNotification('Failed to add network', 'error');
+            }
+        }
+        
+        function skipOnboarding() {
+            completeOnboarding();
+        }
+        
+        function completeOnboarding() {
+            const overlay = document.getElementById('onboardingOverlay');
+            const mainContainer = document.getElementById('mainContainer');
+            
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                mainContainer.classList.add('visible');
+                localStorage.setItem('onboardingCompleted', 'true');
+            }, 500);
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const content = document.createElement('div');
+            content.style.display = 'flex';
+            content.style.alignItems = 'flex-start';
+            content.style.gap = '12px';
+            
+            const textDiv = document.createElement('div');
+            textDiv.style.flex = '1';
+            
+            const title = document.createElement('div');
+            title.style.fontWeight = '600';
+            title.style.marginBottom = '4px';
+            title.textContent = type === 'success' ? 'Success' : 'Notice';
+            
+            const msg = document.createElement('div');
+            msg.style.fontSize = '14px';
+            msg.style.color = '#94969C';
+            msg.textContent = message;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.style.background = 'transparent';
+            closeBtn.style.border = 'none';
+            closeBtn.style.color = '#94969C';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.style.fontSize = '20px';
+            closeBtn.textContent = '×';
+            closeBtn.onclick = () => notification.remove();
+            
+            textDiv.appendChild(title);
+            textDiv.appendChild(msg);
+            content.appendChild(textDiv);
+            content.appendChild(closeBtn);
+            notification.appendChild(content);
+            
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        }
+        
+        async function connectWallet() {
+            const walletBtn = document.getElementById('walletButton');
+            
+            if (typeof window.ethereum === 'undefined') {
+                showNotification('MetaMask not detected. Please install MetaMask extension.', 'error');
+                return;
+            }
+            
+            try {
+                walletBtn.innerHTML = '<span class="spinner"></span> Connecting...';
+                walletBtn.disabled = true;
+                
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                if (accounts && accounts.length > 0) {
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+                    userAddress = accounts[0];
+                    
+                    const shortAddress = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+                    walletBtn.textContent = shortAddress;
+                    walletBtn.classList.add('connected');
+                    walletBtn.disabled = false;
+                    
+                    showNotification(`Wallet connected: ${shortAddress}`, 'success');
+                    loadUserData();
+                    
+                    window.ethereum.on('accountsChanged', (accounts) => {
+                        if (accounts.length === 0) {
+                            disconnectWallet();
+                        } else {
+                            userAddress = accounts[0];
+                            const shortAddr = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+                            walletBtn.textContent = shortAddr;
+                            loadUserData();
+                        }
+                    });
+                }
+            } catch (error) {
+                walletBtn.textContent = 'Connect Wallet';
+                walletBtn.disabled = false;
+                showNotification('Connection failed', 'error');
+            }
+        }
+        
+        function disconnectWallet() {
+            provider = null;
+            signer = null;
+            userAddress = null;
+            const walletBtn = document.getElementById('walletButton');
+            walletBtn.textContent = 'Connect Wallet';
+            walletBtn.classList.remove('connected');
+            resetUI();
+        }
+        
+        function loadUserData() {
+            const userData = JSON.parse(localStorage.getItem(`testnet_${userAddress}`) || '{}');
+            
+            tokenBalance = userData.tokenBalance || 0;
+            claimsToday = userData.claimsToday || 0;
+            hasBadge = userData.hasBadge || false;
+            chatsMinted = userData.chatsMinted || 0;
+            
+            const lastClaim = userData.lastClaimDate || '';
+            const today = new Date().toDateString();
+            if (lastClaim !== today) {
+                claimsToday = 0;
+            }
+            
+            updateUI();
+        }
+        
+        function saveUserData() {
+            const userData = {
+                tokenBalance,
+                claimsToday,
+                hasBadge,
+                chatsMinted,
+                lastClaimDate: new Date().toDateString()
+            };
+            localStorage.setItem(`testnet_${userAddress}`, JSON.stringify(userData));
+        }
+        
+        function updateUI() {
+            document.getElementById('tokenBalance').textContent = tokenBalance;
+            document.getElementById('statTokens').textContent = `${tokenBalance} $TEST`;
+            document.getElementById('claimsLeft').textContent = Math.max(0, 100 - claimsToday);
+            document.getElementById('statChats').textContent = chatsMinted;
+            
+            const faucetBtn = document.getElementById('faucetButton');
+            if (claimsToday >= 100) {
+                faucetBtn.disabled = true;
+                faucetBtn.innerHTML = '<span>Daily Limit Reached</span>';
+            }
+            
+            if (hasBadge) {
+                const badgeDisplay = document.getElementById('badgeDisplayContainer');
+                const badgeImage = document.getElementById('badgeImage');
+                
+                badgeDisplay.classList.remove('not-minted');
+                badgeImage.src = 'badge-minted.png';
+                
+                document.getElementById('badgeStatus').classList.add('minted');
+                document.getElementById('badgeStatus').innerHTML = '<span>✅</span><span>Minted</span>';
+                document.getElementById('badgeText').textContent = 'Minted';
+                document.getElementById('statBadge').textContent = 'Minted ✅';
+                document.getElementById('badgeButton').disabled = true;
+                document.getElementById('badgeButton').innerHTML = '<span>Badge Already Minted</span>';
+            }
+        }
+        
+        function resetUI() {
+            tokenBalance = 0;
+            claimsToday = 0;
+            hasBadge = false;
+            chatsMinted = 0;
+            updateUI();
+        }
+        
+        async function claimTokens() {
+            if (!userAddress) {
+                showNotification('Please connect your wallet first', 'error');
+                await connectWallet();
+                return;
+            }
+            
+            if (claimsToday >= 100) {
+                showNotification('Daily limit reached. Come back tomorrow!', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('faucetButton');
+            btn.innerHTML = '<span class="spinner"></span> Claiming...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                const claimAmount = Math.min(10, 100 - claimsToday);
+                tokenBalance += claimAmount;
+                claimsToday += claimAmount;
+                
+                saveUserData();
+                updateUI();
+                
+                btn.innerHTML = '<span>Claim Test Tokens</span>';
+                btn.disabled = claimsToday >= 100;
+                
+                showNotification(`Successfully claimed ${claimAmount} $TEST tokens!`, 'success');
+            }, 2000);
+        }
+        
+        async function mintBadge() {
+            if (!userAddress) {
+                showNotification('Please connect your wallet first', 'error');
+                await connectWallet();
+                return;
+            }
+            
+            if (hasBadge) {
+                showNotification('You already have a testnet badge!', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('badgeButton');
+            btn.innerHTML = '<span class="spinner"></span> Minting...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                hasBadge = true;
+                saveUserData();
+                updateUI();
+                
+                showNotification('Testnet participation badge minted successfully!', 'success');
+            }, 3000);
+        }
+        
+        async function mintChatToChain(messageData, button) {
+            if (!userAddress) {
+                showNotification('Please connect your wallet first', 'error');
+                await connectWallet();
+                return;
+            }
+            
+            try {
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                if (chainId !== CONFIG.TESTNET_CHAIN_ID) {
+                    showNotification('Please switch to Youmio Testnet', 'error');
+                    return;
+                }
+            } catch (error) {
+                showNotification('Chain verification failed', 'error');
+                return;
+            }
+            
+            button.innerHTML = '<span class="spinner"></span> Minting...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                chatsMinted++;
+                saveUserData();
+                updateUI();
+                
+                button.textContent = 'Minted!';
+                button.classList.add('success');
+                
+                showNotification(`Chat minted to testnet! Total minted: ${chatsMinted}`, 'success');
+            }, 2000);
+        }
+        
+        async function loadAdminSettings() {
+            const settings = {
+                personality: JSON.parse(localStorage.getItem('limboPersonality') || '{}'),
+                knowledge: JSON.parse(localStorage.getItem('limboKnowledge') || '{}'),
+                behavior: JSON.parse(localStorage.getItem('limboBehavior') || '{}'),
+                documents: JSON.parse(localStorage.getItem('limboDocuments') || '[]')
+            };
+            return settings;
+        }
+        
+        function extractKnowledge(settings) {
+            let knowledge = '';
+            
+            if (settings.knowledge?.textDump) {
+                knowledge += settings.knowledge.textDump + '\n\n';
+            }
+            
+            if (settings.knowledge?.ecosystemFacts) {
+                knowledge += settings.knowledge.ecosystemFacts + '\n\n';
+            }
+            
+            return knowledge || 'No knowledge configured yet.';
+        }
+        
+        async function callAI(userMessage) {
+            try {
+                const response = await fetch(`${CONFIG.API_PROXY_URL}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt: userMessage })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API error');
+                }
+                
+                const data = await response.json();
+                return data.reply;
+                
+            } catch (error) {
+                const fallbackResponses = [
+                    "api's being weird right now",
+                    "connection issues, classic",
+                    "servers are probably on fire",
+                    "technical difficulties or whatever"
+                ];
+                return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+            }
+        }
+        
+        function addMessage(content, isUser = false, userPrompt = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            const messageId = `msg-${++messageIdCounter}`;
+            messageDiv.id = messageId;
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'message-label';
+            labelDiv.textContent = isUser ? 'You' : 'Limbo';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(labelDiv);
+            messageDiv.appendChild(contentDiv);
+            
+            if (!isUser && content.length > 10) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'message-actions';
+                
+                const mintBtn = document.createElement('button');
+                mintBtn.className = 'mint-button';
+                mintBtn.textContent = 'Mint to Chain';
+                
+                mintBtn.onclick = function() {
+                    mintChatToChain({ 
+                        userMessage: userPrompt || '', 
+                        aiResponse: content
+                    }, mintBtn);
+                };
+                
+                actionsDiv.appendChild(mintBtn);
+                messageDiv.appendChild(actionsDiv);
+            }
+            
+            document.getElementById('chatMessages').appendChild(messageDiv);
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+        
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message typing';
+            typingDiv.id = 'typingIndicator';
+            
+            const dotsDiv = document.createElement('div');
+            dotsDiv.className = 'typing-dots';
+            dotsDiv.textContent = '...';
+            
+            typingDiv.appendChild(dotsDiv);
+            document.getElementById('chatMessages').appendChild(typingDiv);
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+        
+        function hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            conversationHistory.push({ role: 'user', content: message });
+            if (conversationHistory.length > MAX_HISTORY) {
+                conversationHistory = conversationHistory.slice(-MAX_HISTORY);
+            }
+            
+            addMessage(message, true);
+            const userMessageText = message;
+            input.value = '';
+            document.getElementById('sendButton').disabled = true;
+            
+            showTyping();
+            
+            try {
+                const reply = await callAI(message);
+                hideTyping();
+                
+                conversationHistory.push({ role: 'assistant', content: reply });
+                addMessage(reply, false, userMessageText);
+                
+            } catch (error) {
+                hideTyping();
+                addMessage("something broke", false, userMessageText);
+            } finally {
+                document.getElementById('sendButton').disabled = false;
+                document.getElementById('chatInput').focus();
+            }
+        }
+        
+        document.getElementById('walletButton').addEventListener('click', connectWallet);
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        window.addEventListener('load', () => {
+            const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+            if (onboardingCompleted === 'true') {
+                completeOnboarding();
+            }
+            
+            const apiLed = document.getElementById('apiLed');
+            const apiText = document.getElementById('apiText');
+            
+            fetch(`${CONFIG.API_PROXY_URL}/health`)
+                .then(response => {
+                    if (response.ok) {
+                        apiLed.classList.remove('error');
+                        apiText.textContent = 'API';
+                    } else {
+                        throw new Error('API offline');
+                    }
+                })
+                .catch(() => {
+                    apiLed.classList.add('error');
+                    apiText.textContent = 'Offline';
+                });
+        });
+    </script>
+</body>
+</html>
