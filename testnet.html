@@ -1298,21 +1298,21 @@
     </div>
     
     <script>
-        // Configuration for Netlify deployment
         const CONFIG = {
             // Use Netlify Functions URL
             API_PROXY_URL: window.location.hostname === 'localhost' 
                 ? 'http://localhost:8888/.netlify/functions'
                 : '/.netlify/functions',
-            TESTNET_CHAIN_ID: '0x1234',
-            TESTNET_RPC_URL: 'https://testnet.youmio.io',
-            TESTNET_CHAIN_NAME: 'Youmio Testnet',
+            TESTNET_CHAIN_ID: '0x12CE7',  // 77063 in hex
+            TESTNET_RPC_URL: 'https://subnets.avax.network/kells/testnet/rpc',
+            TESTNET_CHAIN_NAME: 'KELLS Testnet',
             TESTNET_CURRENCY: {
-                name: 'TEST',
-                symbol: 'TEST',
+                name: 'KELLS',
+                symbol: 'KELLS',
                 decimals: 18
             },
-            TESTNET_EXPLORER: 'https://testnet-explorer.youmio.io'
+            TESTNET_EXPLORER: 'https://subnets-test.avax.network/kells',
+            KELLS_TOKEN_ADDRESS: '0x6ACaf9E9EF556E69466362DD8086F25281beD293'
         };
         
         // All JavaScript remains exactly the same
