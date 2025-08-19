@@ -1,6 +1,3 @@
-// netlify/functions/chat.js
-const fetch = require('node-fetch');
-
 exports.handler = async (event, context) => {
   // Enable CORS
   const headers = {
@@ -31,6 +28,7 @@ exports.handler = async (event, context) => {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   
   if (!GEMINI_API_KEY) {
+    console.error('GEMINI_API_KEY not configured');
     return {
       statusCode: 500,
       headers,
@@ -41,7 +39,7 @@ exports.handler = async (event, context) => {
   try {
     const { prompt, knowledge, personality, behavior, conversationHistory } = JSON.parse(event.body);
     
-    // Build comprehensive system prompt that actually uses the admin settings
+    // Build comprehensive system prompt
     let systemPrompt = `You are Limbo, an alien pop star and digital entity. Your responses MUST follow these rules:
 
 CHARACTER IDENTITY:
@@ -89,7 +87,7 @@ Current user message: ${prompt}
 
 Remember: You're Limbo. Stay in character. Use the knowledge provided. Be sassy but helpful. Always lowercase.`;
 
-    // Call Gemini API with the comprehensive prompt
+    // Call Gemini API - using built-in fetch
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -135,7 +133,7 @@ Remember: You're Limbo. Stay in character. Use the knowledge provided. Be sassy 
 
     const data = await response.json();
     
-    // Extract the reply - ensure it exists
+    // Extract the reply
     let reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!reply) {
@@ -143,7 +141,7 @@ Remember: You're Limbo. Stay in character. Use the knowledge provided. Be sassy 
       throw new Error('No response generated');
     }
 
-    // Ensure the reply is lowercase (enforce character)
+    // Ensure lowercase
     reply = reply.toLowerCase().trim();
 
     return {
@@ -154,7 +152,6 @@ Remember: You're Limbo. Stay in character. Use the knowledge provided. Be sassy 
     
   } catch (error) {
     console.error('Chat error:', error);
-    // Return a Limbo-style error instead of generic fallback
     return {
       statusCode: 200,
       headers,
