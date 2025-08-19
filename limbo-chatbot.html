@@ -701,7 +701,7 @@
             setTimeout(() => notification.remove(), 5000);
         }
         
-        // Load admin settings - FIXED TO PRIORITIZE TEXT DUMP
+        // Load admin settings - COMPREHENSIVE
         async function loadAdminSettings() {
             return {
                 personality: JSON.parse(localStorage.getItem('limboPersonality') || '{}'),
@@ -711,15 +711,15 @@
             };
         }
         
-        // Extract knowledge - FIXED TO PRIORITIZE TEXT DUMP
+        // Extract knowledge - PRIORITIZE TEXT DUMP
         function extractKnowledge(settings) {
             let knowledge = '';
             
             // PRIORITY 1: Quick Reference Text Dump (HIGHEST PRIORITY)
             if (settings.knowledge?.textDump && settings.knowledge.textDump.trim()) {
-                knowledge += '=== PRIORITY KNOWLEDGE (CHECK FIRST) ===\n';
+                knowledge += '=== CRITICAL KNOWLEDGE (ALWAYS CHECK THIS FIRST) ===\n';
                 knowledge += settings.knowledge.textDump.trim();
-                knowledge += '\n\n=== END PRIORITY KNOWLEDGE ===\n\n';
+                knowledge += '\n=== END CRITICAL KNOWLEDGE ===\n\n';
             }
             
             // PRIORITY 2: Additional structured knowledge
@@ -737,7 +737,7 @@
             
             // PRIORITY 3: Document content
             if (settings.documents && settings.documents.length > 0) {
-                knowledge += '=== DOCUMENTS ===\n';
+                knowledge += '=== UPLOADED DOCUMENTS ===\n';
                 settings.documents.forEach(doc => {
                     knowledge += `--- ${doc.name} ---\n`;
                     knowledge += doc.content;
@@ -745,10 +745,10 @@
                 });
             }
             
-            return knowledge || '[NO KNOWLEDGE CONFIGURED - Add knowledge in Admin Panel]';
+            return knowledge || '';
         }
         
-        // Call AI through Netlify Function - UPDATED TO PASS PRIORITY KNOWLEDGE
+        // Call AI through Netlify Function - COMPREHENSIVE
         async function callAI(message) {
             const settings = await loadAdminSettings();
             const knowledge = extractKnowledge(settings);
@@ -769,23 +769,22 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('API error');
+                    console.error('API response not ok:', response.status);
                 }
                 
                 const data = await response.json();
-                return data.reply;
+                
+                if (data.reply) {
+                    return data.reply;
+                } else {
+                    console.error('No reply in response:', data);
+                    return "something's broken with the api";
+                }
                 
             } catch (error) {
                 console.error('Chat error:', error);
-                // Fallback responses with personality
-                const fallbacks = [
-                    "api broke lol",
-                    "something's borked with the connection",
-                    "technical difficulties, as usual",
-                    "connection's acting up, typical",
-                    "servers having a moment"
-                ];
-                return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+                // Return Limbo-style error, not generic
+                return "connection's being weird, try again";
             }
         }
         
