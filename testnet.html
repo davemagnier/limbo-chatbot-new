@@ -1312,7 +1312,7 @@
                 symbol: 'KELLS',
                 decimals: 18
             },
-            TESTNET_EXPLORER: 'https://subnets-test.avax.network/kells',
+            TESTNET_EXPLORER: '',  // No explorer for KELLS testnet yet
             KELLS_TOKEN_ADDRESS: '0x6ACaf9E9EF556E69466362DD8086F25281beD293'
         };
         
@@ -1375,45 +1375,121 @@
             }, 1500);
         }
         
+        let isAddingNetwork = false; // Prevent multiple simultaneous requests
+        
         async function addTestnetToWallet() {
+            if (isAddingNetwork) {
+                showNotification('Network addition already in progress. Please approve in MetaMask.', 'error');
+                return;
+            }
+            
             if (!window.ethereum) {
                 showNotification('Please install MetaMask to continue', 'error');
                 return;
             }
             
+            isAddingNetwork = true;
+            const addBtn = document.getElementById('addNetworkBtn');
+            const originalText = addBtn.innerHTML;
+            addBtn.innerHTML = '<span class="spinner"></span> Waiting for MetaMask...';
+            
             try {
+                // First, request account access
                 const accounts = await window.ethereum.request({
                     method: 'eth_requestAccounts'
                 });
                 
-                if (accounts.length > 0) {
-                    document.getElementById('step1').classList.remove('active');
-                    document.getElementById('step1').classList.add('completed');
-                    document.getElementById('step2').classList.add('active');
-                    
-                    await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: CONFIG.TESTNET_CHAIN_ID,
-                            chainName: CONFIG.TESTNET_CHAIN_NAME,
-                            nativeCurrency: CONFIG.TESTNET_CURRENCY,
-                            rpcUrls: [CONFIG.TESTNET_RPC_URL],
-                            blockExplorerUrls: [CONFIG.TESTNET_EXPLORER]
-                        }]
-                    });
-                    
+                if (accounts.length === 0) {
+                    throw new Error('No accounts found');
+                }
+                
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step2').classList.add('active');
+                
+                // Check if we're already on the correct network
+                const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+                
+                if (currentChainId === CONFIG.TESTNET_CHAIN_ID) {
+                    // Already on KELLS network
                     document.getElementById('step2').classList.remove('active');
                     document.getElementById('step2').classList.add('completed');
                     document.getElementById('step3').classList.add('completed');
                     
-                    showNotification('KELLS Testnet added successfully!', 'success');
-                    
+                    showNotification('Already connected to KELLS Testnet!', 'success');
                     setTimeout(() => {
                         completeOnboarding();
                     }, 1500);
+                } else {
+                    // Try to switch to the network first
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: CONFIG.TESTNET_CHAIN_ID }]
+                        });
+                        
+                        document.getElementById('step2').classList.remove('active');
+                        document.getElementById('step2').classList.add('completed');
+                        document.getElementById('step3').classList.add('completed');
+                        
+                        showNotification('Switched to KELLS Testnet!', 'success');
+                        setTimeout(() => {
+                            completeOnboarding();
+                        }, 1500);
+                        
+                    } catch (switchError) {
+                        // Network doesn't exist, so add it
+                        if (switchError.code === 4902) {
+                            try {
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: CONFIG.TESTNET_CHAIN_ID,
+                                        chainName: CONFIG.TESTNET_CHAIN_NAME,
+                                        nativeCurrency: CONFIG.TESTNET_CURRENCY,
+                                        rpcUrls: [CONFIG.TESTNET_RPC_URL],
+                                        blockExplorerUrls: [CONFIG.TESTNET_EXPLORER ? CONFIG.TESTNET_EXPLORER : null]
+                                    }]
+                                });
+                                
+                                document.getElementById('step2').classList.remove('active');
+                                document.getElementById('step2').classList.add('completed');
+                                document.getElementById('step3').classList.add('completed');
+                                
+                                showNotification('KELLS Testnet added successfully!', 'success');
+                                
+                                setTimeout(() => {
+                                    completeOnboarding();
+                                }, 1500);
+                                
+                            } catch (addError) {
+                                throw addError;
+                            }
+                        } else {
+                            throw switchError;
+                        }
+                    }
                 }
+                
             } catch (error) {
-                showNotification('Failed to add network', 'error');
+                console.error('Network addition error:', error);
+                
+                // Handle specific error cases
+                if (error.code === -32002) {
+                    showNotification('Request already pending. Please check MetaMask.', 'error');
+                } else if (error.code === 4001) {
+                    showNotification('Network addition rejected by user.', 'error');
+                } else if (error.message && error.message.includes('already pending')) {
+                    showNotification('Please complete the pending request in MetaMask.', 'error');
+                } else {
+                    showNotification(`Failed to add network: ${error.message || 'Unknown error'}`, 'error');
+                }
+                
+                // Reset button states on error
+                addBtn.innerHTML = originalText;
+            } finally {
+                isAddingNetwork = false;
+                addBtn.innerHTML = originalText;
             }
         }
         
