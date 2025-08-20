@@ -590,6 +590,7 @@
             gap: 20px;
             flex: 1;
             min-height: 0;
+            height: calc(100vh - 100px);
         }
         
         /* Sidebar Modules with Better Spacing */
@@ -1161,6 +1162,31 @@
             }
         }
         
+        /* Desktop-specific styles to ensure proper layout */
+        @media (min-width: 769px) {
+            .mobile-tabs {
+                display: none !important;
+            }
+            
+            .mobile-content {
+                display: none !important;
+            }
+            
+            .sidebar-modules {
+                display: flex !important;
+                flex-direction: column;
+            }
+            
+            .chatbot-wrapper {
+                display: flex !important;
+                position: relative !important;
+                top: auto !important;
+                left: auto !important;
+                right: auto !important;
+                bottom: auto !important;
+            }
+        }
+        
         /* Mobile Layout */
         @media (max-width: 768px) {
             .main-container {
@@ -1223,6 +1249,11 @@
             /* Show mobile tabs */
             .mobile-tabs {
                 display: flex;
+            }
+            
+            /* Hide desktop sidebar on mobile */
+            #desktopModules {
+                display: none;
             }
             
             /* Sidebar becomes tab content on mobile */
@@ -1492,7 +1523,7 @@
             </div>
             
             <!-- Desktop & Mobile: Chat Area -->
-            <div class="chatbot-wrapper" id="chatbotWrapper">
+            <div class="chatbot-wrapper" id="chatbotWrapper">>
                 <div class="chat-header">
                     <div class="limbo-avatar">
                         <img src="limbo-selfie.jpg" alt="Limbo" onerror="this.style.display='none'; this.parentElement.innerHTML='L';">
@@ -1606,15 +1637,27 @@
         // Setup mobile content on load
         function setupMobileContent() {
             const isMobile = window.innerWidth <= 768;
+            const mobileModules = document.getElementById('mobileModules');
+            const desktopModules = document.getElementById('desktopModules');
+            const chatWrapper = document.getElementById('chatbotWrapper');
+            
             if (isMobile) {
                 // Clone modules to mobile container if not already done
-                const mobileModules = document.getElementById('mobileModules');
-                const desktopModules = document.getElementById('desktopModules');
-                
                 if (mobileModules && desktopModules && mobileModules.children.length === 0) {
                     mobileModules.innerHTML = desktopModules.innerHTML;
                     mobileModules.classList.add('active');
                 }
+                // Hide desktop modules
+                if (desktopModules) desktopModules.style.display = 'none';
+                // Setup chat for mobile
+                if (chatWrapper) chatWrapper.style.display = 'none';
+            } else {
+                // Desktop view - ensure proper display
+                if (desktopModules) desktopModules.style.display = 'flex';
+                if (chatWrapper) chatWrapper.style.display = 'flex';
+                if (mobileModules) mobileModules.style.display = 'none';
+                const mobileTabs = document.getElementById('mobileTabs');
+                if (mobileTabs) mobileTabs.style.display = 'none';
             }
         }
         
@@ -1931,6 +1974,8 @@
                 overlay.style.display = 'none';
                 mainContainer.classList.add('visible');
                 localStorage.setItem('onboardingCompleted', 'true');
+                
+                // Ensure proper desktop/mobile setup
                 setupMobileContent();
             }, 500);
         }
@@ -2362,7 +2407,13 @@
         window.addEventListener('load', () => {
             const onboardingCompleted = localStorage.getItem('onboardingCompleted');
             if (onboardingCompleted === 'true') {
-                completeOnboarding();
+                const mainContainer = document.getElementById('mainContainer');
+                const overlay = document.getElementById('onboardingOverlay');
+                overlay.style.display = 'none';
+                mainContainer.classList.add('visible');
+                
+                // Setup correct view based on screen size
+                setupMobileContent();
             }
             
             // Check API status
@@ -2382,9 +2433,6 @@
                     apiLed.classList.add('error');
                     apiText.textContent = 'Offline';
                 });
-            
-            // Setup mobile content if needed
-            setupMobileContent();
         });
     </script>
 </body>
