@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' http://localhost:3001 https://*.netlify.app/.netlify/functions/ https://subnets.avax.network;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' http://localhost:3001 https://*.netlify.app/.netlify/functions/ https://generativelanguage.googleapis.com https://api.openai.com https://subnets.avax.network;">
     <meta name="referrer" content="no-referrer">
     <title>Youmio L1 Testnet - Youmio Chain</title>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -453,7 +453,7 @@
         }
         
         .checkbox.checked::after {
-            content: '✔';
+            content: '✓';
             position: absolute;
             top: 50%;
             left: 50%;
@@ -1344,15 +1344,15 @@
                 <div class="requirement-title">Wallet Requirements</div>
                 <ul class="requirement-list">
                     <li class="requirement-item">
-                        <span class="requirement-check">✔</span>
+                        <span class="requirement-check">✓</span>
                         <span>Minimum 0.03 ETH balance on mainnet</span>
                     </li>
                     <li class="requirement-item">
-                        <span class="requirement-check">✔</span>
+                        <span class="requirement-check">✓</span>
                         <span>At least 3 transactions on mainnet</span>
                     </li>
                     <li class="requirement-item">
-                        <span class="requirement-check">✔</span>
+                        <span class="requirement-check">✓</span>
                         <span>Maximum 1 request every 6 hours</span>
                     </li>
                 </ul>
@@ -1523,7 +1523,7 @@
             </div>
             
             <!-- Desktop & Mobile: Chat Area -->
-            <div class="chatbot-wrapper" id="chatbotWrapper">>
+            <div class="chatbot-wrapper" id="chatbotWrapper">
                 <div class="chat-header">
                     <div class="limbo-avatar">
                         <img src="limbo-selfie.jpg" alt="Limbo" onerror="this.style.display='none'; this.parentElement.innerHTML='L';">
@@ -1611,7 +1611,53 @@
             discord: false
         };
         
-        // Mobile tab switching
+        // FIXED: Load admin settings helper functions
+        async function loadAdminSettings() {
+            return {
+                personality: JSON.parse(localStorage.getItem('limboPersonality') || '{}'),
+                knowledge: JSON.parse(localStorage.getItem('limboKnowledge') || '{}'),
+                behavior: JSON.parse(localStorage.getItem('limboBehavior') || '{}'),
+                documents: JSON.parse(localStorage.getItem('limboDocuments') || '[]')
+            };
+        }
+        
+        function extractKnowledge(settings) {
+            let knowledge = '';
+            
+            // PRIORITY 1: Quick Reference Text Dump (HIGHEST PRIORITY)
+            if (settings.knowledge?.textDump && settings.knowledge.textDump.trim()) {
+                knowledge += '=== CRITICAL KNOWLEDGE (ALWAYS CHECK THIS FIRST) ===\n';
+                knowledge += settings.knowledge.textDump.trim();
+                knowledge += '\n=== END CRITICAL KNOWLEDGE ===\n\n';
+            }
+            
+            // PRIORITY 2: Additional structured knowledge
+            if (settings.knowledge?.ecosystemFacts && settings.knowledge.ecosystemFacts.trim()) {
+                knowledge += '=== ECOSYSTEM FACTS ===\n';
+                knowledge += settings.knowledge.ecosystemFacts.trim();
+                knowledge += '\n\n';
+            }
+            
+            if (settings.knowledge?.importantLinks && settings.knowledge.importantLinks.trim()) {
+                knowledge += '=== IMPORTANT LINKS ===\n';
+                knowledge += settings.knowledge.importantLinks.trim();
+                knowledge += '\n\n';
+            }
+            
+            // PRIORITY 3: Document content
+            if (settings.documents && settings.documents.length > 0) {
+                knowledge += '=== UPLOADED DOCUMENTS ===\n';
+                settings.documents.forEach(doc => {
+                    knowledge += `--- ${doc.name} ---\n`;
+                    knowledge += doc.content;
+                    knowledge += '\n\n';
+                });
+            }
+            
+            return knowledge || '';
+        }
+        
+        // FIXED: Mobile tab switching
         function switchMobileTab(tab) {
             currentMobileTab = tab;
             
@@ -1621,42 +1667,68 @@
             });
             event.target.closest('.mobile-tab-button').classList.add('active');
             
-            // Show/hide content
+            // Show/hide content - FIXED VISIBILITY
             const modulesContent = document.getElementById('mobileModules');
             const chatWrapper = document.getElementById('chatbotWrapper');
             
             if (tab === 'modules') {
-                if (modulesContent) modulesContent.classList.add('active');
-                if (chatWrapper) chatWrapper.classList.remove('active');
+                if (modulesContent) {
+                    modulesContent.classList.add('active');
+                    modulesContent.style.display = 'block';
+                }
+                if (chatWrapper) {
+                    chatWrapper.classList.remove('active');
+                    chatWrapper.style.display = 'none';
+                }
             } else {
-                if (modulesContent) modulesContent.classList.remove('active');
-                if (chatWrapper) chatWrapper.classList.add('active');
+                if (modulesContent) {
+                    modulesContent.classList.remove('active');
+                    modulesContent.style.display = 'none';
+                }
+                if (chatWrapper) {
+                    chatWrapper.classList.add('active');
+                    chatWrapper.style.display = 'flex';
+                }
             }
         }
         
-        // Setup mobile content on load
+        // FIXED: Setup mobile content properly
         function setupMobileContent() {
             const isMobile = window.innerWidth <= 768;
             const mobileModules = document.getElementById('mobileModules');
             const desktopModules = document.getElementById('desktopModules');
             const chatWrapper = document.getElementById('chatbotWrapper');
+            const mobileTabs = document.getElementById('mobileTabs');
             
             if (isMobile) {
                 // Clone modules to mobile container if not already done
                 if (mobileModules && desktopModules && mobileModules.children.length === 0) {
                     mobileModules.innerHTML = desktopModules.innerHTML;
-                    mobileModules.classList.add('active');
                 }
+                
+                // Show mobile tabs
+                if (mobileTabs) mobileTabs.style.display = 'flex';
+                
+                // Setup initial mobile view
+                if (mobileModules) {
+                    mobileModules.classList.add('active');
+                    mobileModules.style.display = 'block';
+                }
+                if (chatWrapper) {
+                    chatWrapper.classList.remove('active');
+                    chatWrapper.style.display = 'none';
+                }
+                
                 // Hide desktop modules
                 if (desktopModules) desktopModules.style.display = 'none';
-                // Setup chat for mobile
-                if (chatWrapper) chatWrapper.style.display = 'none';
             } else {
                 // Desktop view - ensure proper display
                 if (desktopModules) desktopModules.style.display = 'flex';
-                if (chatWrapper) chatWrapper.style.display = 'flex';
+                if (chatWrapper) {
+                    chatWrapper.style.display = 'flex';
+                    chatWrapper.classList.remove('active');
+                }
                 if (mobileModules) mobileModules.style.display = 'none';
-                const mobileTabs = document.getElementById('mobileTabs');
                 if (mobileTabs) mobileTabs.style.display = 'none';
             }
         }
@@ -2021,12 +2093,24 @@
             setTimeout(() => notification.remove(), 5000);
         }
         
+        // FIXED: Connect wallet for mobile
         async function connectWallet() {
             const walletBtn = document.getElementById('walletButton');
             
+            // Check if we're on mobile and if MetaMask app is available
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
             if (typeof window.ethereum === 'undefined') {
-                showNotification('MetaMask not detected. Please install MetaMask extension.', 'error');
-                return;
+                if (isMobile) {
+                    // On mobile, try to open MetaMask app
+                    const metamaskAppUrl = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+                    showNotification('Opening MetaMask app...', 'success');
+                    window.location.href = metamaskAppUrl;
+                    return;
+                } else {
+                    showNotification('MetaMask not detected. Please install MetaMask extension.', 'error');
+                    return;
+                }
             }
             
             try {
@@ -2070,7 +2154,12 @@
             } catch (error) {
                 walletBtn.textContent = 'Connect Wallet';
                 walletBtn.disabled = false;
-                showNotification('Connection failed', 'error');
+                
+                if (error.code === 4001) {
+                    showNotification('Connection request rejected.', 'error');
+                } else {
+                    showNotification(`Connection failed: ${error.message || 'Unknown error'}`, 'error');
+                }
             }
         }
         
@@ -2266,31 +2355,44 @@
             }, 2000);
         }
         
+        // FIXED: Updated callAI function with knowledge extraction
         async function callAI(userMessage) {
+            const settings = await loadAdminSettings();
+            const knowledge = extractKnowledge(settings);
+            
             try {
                 const response = await fetch(`${CONFIG.API_PROXY_URL}/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ prompt: userMessage })
+                    body: JSON.stringify({ 
+                        prompt: userMessage,
+                        knowledge: knowledge,
+                        personality: settings.personality,
+                        behavior: settings.behavior,
+                        conversationHistory: conversationHistory.slice(-10) // Last 10 messages for context
+                    })
                 });
                 
                 if (!response.ok) {
+                    console.error('API response not ok:', response.status);
                     throw new Error('API error');
                 }
                 
                 const data = await response.json();
-                return data.reply;
+                
+                if (data.reply) {
+                    return data.reply;
+                } else {
+                    console.error('No reply in response:', data);
+                    return "something's broken with the api";
+                }
                 
             } catch (error) {
-                const fallbackResponses = [
-                    "api's being weird right now",
-                    "connection issues, classic",
-                    "servers are probably on fire",
-                    "technical difficulties or whatever"
-                ];
-                return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+                console.error('Chat error:', error);
+                // Return Limbo-style error, not generic
+                return "connection's being weird, try again";
             }
         }
         
@@ -2433,6 +2535,17 @@
                     apiLed.classList.add('error');
                     apiText.textContent = 'Offline';
                 });
+                
+            // Auto-connect wallet if previously connected (for mobile)
+            if (window.ethereum) {
+                window.ethereum.request({ method: 'eth_accounts' })
+                    .then(accounts => {
+                        if (accounts && accounts.length > 0) {
+                            connectWallet();
+                        }
+                    })
+                    .catch(() => {});
+            }
         });
     </script>
 </body>
