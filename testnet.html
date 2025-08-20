@@ -26,6 +26,132 @@
             position: relative;
         }
         
+        /* Wallet Dropdown Menu */
+        .wallet-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: #1A1A2E;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 8px;
+            min-width: 200px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .wallet-dropdown.show {
+            display: block;
+        }
+        
+        .wallet-info {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+        }
+        
+        .wallet-address-full {
+            font-size: 11px;
+            color: #94969C;
+            word-break: break-all;
+            margin-bottom: 8px;
+        }
+        
+        .wallet-balance {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4BBFEB;
+        }
+        
+        .dropdown-button {
+            width: 100%;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .dropdown-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .dropdown-button.danger {
+            background: rgba(255, 100, 100, 0.1);
+            border-color: rgba(255, 100, 100, 0.2);
+            color: #ff6464;
+        }
+        
+        .dropdown-button.danger:hover {
+            background: rgba(255, 100, 100, 0.2);
+            border-color: rgba(255, 100, 100, 0.3);
+        }
+        
+        /* Network Button Interactive */
+        .network-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .network-button.connected {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+        
+        .network-button.wrong-network {
+            background: rgba(255, 100, 100, 0.1);
+            border-color: rgba(255, 100, 100, 0.2);
+            color: #ff6464;
+            animation: pulse-error 2s infinite;
+        }
+        
+        @keyframes pulse-error {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .network-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .network-led {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            box-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        .network-led.wrong {
+            background: #ff6464;
+            box-shadow: 0 0 6px rgba(255, 100, 100, 0.5);
+        }
+        
         /* Onboarding Overlay */
         .onboarding-overlay {
             position: fixed;
@@ -54,7 +180,6 @@
             animation: slideUp 0.5s ease;
         }
         
-        /* Compact container for step 2 */
         .onboarding-container.compact {
             padding: 24px;
         }
@@ -104,7 +229,6 @@
             height: auto;
         }
         
-        /* Compact wallet requirements */
         .wallet-requirements {
             background: rgba(255, 255, 255, 0.03);
             border: 2px solid rgba(255, 255, 255, 0.06);
@@ -149,7 +273,6 @@
             color: #4BBFEB;
         }
         
-        /* Social buttons side by side */
         .social-connect-section {
             margin: 16px 0;
         }
@@ -205,7 +328,6 @@
             font-size: 14px;
         }
         
-        /* Compact steps */
         .onboarding-steps {
             display: flex;
             gap: 8px;
@@ -302,7 +424,6 @@
             transform: none !important;
         }
         
-        /* Compact checkbox */
         .checkbox-container {
             display: flex;
             align-items: flex-start;
@@ -331,7 +452,7 @@
         }
         
         .checkbox.checked::after {
-            content: '✓';
+            content: '✔';
             position: absolute;
             top: 50%;
             left: 50%;
@@ -432,26 +553,6 @@
             flex-wrap: wrap;
         }
         
-        .network-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            font-size: 13px;
-        }
-        
-        .network-led {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #00ff88;
-            box-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
-            animation: pulse 2s infinite;
-        }
-        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -467,6 +568,7 @@
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 600;
+            position: relative;
         }
         
         .wallet-button:hover {
@@ -480,10 +582,10 @@
             border: 2px solid rgba(75, 191, 235, 0.2);
         }
         
-        /* Main Content Layout */
+        /* Main Content Layout - ADJUSTED FOR BETTER SPACE */
         .content-wrapper {
             display: grid;
-            grid-template-columns: 360px 1fr;
+            grid-template-columns: 420px 1fr;
             gap: 16px;
             flex: 1;
             min-height: 0;
@@ -516,7 +618,7 @@
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            padding: 18px;
+            padding: 20px;
             position: relative;
             overflow: hidden;
             transition: all 0.3s;
@@ -550,7 +652,7 @@
         }
         
         .module-title {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -558,8 +660,8 @@
         }
         
         .module-icon {
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             background: linear-gradient(135deg, rgba(198, 104, 168, 0.2) 0%, rgba(166, 104, 196, 0.2) 100%);
             border-radius: 8px;
             display: flex;
@@ -583,8 +685,8 @@
         }
         
         .badge-display {
-            width: 160px;
-            height: 160px;
+            width: 180px;
+            height: 180px;
             border-radius: 20px;
             overflow: hidden;
             border: 3px solid rgba(198, 104, 168, 0.3);
@@ -616,14 +718,14 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 14px;
+            padding: 14px 16px;
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
+            border-radius: 12px;
             border: 2px solid rgba(255, 255, 255, 0.05);
         }
         
         .token-amount {
-            font-size: 22px;
+            font-size: 26px;
             font-weight: 700;
             background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
             -webkit-background-clip: text;
@@ -631,16 +733,16 @@
         }
         
         .token-label {
-            font-size: 11px;
+            font-size: 12px;
             color: #94969C;
             margin-top: 2px;
         }
         
         .faucet-button, .mint-badge-button {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border-radius: 12px;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             border: 2px solid transparent;
             cursor: pointer;
@@ -673,7 +775,7 @@
         }
         
         .limit-text {
-            font-size: 10px;
+            font-size: 11px;
             color: #94969C;
             text-align: center;
         }
@@ -681,16 +783,16 @@
         .stats-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
         
         .stat-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 12px;
+            padding: 12px 14px;
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
+            border-radius: 10px;
             border: 2px solid rgba(255, 255, 255, 0.05);
         }
         
@@ -700,12 +802,12 @@
         }
         
         .stat-value {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             color: #4BBFEB;
         }
         
-        /* Chatbot Container - Main Focus */
+        /* Chatbot Container - ADJUSTED WIDTH */
         .chatbot-wrapper {
             background: rgba(26, 26, 46, 0.6);
             backdrop-filter: blur(10px);
@@ -996,6 +1098,38 @@
             animation: spin 0.8s linear infinite;
         }
         
+        /* Mobile Preview Button */
+        .mobile-preview-button {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 24px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(198, 104, 168, 0.3);
+        }
+        
+        .mobile-preview-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(198, 104, 168, 0.4);
+        }
+        
+        @media (max-width: 1200px) {
+            .content-wrapper {
+                grid-template-columns: 380px 1fr;
+            }
+        }
+        
         @media (max-width: 968px) {
             .content-wrapper {
                 grid-template-columns: 1fr;
@@ -1018,6 +1152,10 @@
                 width: 120px;
                 height: 120px;
             }
+            
+            .mobile-preview-button {
+                display: none;
+            }
         }
         
         @media (max-width: 640px) {
@@ -1034,9 +1172,9 @@
                 justify-content: space-between;
             }
             
-            .network-indicator {
+            .network-button {
                 font-size: 11px;
-                padding: 6px 12px;
+                padding: 8px 14px;
             }
         }
     </style>
@@ -1078,15 +1216,15 @@
                 <div class="requirement-title">Wallet Requirements</div>
                 <ul class="requirement-list">
                     <li class="requirement-item">
-                        <span class="requirement-check">✓</span>
+                        <span class="requirement-check">✔</span>
                         <span>Minimum 0.03 ETH balance on mainnet</span>
                     </li>
                     <li class="requirement-item">
-                        <span class="requirement-check">✓</span>
+                        <span class="requirement-check">✔</span>
                         <span>At least 3 transactions on mainnet</span>
                     </li>
                     <li class="requirement-item">
-                        <span class="requirement-check">✓</span>
+                        <span class="requirement-check">✔</span>
                         <span>Maximum 1 request every 6 hours</span>
                     </li>
                 </ul>
@@ -1142,7 +1280,7 @@
     <div class="background-gradient"></div>
     
     <div class="main-container" id="mainContainer">
-        <!-- Header with Larger Logo -->
+        <!-- Header with Interactive Network Status -->
         <div class="header">
             <div class="logo-section">
                 <img src="youmio-logo.png" alt="Youmio" class="youmio-logo">
@@ -1152,19 +1290,33 @@
                 </div>
             </div>
             <div class="network-status">
-                <div class="network-indicator">
-                    <span class="network-led"></span>
-                    <span>KELLS Testnet</span>
-                </div>
-                <button class="wallet-button" id="walletButton">
-                    Connect Wallet
+                <button class="network-button" id="networkButton" onclick="handleNetworkClick()">
+                    <span class="network-led" id="networkLed"></span>
+                    <span id="networkText">KELLS Testnet</span>
                 </button>
+                <div style="position: relative;">
+                    <button class="wallet-button" id="walletButton" onclick="toggleWalletDropdown()">
+                        Connect Wallet
+                    </button>
+                    <div class="wallet-dropdown" id="walletDropdown">
+                        <div class="wallet-info">
+                            <div class="wallet-address-full" id="walletAddressFull"></div>
+                            <div class="wallet-balance">Balance: <span id="dropdownBalance">0</span> KELLS</div>
+                        </div>
+                        <button class="dropdown-button" onclick="switchWallet()">
+                            <span>🔄</span> Switch Wallet
+                        </button>
+                        <button class="dropdown-button danger" onclick="disconnectWallet()">
+                            <span>🔌</span> Disconnect
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <!-- Main Content -->
+        <!-- Main Content with Adjusted Layout -->
         <div class="content-wrapper">
-            <!-- Left Sidebar - Enhanced Modules -->
+            <!-- Left Sidebar - More Space for Modules -->
             <div class="sidebar-modules">
                 <!-- Faucet Module -->
                 <div class="module-card compact">
@@ -1189,7 +1341,7 @@
                     </div>
                 </div>
                 
-                <!-- Enhanced Badge Module -->
+                <!-- Enhanced Badge Module with More Space -->
                 <div class="module-card">
                     <div class="module-header">
                         <div class="module-title">
@@ -1210,7 +1362,7 @@
                     </div>
                 </div>
                 
-                <!-- Stats Module -->
+                <!-- Stats Module with Better Spacing -->
                 <div class="module-card compact">
                     <div class="module-header">
                         <div class="module-title">
@@ -1237,7 +1389,7 @@
                 </div>
             </div>
             
-            <!-- Main Chat Area -->
+            <!-- Main Chat Area - Slightly Narrower -->
             <div class="chatbot-wrapper">
                 <div class="chat-header">
                     <div class="limbo-avatar">
@@ -1276,14 +1428,18 @@
         </div>
     </div>
     
+    <!-- Mobile Preview Button -->
+    <button class="mobile-preview-button" onclick="openMobilePreview()">
+        📱 Mobile Preview
+    </button>
+    
     <script>
         // Configuration for KELLS Testnet
         const CONFIG = {
-            // Use Netlify Functions URL
             API_PROXY_URL: window.location.hostname === 'localhost' 
                 ? 'http://localhost:8888/.netlify/functions'
                 : '/.netlify/functions',
-            TESTNET_CHAIN_ID: '0x12d07',  // 77063 in hex - actual KELLS chain ID
+            TESTNET_CHAIN_ID: '0x12d07',  // 77063 in hex
             TESTNET_RPC_URL: 'https://subnets.avax.network/kells/testnet/rpc',
             TESTNET_CHAIN_NAME: 'KELLS Testnet',
             TESTNET_CURRENCY: {
@@ -1291,11 +1447,11 @@
                 symbol: 'KELLS',
                 decimals: 18
             },
-            TESTNET_EXPLORER: null,  // Use null instead of empty string
+            TESTNET_EXPLORER: null,
             KELLS_TOKEN_ADDRESS: '0x6ACaf9E9EF556E69466362DD8086F25281beD293'
         };
         
-        // All JavaScript remains exactly the same
+        // State variables
         let provider = null;
         let signer = null;
         let userAddress = null;
@@ -1306,12 +1462,133 @@
         let messageIdCounter = 0;
         let conversationHistory = [];
         const MAX_HISTORY = 20;
+        let isCorrectNetwork = false;
         
         let termsAccepted = false;
         let socialConnections = {
             x: false,
             discord: false
         };
+        
+        // Check network status periodically
+        async function checkNetworkStatus() {
+            if (!window.ethereum || !userAddress) return;
+            
+            try {
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                const networkBtn = document.getElementById('networkButton');
+                const networkLed = document.getElementById('networkLed');
+                const networkText = document.getElementById('networkText');
+                
+                if (chainId === CONFIG.TESTNET_CHAIN_ID) {
+                    isCorrectNetwork = true;
+                    networkBtn.classList.add('connected');
+                    networkBtn.classList.remove('wrong-network');
+                    networkLed.classList.remove('wrong');
+                    networkText.textContent = 'KELLS Testnet';
+                } else {
+                    isCorrectNetwork = false;
+                    networkBtn.classList.remove('connected');
+                    networkBtn.classList.add('wrong-network');
+                    networkLed.classList.add('wrong');
+                    networkText.textContent = 'Wrong Network';
+                }
+            } catch (error) {
+                console.error('Network check error:', error);
+            }
+        }
+        
+        // Handle network button click
+        async function handleNetworkClick() {
+            if (!window.ethereum) {
+                showNotification('Please install MetaMask first', 'error');
+                return;
+            }
+            
+            if (!userAddress) {
+                showNotification('Please connect your wallet first', 'error');
+                await connectWallet();
+                return;
+            }
+            
+            if (!isCorrectNetwork) {
+                await addTestnetToWallet();
+            } else {
+                showNotification('Already connected to KELLS Testnet', 'success');
+            }
+        }
+        
+        // Toggle wallet dropdown
+        function toggleWalletDropdown() {
+            if (!userAddress) {
+                connectWallet();
+                return;
+            }
+            
+            const dropdown = document.getElementById('walletDropdown');
+            dropdown.classList.toggle('show');
+            
+            // Update dropdown info
+            document.getElementById('walletAddressFull').textContent = userAddress;
+            document.getElementById('dropdownBalance').textContent = tokenBalance;
+        }
+        
+        // Switch wallet function
+        async function switchWallet() {
+            const dropdown = document.getElementById('walletDropdown');
+            dropdown.classList.remove('show');
+            
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_requestPermissions',
+                    params: [{
+                        eth_accounts: {}
+                    }]
+                });
+                
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                if (accounts && accounts.length > 0) {
+                    userAddress = accounts[0];
+                    const walletBtn = document.getElementById('walletButton');
+                    const shortAddress = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+                    walletBtn.textContent = shortAddress;
+                    
+                    loadUserData();
+                    checkNetworkStatus();
+                    showNotification(`Switched to wallet: ${shortAddress}`, 'success');
+                }
+            } catch (error) {
+                console.error('Switch wallet error:', error);
+                showNotification('Failed to switch wallet', 'error');
+            }
+        }
+        
+        // Open mobile preview
+        function openMobilePreview() {
+            const width = 375;
+            const height = 812;
+            const left = (window.screen.width - width) / 2;
+            const top = (window.screen.height - height) / 2;
+            
+            window.open(
+                window.location.href,
+                'Mobile Preview',
+                `width=${width},height=${height},left=${left},top=${top},resizable=yes`
+            );
+        }
+        
+        // Click outside to close dropdown
+        document.addEventListener('click', function(event) {
+            const walletBtn = document.getElementById('walletButton');
+            const dropdown = document.getElementById('walletDropdown');
+            
+            if (!walletBtn.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
         
         function startOnboarding() {
             document.getElementById('onboardingStep1').style.display = 'none';
@@ -1354,7 +1631,6 @@
             }, 1500);
         }
         
-        // Debug function to check actual chain ID
         async function checkActualChainId() {
             try {
                 const response = await fetch(CONFIG.TESTNET_RPC_URL, {
@@ -1371,9 +1647,6 @@
                 });
                 
                 const data = await response.json();
-                console.log('Actual Chain ID from RPC:', data.result);
-                const actualChainId = parseInt(data.result, 16);
-                console.log('Actual Chain ID (decimal):', actualChainId);
                 return data.result;
             } catch (error) {
                 console.error('Failed to fetch chain ID:', error);
@@ -1382,18 +1655,15 @@
         }
         
         async function verifyAndAddNetwork() {
-            // First check what chain ID the RPC actually returns
             const actualChainId = await checkActualChainId();
             if (actualChainId && actualChainId !== CONFIG.TESTNET_CHAIN_ID) {
-                console.log('Updating chain ID from', CONFIG.TESTNET_CHAIN_ID, 'to', actualChainId);
                 CONFIG.TESTNET_CHAIN_ID = actualChainId;
             }
             
-            // Now proceed with adding the network
             await addTestnetToWallet();
         }
         
-        let isAddingNetwork = false; // Prevent multiple simultaneous requests
+        let isAddingNetwork = false;
         
         async function addTestnetToWallet() {
             if (isAddingNetwork) {
@@ -1408,11 +1678,12 @@
             
             isAddingNetwork = true;
             const addBtn = document.getElementById('addNetworkBtn');
-            const originalText = addBtn.innerHTML;
-            addBtn.innerHTML = '<span class="spinner"></span> Waiting for MetaMask...';
+            const originalText = addBtn ? addBtn.innerHTML : '';
+            if (addBtn) {
+                addBtn.innerHTML = '<span class="spinner"></span> Waiting for MetaMask...';
+            }
             
             try {
-                // First, request account access
                 const accounts = await window.ethereum.request({
                     method: 'eth_requestAccounts'
                 });
@@ -1421,42 +1692,52 @@
                     throw new Error('No accounts found');
                 }
                 
-                document.getElementById('step1').classList.remove('active');
-                document.getElementById('step1').classList.add('completed');
-                document.getElementById('step2').classList.add('active');
+                if (document.getElementById('step1')) {
+                    document.getElementById('step1').classList.remove('active');
+                    document.getElementById('step1').classList.add('completed');
+                    document.getElementById('step2').classList.add('active');
+                }
                 
-                // Check if we're already on the correct network
                 const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
                 
                 if (currentChainId === CONFIG.TESTNET_CHAIN_ID) {
-                    // Already on KELLS network
-                    document.getElementById('step2').classList.remove('active');
-                    document.getElementById('step2').classList.add('completed');
-                    document.getElementById('step3').classList.add('completed');
+                    if (document.getElementById('step2')) {
+                        document.getElementById('step2').classList.remove('active');
+                        document.getElementById('step2').classList.add('completed');
+                        document.getElementById('step3').classList.add('completed');
+                    }
                     
                     showNotification('Already connected to KELLS Testnet!', 'success');
-                    setTimeout(() => {
-                        completeOnboarding();
-                    }, 1500);
+                    checkNetworkStatus();
+                    
+                    if (document.getElementById('onboardingOverlay').style.display !== 'none') {
+                        setTimeout(() => {
+                            completeOnboarding();
+                        }, 1500);
+                    }
                 } else {
-                    // Try to switch to the network first
                     try {
                         await window.ethereum.request({
                             method: 'wallet_switchEthereumChain',
                             params: [{ chainId: CONFIG.TESTNET_CHAIN_ID }]
                         });
                         
-                        document.getElementById('step2').classList.remove('active');
-                        document.getElementById('step2').classList.add('completed');
-                        document.getElementById('step3').classList.add('completed');
+                        if (document.getElementById('step2')) {
+                            document.getElementById('step2').classList.remove('active');
+                            document.getElementById('step2').classList.add('completed');
+                            document.getElementById('step3').classList.add('completed');
+                        }
                         
                         showNotification('Switched to KELLS Testnet!', 'success');
-                        setTimeout(() => {
-                            completeOnboarding();
-                        }, 1500);
+                        checkNetworkStatus();
+                        
+                        if (document.getElementById('onboardingOverlay').style.display !== 'none') {
+                            setTimeout(() => {
+                                completeOnboarding();
+                            }, 1500);
+                        }
                         
                     } catch (switchError) {
-                        // Network doesn't exist, so add it
                         if (switchError.code === 4902) {
                             try {
                                 await window.ethereum.request({
@@ -1466,19 +1747,23 @@
                                         chainName: CONFIG.TESTNET_CHAIN_NAME,
                                         nativeCurrency: CONFIG.TESTNET_CURRENCY,
                                         rpcUrls: [CONFIG.TESTNET_RPC_URL]
-                                        // Don't include blockExplorerUrls if it's null
                                     }]
                                 });
                                 
-                                document.getElementById('step2').classList.remove('active');
-                                document.getElementById('step2').classList.add('completed');
-                                document.getElementById('step3').classList.add('completed');
+                                if (document.getElementById('step2')) {
+                                    document.getElementById('step2').classList.remove('active');
+                                    document.getElementById('step2').classList.add('completed');
+                                    document.getElementById('step3').classList.add('completed');
+                                }
                                 
                                 showNotification('KELLS Testnet added successfully!', 'success');
+                                checkNetworkStatus();
                                 
-                                setTimeout(() => {
-                                    completeOnboarding();
-                                }, 1500);
+                                if (document.getElementById('onboardingOverlay').style.display !== 'none') {
+                                    setTimeout(() => {
+                                        completeOnboarding();
+                                    }, 1500);
+                                }
                                 
                             } catch (addError) {
                                 throw addError;
@@ -1491,23 +1776,11 @@
                 
             } catch (error) {
                 console.error('Network addition error:', error);
-                
-                // Handle specific error cases
-                if (error.code === -32002) {
-                    showNotification('Request already pending. Please check MetaMask.', 'error');
-                } else if (error.code === 4001) {
-                    showNotification('Network addition rejected by user.', 'error');
-                } else if (error.message && error.message.includes('already pending')) {
-                    showNotification('Please complete the pending request in MetaMask.', 'error');
-                } else {
-                    showNotification(`Failed to add network: ${error.message || 'Unknown error'}`, 'error');
-                }
-                
-                // Reset button states on error
-                addBtn.innerHTML = originalText;
+                showNotification(`Failed to add network: ${error.message || 'Unknown error'}`, 'error');
+                if (addBtn) addBtn.innerHTML = originalText;
             } finally {
                 isAddingNetwork = false;
-                addBtn.innerHTML = originalText;
+                if (addBtn) addBtn.innerHTML = originalText;
             }
         }
         
@@ -1596,7 +1869,9 @@
                     
                     showNotification(`Wallet connected: ${shortAddress}`, 'success');
                     loadUserData();
+                    checkNetworkStatus();
                     
+                    // Set up event listeners
                     window.ethereum.on('accountsChanged', (accounts) => {
                         if (accounts.length === 0) {
                             disconnectWallet();
@@ -1606,6 +1881,10 @@
                             walletBtn.textContent = shortAddr;
                             loadUserData();
                         }
+                    });
+                    
+                    window.ethereum.on('chainChanged', () => {
+                        checkNetworkStatus();
                     });
                 }
             } catch (error) {
@@ -1622,7 +1901,12 @@
             const walletBtn = document.getElementById('walletButton');
             walletBtn.textContent = 'Connect Wallet';
             walletBtn.classList.remove('connected');
+            
+            const dropdown = document.getElementById('walletDropdown');
+            dropdown.classList.remove('show');
+            
             resetUI();
+            showNotification('Wallet disconnected', 'success');
         }
         
         function loadUserData() {
@@ -1693,6 +1977,12 @@
                 return;
             }
             
+            if (!isCorrectNetwork) {
+                showNotification('Please switch to KELLS Testnet', 'error');
+                await handleNetworkClick();
+                return;
+            }
+            
             if (claimsToday >= 100) {
                 showNotification('Daily limit reached. Come back tomorrow!', 'error');
                 return;
@@ -1724,6 +2014,12 @@
                 return;
             }
             
+            if (!isCorrectNetwork) {
+                showNotification('Please switch to KELLS Testnet', 'error');
+                await handleNetworkClick();
+                return;
+            }
+            
             if (hasBadge) {
                 showNotification('You already have a testnet badge!', 'error');
                 return;
@@ -1749,14 +2045,9 @@
                 return;
             }
             
-            try {
-                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-                if (chainId !== CONFIG.TESTNET_CHAIN_ID) {
-                    showNotification('Please switch to KELLS Testnet', 'error');
-                    return;
-                }
-            } catch (error) {
-                showNotification('Chain verification failed', 'error');
+            if (!isCorrectNetwork) {
+                showNotification('Please switch to KELLS Testnet', 'error');
+                await handleNetworkClick();
                 return;
             }
             
@@ -1773,30 +2064,6 @@
                 
                 showNotification(`Chat minted to testnet! Total minted: ${chatsMinted}`, 'success');
             }, 2000);
-        }
-        
-        async function loadAdminSettings() {
-            const settings = {
-                personality: JSON.parse(localStorage.getItem('limboPersonality') || '{}'),
-                knowledge: JSON.parse(localStorage.getItem('limboKnowledge') || '{}'),
-                behavior: JSON.parse(localStorage.getItem('limboBehavior') || '{}'),
-                documents: JSON.parse(localStorage.getItem('limboDocuments') || '[]')
-            };
-            return settings;
-        }
-        
-        function extractKnowledge(settings) {
-            let knowledge = '';
-            
-            if (settings.knowledge?.textDump) {
-                knowledge += settings.knowledge.textDump + '\n\n';
-            }
-            
-            if (settings.knowledge?.ecosystemFacts) {
-                knowledge += settings.knowledge.ecosystemFacts + '\n\n';
-            }
-            
-            return knowledge || 'No knowledge configured yet.';
         }
         
         async function callAI(userMessage) {
@@ -1920,7 +2187,7 @@
             }
         }
         
-        document.getElementById('walletButton').addEventListener('click', connectWallet);
+        // Event listeners
         document.getElementById('sendButton').addEventListener('click', sendMessage);
         document.getElementById('chatInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -1929,12 +2196,16 @@
             }
         });
         
+        // Set up periodic network check
+        setInterval(checkNetworkStatus, 3000);
+        
         window.addEventListener('load', () => {
             const onboardingCompleted = localStorage.getItem('onboardingCompleted');
             if (onboardingCompleted === 'true') {
                 completeOnboarding();
             }
             
+            // Check API status
             const apiLed = document.getElementById('apiLed');
             const apiText = document.getElementById('apiText');
             
