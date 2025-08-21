@@ -1657,6 +1657,95 @@
             return knowledge || '';
         }
         
+        // Generate unique reference number
+        function generateReferenceNumber() {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 8);
+            const prefix = 'LIMBO';
+            return `${prefix}-${timestamp}-${random}`.toUpperCase();
+        }
+        
+        // Check if message is asking for image generation
+        function isImageRequest(message) {
+            const imageKeywords = [
+                'draw', 'create', 'generate', 'make', 'design', 'paint', 
+                'imagine', 'visualize', 'picture', 'image', 'illustration',
+                'sketch', 'render', 'show me', 'can you draw', 'make me',
+                'create an image', 'generate a picture', 'art'
+            ];
+            
+            const msgLower = message.toLowerCase();
+            
+            if (/chart|price|dex|trading/i.test(msgLower)) {
+                return false;
+            }
+            
+            return imageKeywords.some(keyword => msgLower.includes(keyword));
+        }
+        
+        // Extract image prompt from user message
+        function extractImagePrompt(message) {
+            const prefixes = [
+                'draw me', 'draw a', 'draw an', 'draw',
+                'create me', 'create a', 'create an', 'create',
+                'generate me', 'generate a', 'generate an', 'generate',
+                'make me', 'make a', 'make an', 'make',
+                'imagine', 'visualize', 'paint', 'design',
+                'show me', 'can you draw', 'please draw',
+                'i want an image of', 'picture of', 'image of',
+                'create an image of', 'generate a picture of'
+            ];
+            
+            let prompt = message.toLowerCase();
+            for (const prefix of prefixes) {
+                if (prompt.startsWith(prefix)) {
+                    prompt = message.substring(prefix.length).trim();
+                    break;
+                }
+            }
+            
+            if (prompt === message.toLowerCase()) {
+                prompt = message;
+            }
+            
+            return prompt;
+        }
+        
+        // Generate image through Netlify Function
+        async function generateImage(prompt) {
+            try {
+                console.log('Generating image for prompt:', prompt);
+                
+                const response = await fetch(`${CONFIG.API_PROXY_URL}/image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Image API error:', errorData);
+                    throw new Error(errorData.error || 'Image API error');
+                }
+                
+                const data = await response.json();
+                console.log('Image data received:', data);
+                
+                if (!data.url) {
+                    console.error('No URL in response:', data);
+                    return null;
+                }
+                
+                return data;
+                
+            } catch (error) {
+                console.error('Image generation error:', error);
+                return null;
+            }
+        }
+        
         // FIXED: Mobile tab switching
         function switchMobileTab(tab) {
             currentMobileTab = tab;
@@ -2343,16 +2432,48 @@
             button.innerHTML = '<span class="spinner"></span> Minting...';
             button.disabled = true;
             
-            setTimeout(() => {
-                chatsMinted++;
-                saveUserData();
-                updateUI();
+            try {
+                // Save to database
+                const response = await fetch(`${CONFIG.API_PROXY_URL}/mint-store`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ...messageData,
+                        walletAddress: userAddress,
+                        tokenBalance: tokenBalance,
+                        networkChainId: CONFIG.TESTNET_CHAIN_ID,
+                        transactionHash: null
+                    })
+                });
                 
-                button.textContent = 'Minted!';
-                button.classList.add('success');
+                if (!response.ok) {
+                    throw new Error('Failed to store mint record');
+                }
                 
-                showNotification(`Chat minted to testnet! Total minted: ${chatsMinted}`, 'success');
-            }, 2000);
+                const result = await response.json();
+                console.log('Mint stored with reference:', result.referenceNumber);
+                
+                setTimeout(() => {
+                    chatsMinted++;
+                    saveUserData();
+                    updateUI();
+                    
+                    button.textContent = 'Minted!';
+                    button.classList.add('success');
+                    
+                    console.log('✅ Minted successfully! Reference:', messageData.referenceNumber);
+                    
+                    showNotification(`Chat minted! Ref: ${messageData.referenceNumber.slice(-8)}`, 'success');
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Minting error:', error);
+                button.textContent = 'Mint Failed';
+                button.disabled = false;
+                showNotification('Minting failed. Please try again.', 'error');
+            }
         }
         
         // FIXED: Updated callAI function with knowledge extraction
@@ -2396,11 +2517,19 @@
             }
         }
         
-        function addMessage(content, isUser = false, userPrompt = null) {
+        function addMessage(content, isUser = false, userPrompt = null, imageData = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
             const messageId = `msg-${++messageIdCounter}`;
             messageDiv.id = messageId;
+            
+            // Generate and store reference number for assistant messages
+            let referenceNumber = null;
+            if (!isUser) {
+                referenceNumber = generateReferenceNumber();
+                messageDiv.setAttribute('data-ref', referenceNumber);
+                console.log('Message reference:', referenceNumber);
+            }
             
             const labelDiv = document.createElement('div');
             labelDiv.className = 'message-label';
@@ -2413,19 +2542,56 @@
             messageDiv.appendChild(labelDiv);
             messageDiv.appendChild(contentDiv);
             
-            if (!isUser && content.length > 10) {
+            // Add image if provided
+            if (imageData && imageData.url && !isUser) {
+                console.log('Adding image to message:', imageData.url);
+                
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'message-image';
+                imageContainer.style.marginTop = '12px';
+                imageContainer.style.borderRadius = '12px';
+                imageContainer.style.overflow = 'hidden';
+                imageContainer.style.maxWidth = '400px';
+                
+                const img = document.createElement('img');
+                img.src = imageData.url;
+                img.alt = 'Generated image';
+                img.style.width = '100%';
+                img.style.height = 'auto';
+                img.style.display = 'block';
+                img.style.cursor = 'pointer';
+                img.onclick = () => window.open(imageData.url, '_blank');
+                
+                // Add error handling for image loading
+                img.onerror = () => {
+                    console.error('Failed to load image:', imageData.url);
+                    img.alt = 'Failed to load image';
+                };
+                
+                imageContainer.appendChild(img);
+                messageDiv.appendChild(imageContainer);
+            }
+            
+            // Add mint button with reference number
+            if (!isUser && (content.length > 10 || imageData)) {
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'message-actions';
                 
                 const mintBtn = document.createElement('button');
                 mintBtn.className = 'mint-button';
-                mintBtn.textContent = 'Mint to Chain';
+                mintBtn.textContent = imageData ? 'Mint Image to Chain' : 'Mint to Chain';
                 
                 mintBtn.onclick = function() {
-                    mintChatToChain({ 
-                        userMessage: userPrompt || '', 
-                        aiResponse: content
-                    }, mintBtn);
+                    const mintData = {
+                        userMessage: userPrompt || 'Direct interaction',
+                        aiResponse: content,
+                        messageId: messageId,
+                        referenceNumber: referenceNumber,
+                        imageUrl: imageData ? imageData.url : null,
+                        type: imageData ? 'image' : 'text'
+                    };
+                    
+                    mintChatToChain(mintData, mintBtn);
                 };
                 
                 actionsDiv.appendChild(mintBtn);
@@ -2471,16 +2637,47 @@
             input.value = '';
             document.getElementById('sendButton').disabled = true;
             
+            // Check if this is an image request
+            const isImage = isImageRequest(message) && !/chart|price|dex/i.test(message.toLowerCase());
+            
             showTyping();
             
             try {
-                const reply = await callAI(message);
-                hideTyping();
-                
-                conversationHistory.push({ role: 'assistant', content: reply });
-                addMessage(reply, false, userMessageText);
+                if (isImage) {
+                    const imagePrompt = extractImagePrompt(message);
+                    console.log('Image request detected. Prompt:', imagePrompt);
+                    
+                    hideTyping();
+                    addMessage("aight, generating that for you...", false, userMessageText);
+                    conversationHistory.push({ role: 'assistant', content: "aight, generating that for you..." });
+                    
+                    showTyping();
+                    const imageData = await generateImage(imagePrompt);
+                    hideTyping();
+                    
+                    if (imageData && imageData.url) {
+                        console.log('Image generated successfully:', imageData.url);
+                        addMessage("there you go, fresh from my digital brain", false, userMessageText, imageData);
+                        conversationHistory.push({ role: 'assistant', content: "there you go, fresh from my digital brain [generated image]" });
+                    } else {
+                        console.error('Image generation failed - no data returned');
+                        addMessage("image generation broke, api might be having issues", false, userMessageText);
+                        conversationHistory.push({ role: 'assistant', content: "image generation broke" });
+                    }
+                } else {
+                    const reply = await callAI(message);
+                    hideTyping();
+                    
+                    conversationHistory.push({ role: 'assistant', content: reply });
+                    if (conversationHistory.length > MAX_HISTORY) {
+                        conversationHistory = conversationHistory.slice(-MAX_HISTORY);
+                    }
+                    
+                    addMessage(reply, false, userMessageText);
+                }
                 
             } catch (error) {
+                console.error('Message send error:', error);
                 hideTyping();
                 addMessage("something broke", false, userMessageText);
             } finally {
