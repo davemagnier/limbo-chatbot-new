@@ -489,6 +489,15 @@
         let messageIdCounter = 0;
         const MAX_HISTORY = 20;
         
+        // Generate unique reference number - CRITICAL FOR UNIQUENESS
+        function generateReferenceNumber() {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 8);
+            const sessionId = window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
+            const prefix = 'LIMBO';
+            return `${prefix}-${timestamp}-${random}-${sessionId}`.toUpperCase();
+        }
+        
         // Initialize mode indicator
         function initializeModeIndicator() {
             const modeIndicator = document.getElementById('modeIndicator');
@@ -615,7 +624,7 @@
             walletBtn.classList.remove('connected');
         }
         
-        // Mint message to blockchain
+        // Mint message to blockchain with unique reference number
         async function mintToChain(messageData, button) {
             if (!userAddress) {
                 showNotification('Please connect your wallet first!', 'error');
@@ -636,29 +645,43 @@
             }
             
             try {
-                const metadata = {
-                    userMessage: messageData.userMessage,
-                    aiResponse: messageData.aiResponse,
-                    timestamp: new Date().toISOString(),
-                    chatbot: 'Limbo AI',
-                    platform: 'Youmio',
-                    type: messageData.type || 'text',
-                    imageUrl: messageData.imageUrl || null
-                };
-                
                 button.innerHTML = '<span class="spinner"></span> Minting...';
+                button.disabled = true;
                 
-                // Simulate minting for now
+                // Store mint record with reference number
+                const response = await fetch(`${CONFIG.API_PROXY_URL}/mint-store`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ...messageData,
+                        walletAddress: userAddress,
+                        tokenBalance: 0, // You can fetch actual balance if needed
+                        networkChainId: CONFIG.CHAIN_ID,
+                        transactionHash: null // Will be updated when actual minting happens
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to store mint record');
+                }
+                
+                const result = await response.json();
+                console.log('✅ Mint stored with reference:', result.referenceNumber);
+                
+                // Simulate successful minting
                 setTimeout(() => {
                     button.textContent = 'Minted!';
                     button.classList.add('success');
-                    showNotification('Successfully minted!', 'success');
+                    showNotification(`Successfully minted! Ref: ${messageData.referenceNumber.slice(-8)}`, 'success');
                 }, 2000);
                 
             } catch (error) {
                 button.textContent = 'Mint to Chain';
                 button.disabled = false;
                 showNotification('Minting failed', 'error');
+                console.error('Mint error:', error);
             }
         }
         
@@ -853,12 +876,20 @@
         const chatInput = document.getElementById('chatInput');
         const sendButton = document.getElementById('sendButton');
         
-        // Add message - FIXED IMAGE DISPLAY
+        // Add message - WITH UNIQUE REFERENCE NUMBER
         function addMessage(content, isUser = false, userPrompt = null, imageData = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
             const messageId = `msg-${++messageIdCounter}`;
             messageDiv.id = messageId;
+            
+            // Generate and store reference number for assistant messages
+            let referenceNumber = null;
+            if (!isUser) {
+                referenceNumber = generateReferenceNumber();
+                messageDiv.setAttribute('data-ref', referenceNumber);
+                console.log('🔍 Message reference:', referenceNumber);
+            }
             
             const labelDiv = document.createElement('div');
             labelDiv.className = 'message-label';
@@ -894,7 +925,7 @@
                 messageDiv.appendChild(imageContainer);
             }
             
-            // Add mint button
+            // Add mint button with unique reference number
             if (!isUser && (content.length > 10 || imageData)) {
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'message-actions';
@@ -908,6 +939,7 @@
                         userMessage: userPrompt || 'Direct interaction',
                         aiResponse: content,
                         messageId: messageId,
+                        referenceNumber: referenceNumber, // Unique reference number
                         imageUrl: imageData ? imageData.url : null,
                         type: imageData ? 'image' : 'text'
                     };
