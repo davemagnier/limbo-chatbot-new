@@ -1,6 +1,7 @@
-import { getStore } from "@netlify/blobs";
+// mint-store.js
+const { getStore } = require("@netlify/blobs");
 
-export default async (request, context) => {
+exports.handler = async (event, context) => {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -10,45 +11,49 @@ export default async (request, context) => {
   };
 
   // Handle preflight
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers });
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers
+    };
   }
 
   try {
     // Initialize the store
     const mintStore = getStore("minted-conversations");
     
-    // Add a test endpoint
-    if (request.url.includes('test')) {
-      return new Response(JSON.stringify({ 
-        status: 'ok', 
-        message: 'Mint store function is working' 
-      }), { 
-        status: 200, 
-        headers 
-      });
+    // Test endpoint
+    if (event.path.includes('test')) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ 
+          status: 'ok', 
+          message: 'Mint store function is working' 
+        })
+      };
     }
     
-    if (request.method === 'POST') {
-      const data = await request.json();
+    if (event.httpMethod === 'POST') {
+      const data = JSON.parse(event.body);
       
-      // For now, skip authentication to test basic functionality
+      // Simple authentication for testing
       if (data.action === 'authenticate') {
-        // Simple authentication without signature verification for testing
         const token = Buffer.from(JSON.stringify({
           wallet: data.walletAddress,
           expires: Date.now() + 3600000,
           timestamp: Date.now()
         })).toString('base64');
         
-        return new Response(JSON.stringify({ 
-          success: true,
-          token,
-          message: 'Authentication successful (test mode)'
-        }), { 
-          status: 200, 
-          headers 
-        });
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ 
+            success: true,
+            token,
+            message: 'Authentication successful'
+          })
+        };
       }
       
       // Store mint record
@@ -65,7 +70,7 @@ export default async (request, context) => {
           metadata: {
             tokenBalance: data.tokenBalance || 0,
             networkChainId: data.networkChainId || '',
-            userAgent: request.headers.get('user-agent') || '',
+            userAgent: event.headers['user-agent'] || '',
             ip: context.ip || ''
           }
         };
@@ -75,74 +80,109 @@ export default async (request, context) => {
         
         // Store in user history
         const userKey = `user_${data.walletAddress}`;
-        const existingHistory = await mintStore.get(userKey);
-        const userHistory = existingHistory ? JSON.parse(existingHistory) : [];
+        let userHistory = [];
+        
+        try {
+          const existingHistory = await mintStore.get(userKey);
+          if (existingHistory) {
+            userHistory = JSON.parse(existingHistory);
+          }
+        } catch (e) {
+          // No existing history
+        }
+        
         userHistory.push({
           referenceNumber: data.referenceNumber,
           timestamp: mintRecord.timestamp,
           type: data.type
         });
+        
         await mintStore.set(userKey, JSON.stringify(userHistory));
         
-        return new Response(JSON.stringify({ 
-          success: true, 
-          referenceNumber: data.referenceNumber,
-          message: 'Mint record stored successfully'
-        }), { 
-          status: 200, 
-          headers 
-        });
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ 
+            success: true, 
+            referenceNumber: data.referenceNumber,
+            message: 'Mint record stored successfully'
+          })
+        };
       }
-    } else if (request.method === 'GET') {
-      const url = new URL(request.url);
-      const walletAddress = url.searchParams.get('wallet');
-      const token = url.searchParams.get('token');
+      
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          error: 'No reference number provided' 
+        })
+      };
+      
+    } else if (event.httpMethod === 'GET') {
+      const params = event.queryStringParameters || {};
+      const walletAddress = params.wallet;
+      const token = params.token;
       
       // For testing, skip token validation
       if (walletAddress) {
         const userKey = `user_${walletAddress}`;
-        const userHistory = await mintStore.get(userKey);
+        let userHistory = [];
         
-        if (!userHistory) {
-          return new Response(JSON.stringify([]), { 
-            status: 200, 
-            headers 
-          });
+        try {
+          const historyData = await mintStore.get(userKey);
+          if (historyData) {
+            userHistory = JSON.parse(historyData);
+          }
+        } catch (e) {
+          // No history found
         }
         
-        const history = JSON.parse(userHistory);
         const fullRecords = [];
         
-        for (const item of history) {
-          const record = await mintStore.get(item.referenceNumber);
-          if (record) {
-            fullRecords.push(JSON.parse(record));
+        for (const item of userHistory) {
+          try {
+            const record = await mintStore.get(item.referenceNumber);
+            if (record) {
+              fullRecords.push(JSON.parse(record));
+            }
+          } catch (e) {
+            console.error('Error fetching record:', e);
           }
         }
         
-        return new Response(JSON.stringify(fullRecords), { 
-          status: 200, 
-          headers 
-        });
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(fullRecords)
+        };
       }
+      
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Wallet address required' 
+        })
+      };
     }
     
-    return new Response(JSON.stringify({ 
-      error: 'Invalid request' 
-    }), { 
-      status: 400, 
-      headers 
-    });
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Invalid request method' 
+      })
+    };
     
   } catch (error) {
     console.error('Mint store error:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Storage operation failed',
-      details: error.message,
-      stack: error.stack
-    }), { 
-      status: 500, 
-      headers 
-    });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Storage operation failed',
+        details: error.message
+      })
+    };
   }
 };
