@@ -453,7 +453,7 @@
         }
         
         .checkbox.checked::after {
-            content: '✓';
+            content: '✔';
             position: absolute;
             top: 50%;
             left: 50%;
@@ -807,6 +807,264 @@
             font-size: 14px;
             font-weight: 600;
             color: #4BBFEB;
+        }
+        
+        /* View Mints Button */
+        .view-mints-button {
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(75, 191, 235, 0.1) 0%, rgba(91, 141, 238, 0.1) 100%);
+            border: 2px solid rgba(75, 191, 235, 0.2);
+            border-radius: 12px;
+            color: #4BBFEB;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .view-mints-button:hover {
+            background: linear-gradient(135deg, rgba(75, 191, 235, 0.2) 0%, rgba(91, 141, 238, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(75, 191, 235, 0.2);
+        }
+        
+        /* Mints Modal */
+        .mints-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 10000;
+            animation: fadeIn 0.3s;
+        }
+        
+        .mints-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .mints-modal-content {
+            width: 100%;
+            max-width: 800px;
+            max-height: 85vh;
+            background: #1A1A2E;
+            border-radius: 24px;
+            border: 2px solid rgba(75, 191, 235, 0.3);
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s;
+        }
+        
+        .mints-modal-header {
+            padding: 24px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mints-modal-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4BBFEB 0%, #5B8DEE 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .modal-close {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 100, 100, 0.1);
+            border-color: rgba(255, 100, 100, 0.2);
+            transform: rotate(90deg);
+        }
+        
+        .mints-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+        
+        /* Authentication Container */
+        .auth-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .auth-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .auth-container h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: #E0E0E0;
+        }
+        
+        .auth-container p {
+            color: #94969C;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        
+        .auth-button {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #4BBFEB 0%, #5B8DEE 100%);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(75, 191, 235, 0.3);
+        }
+        
+        .auth-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Mints List */
+        .mints-search {
+            margin-bottom: 20px;
+        }
+        
+        .mints-search input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .mints-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .mint-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s;
+        }
+        
+        .mint-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(75, 191, 235, 0.2);
+            transform: translateX(4px);
+        }
+        
+        .mint-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .mint-reference {
+            font-size: 11px;
+            font-weight: 600;
+            color: #4BBFEB;
+            background: rgba(75, 191, 235, 0.1);
+            padding: 4px 10px;
+            border-radius: 10px;
+        }
+        
+        .mint-time {
+            font-size: 11px;
+            color: #94969C;
+        }
+        
+        .mint-conversation {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .mint-user-msg {
+            color: #C668A8;
+            margin-bottom: 8px;
+        }
+        
+        .mint-ai-msg {
+            color: #E0E0E0;
+        }
+        
+        .mint-type {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 8px;
+            background: rgba(198, 104, 168, 0.1);
+            border: 1px solid rgba(198, 104, 168, 0.2);
+            border-radius: 6px;
+            font-size: 11px;
+            color: #C668A8;
+        }
+        
+        .export-button {
+            margin-top: 16px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .export-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Loading State */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(75, 191, 235, 0.3);
+            border-top-color: #4BBFEB;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
         
         /* Chatbot Container */
@@ -1291,6 +1549,15 @@
             .token-amount {
                 font-size: 24px;
             }
+            
+            .mints-modal-content {
+                max-height: 100vh;
+                border-radius: 0;
+            }
+            
+            .mint-item {
+                padding: 12px;
+            }
         }
         
         /* Small Mobile */
@@ -1344,15 +1611,15 @@
                 <div class="requirement-title">Wallet Requirements</div>
                 <ul class="requirement-list">
                     <li class="requirement-item">
-                        <span class="requirement-check">✓</span>
+                        <span class="requirement-check">✔</span>
                         <span>Minimum 0.03 ETH balance on mainnet</span>
                     </li>
                     <li class="requirement-item">
-                        <span class="requirement-check">✓</span>
+                        <span class="requirement-check">✔</span>
                         <span>At least 3 transactions on mainnet</span>
                     </li>
                     <li class="requirement-item">
-                        <span class="requirement-check">✓</span>
+                        <span class="requirement-check">✔</span>
                         <span>Maximum 1 request every 6 hours</span>
                     </li>
                 </ul>
@@ -1401,6 +1668,34 @@
                 <button class="action-button primary" id="addNetworkBtn" onclick="verifyAndAddNetwork()" disabled>
                     Add KELLS Testnet
                 </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mints Modal -->
+    <div class="mints-modal" id="mintsModal">
+        <div class="mints-modal-content">
+            <div class="mints-modal-header">
+                <h2>My Minted Conversations</h2>
+                <button class="modal-close" onclick="closeMyMints()">×</button>
+            </div>
+            <div class="mints-modal-body" id="mintsModalBody">
+                <div class="auth-container" id="authContainer">
+                    <div class="auth-icon">🔐</div>
+                    <h3>Authenticate to View Your Mints</h3>
+                    <p>Sign a message with your wallet to securely access your minted conversations.</p>
+                    <button class="auth-button" onclick="authenticateWallet()">
+                        Sign & Authenticate
+                    </button>
+                </div>
+                <div class="mints-list-container" id="mintsListContainer" style="display: none;">
+                    <div class="mints-search">
+                        <input type="text" id="mintSearch" placeholder="Search your mints..." onkeyup="filterMints()">
+                    </div>
+                    <div class="mints-list" id="mintsList">
+                        <!-- Mints will be loaded here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1513,6 +1808,10 @@
                                 <span class="stat-value" id="statChats">0</span>
                             </div>
                         </div>
+                        <!-- NEW: My Mints Button -->
+                        <button class="view-mints-button" id="viewMintsButton" onclick="openMyMints()">
+                            <span>🔐</span> View My Minted Chats
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1604,6 +1903,8 @@
         const MAX_HISTORY = 20;
         let isCorrectNetwork = false;
         let currentMobileTab = 'modules';
+        let authToken = null;
+        let userMints = [];
         
         let termsAccepted = false;
         let socialConnections = {
@@ -1661,8 +1962,21 @@
         function generateReferenceNumber() {
             const timestamp = Date.now();
             const random = Math.random().toString(36).substring(2, 8);
+            const sessionId = window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
             const prefix = 'LIMBO';
-            return `${prefix}-${timestamp}-${random}`.toUpperCase();
+            return `${prefix}-${timestamp}-${random}-${sessionId}`.toUpperCase();
+        }
+        
+        // Escape HTML for security
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
         }
         
         // Check if message is asking for image generation
@@ -1744,6 +2058,214 @@
                 console.error('Image generation error:', error);
                 return null;
             }
+        }
+        
+        // MY MINTS FUNCTIONS
+        
+        // Open My Mints Modal
+        function openMyMints() {
+            if (!userAddress) {
+                showNotification('Please connect your wallet first', 'error');
+                return;
+            }
+            
+            const modal = document.getElementById('mintsModal');
+            modal.classList.add('show');
+            
+            // Check if already authenticated
+            const storedAuth = sessionStorage.getItem(`auth_${userAddress}`);
+            if (storedAuth) {
+                const auth = JSON.parse(storedAuth);
+                if (auth.expires > Date.now()) {
+                    authToken = auth.token;
+                    loadUserMints();
+                    return;
+                }
+            }
+            
+            // Show authentication screen
+            document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('mintsListContainer').style.display = 'none';
+        }
+        
+        // Close My Mints Modal
+        function closeMyMints() {
+            const modal = document.getElementById('mintsModal');
+            modal.classList.remove('show');
+        }
+        
+        // Authenticate Wallet
+        async function authenticateWallet() {
+            if (!userAddress || !signer) {
+                showNotification('Wallet not connected', 'error');
+                return;
+            }
+            
+            const authBtn = document.querySelector('.auth-button');
+            authBtn.innerHTML = '<span class="loading-spinner"></span> Signing...';
+            authBtn.disabled = true;
+            
+            try {
+                // Create message to sign
+                const message = `Authenticate to view your minted conversations\n\nWallet: ${userAddress}\nTimestamp: ${Date.now()}\nNonce: ${Math.random().toString(36).substring(2)}`;
+                
+                // Request signature from wallet
+                const signature = await signer.signMessage(message);
+                
+                // Send authentication request
+                const response = await fetch(`${CONFIG.API_PROXY_URL}/mint-store`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'authenticate',
+                        walletAddress: userAddress,
+                        signature: signature,
+                        message: message
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Authentication failed');
+                }
+                
+                const data = await response.json();
+                authToken = data.token;
+                
+                // Store auth in session
+                sessionStorage.setItem(`auth_${userAddress}`, JSON.stringify({
+                    token: authToken,
+                    expires: Date.now() + 3600000 // 1 hour
+                }));
+                
+                // Load user mints
+                loadUserMints();
+                
+            } catch (error) {
+                console.error('Authentication error:', error);
+                showNotification('Authentication failed. Please try again.', 'error');
+                authBtn.innerHTML = 'Sign & Authenticate';
+                authBtn.disabled = false;
+            }
+        }
+        
+        // Load User Mints
+        async function loadUserMints() {
+            if (!authToken || !userAddress) {
+                showNotification('Not authenticated', 'error');
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('mintsListContainer').style.display = 'block';
+            document.getElementById('mintsList').innerHTML = '<div style="text-align: center;"><span class="loading-spinner"></span> Loading your mints...</div>';
+            
+            try {
+                const response = await fetch(`${CONFIG.API_PROXY_URL}/mint-store?wallet=${userAddress}&token=${authToken}`);
+                
+                if (response.status === 401) {
+                    // Token expired, re-authenticate
+                    sessionStorage.removeItem(`auth_${userAddress}`);
+                    document.getElementById('authContainer').style.display = 'block';
+                    document.getElementById('mintsListContainer').style.display = 'none';
+                    showNotification('Session expired. Please authenticate again.', 'error');
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load mints');
+                }
+                
+                userMints = await response.json();
+                displayUserMints(userMints);
+                
+            } catch (error) {
+                console.error('Error loading mints:', error);
+                document.getElementById('mintsList').innerHTML = '<div style="text-align: center; color: #ff6464;">Failed to load mints. Please try again.</div>';
+            }
+        }
+        
+        // Display User Mints
+        function displayUserMints(mints) {
+            const mintsList = document.getElementById('mintsList');
+            
+            if (!mints || mints.length === 0) {
+                mintsList.innerHTML = '<div style="text-align: center; color: #94969C; padding: 40px;">You haven\'t minted any conversations yet.</div>';
+                return;
+            }
+            
+            // Sort by timestamp (newest first)
+            mints.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            let html = `
+                <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94969C; font-size: 13px;">Total Mints: ${mints.length}</span>
+                    <button class="export-button" onclick="exportUserMints()">Export My Mints</button>
+                </div>
+            `;
+            
+            mints.forEach(mint => {
+                const truncateText = (text, maxLength = 200) => {
+                    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+                };
+                
+                html += `
+                    <div class="mint-item" data-ref="${mint.referenceNumber}">
+                        <div class="mint-item-header">
+                            <span class="mint-reference">${mint.referenceNumber}</span>
+                            <span class="mint-time">${new Date(mint.timestamp).toLocaleString()}</span>
+                        </div>
+                        <div class="mint-conversation">
+                            <div class="mint-user-msg">
+                                <strong>You:</strong> ${escapeHtml(truncateText(mint.userMessage))}
+                            </div>
+                            <div class="mint-ai-msg">
+                                <strong>Limbo:</strong> ${escapeHtml(truncateText(mint.aiResponse))}
+                            </div>
+                        </div>
+                        ${mint.type === 'image' ? '<span class="mint-type">Contains Image</span>' : ''}
+                    </div>
+                `;
+            });
+            
+            mintsList.innerHTML = html;
+        }
+        
+        // Filter Mints
+        function filterMints() {
+            const searchTerm = document.getElementById('mintSearch').value.toLowerCase();
+            const filteredMints = userMints.filter(mint => 
+                mint.referenceNumber.toLowerCase().includes(searchTerm) ||
+                mint.userMessage.toLowerCase().includes(searchTerm) ||
+                mint.aiResponse.toLowerCase().includes(searchTerm)
+            );
+            displayUserMints(filteredMints);
+        }
+        
+        // Export User Mints
+        function exportUserMints() {
+            if (!userMints || userMints.length === 0) {
+                showNotification('No mints to export', 'error');
+                return;
+            }
+            
+            const exportData = {
+                wallet: userAddress,
+                exportDate: new Date().toISOString(),
+                totalMints: userMints.length,
+                mints: userMints
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `my-mints-${userAddress.slice(0, 8)}-${Date.now()}.json`;
+            a.click();
+            
+            showNotification('Mints exported successfully!', 'success');
         }
         
         // FIXED: Mobile tab switching
@@ -2252,7 +2774,18 @@
             }
         }
         
+        // Modified disconnectWallet to clear auth
         function disconnectWallet() {
+            // Clear authentication
+            if (userAddress) {
+                sessionStorage.removeItem(`auth_${userAddress}`);
+            }
+            authToken = null;
+            userMints = [];
+            
+            // Close modal if open
+            closeMyMints();
+            
             provider = null;
             signer = null;
             userAddress = null;
@@ -2692,6 +3225,20 @@
             if (e.key === 'Enter') {
                 e.preventDefault();
                 sendMessage();
+            }
+        });
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeMyMints();
+            }
+        });
+        
+        // Close modal on background click
+        document.getElementById('mintsModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('mintsModal')) {
+                closeMyMints();
             }
         });
         
