@@ -1218,7 +1218,7 @@ Limbo: vibing in the digital void, the usual. you?</textarea>
                     url += `?date=${dateFilter}`;
                 }
                 
-                const response = await fetch(url);
+                const response = await fetch(url + (dateFilter ? '&' : '?') + 'adminKey=YOUR_SECRET_ADMIN_KEY_HERE');
                 
                 if (!response.ok) {
                     console.log('No minted conversations found');
