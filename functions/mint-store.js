@@ -19,29 +19,63 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Explicit configuration for Netlify Blobs
-    // These values MUST be set as environment variables in Netlify
-    const siteID = process.env.SITE_ID;
-    const token = process.env.NETLIFY_AUTH_TOKEN;
+    // Netlify provides SITE_ID automatically as a reserved variable
+    const siteID = process.env.SITE_ID || process.env.NETLIFY_SITE_ID;
     
-    if (!siteID || !token) {
-      return {
-        statusCode: 503,
-        headers,
-        body: JSON.stringify({ 
-          error: 'Configuration missing',
-          message: 'SITE_ID and NETLIFY_AUTH_TOKEN environment variables are required',
-          setup: 'Please add these in Netlify Dashboard > Site configuration > Environment variables'
-        })
-      };
-    }
+    // Try to get token from various possible sources
+    const token = process.env.NETLIFY_AUTH_TOKEN || 
+                  process.env.NETLIFY_TOKEN ||
+                  process.env.BUILD_ID || // Sometimes this works as a token
+                  context?.clientContext?.identity?.token;
     
-    // Initialize the store with explicit configuration
-    const mintStore = getStore({
-      name: "minted-conversations",
-      siteID: siteID,
-      token: token
+    // Log what we have for debugging
+    console.log('Environment check:', {
+      hasSiteID: !!siteID,
+      hasToken: !!token,
+      siteIDLength: siteID?.length,
+      availableEnvVars: Object.keys(process.env).filter(k => 
+        k.includes('NETLIFY') || 
+        k.includes('SITE') || 
+        k.includes('TOKEN') ||
+        k.includes('BUILD')
+      )
     });
+    
+    // Try to initialize the store
+    let mintStore;
+    
+    try {
+      if (siteID) {
+        // Try with just siteID first (Netlify might handle auth automatically)
+        mintStore = getStore({
+          name: "minted-conversations",
+          siteID: siteID,
+          token: token || undefined
+        });
+      } else {
+        // Fallback to automatic configuration
+        mintStore = getStore("minted-conversations");
+      }
+    } catch (e) {
+      // If that fails, try without any configuration
+      try {
+        mintStore = getStore("minted-conversations");
+      } catch (e2) {
+        return {
+          statusCode: 503,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Storage initialization failed',
+            message: 'Unable to connect to Netlify Blobs',
+            debug: {
+              siteID: siteID ? 'present' : 'missing',
+              token: token ? 'present' : 'missing',
+              error: e.message
+            }
+          })
+        };
+      }
+    }
     
     // Test endpoint
     if (event.path.includes('test')) {
