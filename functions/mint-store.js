@@ -1,4 +1,4 @@
-// mint-store.js
+// mint-store.js - Properly configured for Netlify Blobs
 const { getStore } = require("@netlify/blobs");
 
 exports.handler = async (event, context) => {
@@ -19,8 +19,12 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Initialize the store
-    const mintStore = getStore("minted-conversations");
+    // Initialize the store with proper configuration
+    // Netlify automatically provides these in production
+    const mintStore = getStore({
+      name: "minted-conversations",
+      consistency: "strong"
+    });
     
     // Test endpoint
     if (event.path.includes('test')) {
@@ -29,7 +33,8 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({ 
           status: 'ok', 
-          message: 'Mint store function is working' 
+          message: 'Mint store function is working',
+          environment: process.env.CONTEXT || 'unknown'
         })
       };
     }
@@ -37,7 +42,7 @@ exports.handler = async (event, context) => {
     if (event.httpMethod === 'POST') {
       const data = JSON.parse(event.body);
       
-      // Simple authentication for testing
+      // Handle authentication
       if (data.action === 'authenticate') {
         const token = Buffer.from(JSON.stringify({
           wallet: data.walletAddress,
@@ -71,11 +76,11 @@ exports.handler = async (event, context) => {
             tokenBalance: data.tokenBalance || 0,
             networkChainId: data.networkChainId || '',
             userAgent: event.headers['user-agent'] || '',
-            ip: context.ip || ''
+            ip: event.headers['x-forwarded-for'] || event.headers['client-ip'] || ''
           }
         };
         
-        // Store the record
+        // Store the main record
         await mintStore.set(data.referenceNumber, JSON.stringify(mintRecord));
         
         // Store in user history
@@ -88,7 +93,7 @@ exports.handler = async (event, context) => {
             userHistory = JSON.parse(existingHistory);
           }
         } catch (e) {
-          // No existing history
+          console.log('No existing history for user');
         }
         
         userHistory.push({
@@ -98,6 +103,27 @@ exports.handler = async (event, context) => {
         });
         
         await mintStore.set(userKey, JSON.stringify(userHistory));
+        
+        // Also store in daily index for admin access
+        const dateKey = `index_${new Date().toISOString().split('T')[0]}`;
+        let dailyIndex = [];
+        
+        try {
+          const existingIndex = await mintStore.get(dateKey);
+          if (existingIndex) {
+            dailyIndex = JSON.parse(existingIndex);
+          }
+        } catch (e) {
+          console.log('No existing daily index');
+        }
+        
+        dailyIndex.push({
+          referenceNumber: data.referenceNumber,
+          walletAddress: data.walletAddress,
+          timestamp: mintRecord.timestamp
+        });
+        
+        await mintStore.set(dateKey, JSON.stringify(dailyIndex));
         
         return {
           statusCode: 200,
@@ -122,9 +148,129 @@ exports.handler = async (event, context) => {
       const params = event.queryStringParameters || {};
       const walletAddress = params.wallet;
       const token = params.token;
+      const adminKey = params.adminKey;
+      const dateFilter = params.date;
+      const referenceNumber = params.ref;
       
-      // For testing, skip token validation
-      if (walletAddress) {
+      // Admin access - requires admin key
+      if (adminKey === process.env.ADMIN_KEY) {
+        if (referenceNumber) {
+          // Get specific mint by reference
+          try {
+            const record = await mintStore.get(referenceNumber);
+            return {
+              statusCode: 200,
+              headers,
+              body: record || JSON.stringify({ error: 'Mint not found' })
+            };
+          } catch (e) {
+            return {
+              statusCode: 404,
+              headers,
+              body: JSON.stringify({ error: 'Mint not found' })
+            };
+          }
+        }
+        
+        if (dateFilter) {
+          // Get all mints for a specific date
+          const dateKey = `index_${dateFilter}`;
+          try {
+            const dailyIndex = await mintStore.get(dateKey);
+            if (dailyIndex) {
+              const index = JSON.parse(dailyIndex);
+              const fullRecords = [];
+              
+              for (const item of index) {
+                try {
+                  const record = await mintStore.get(item.referenceNumber);
+                  if (record) {
+                    fullRecords.push(JSON.parse(record));
+                  }
+                } catch (e) {
+                  console.error('Error fetching record:', e);
+                }
+              }
+              
+              return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify(fullRecords)
+              };
+            }
+          } catch (e) {
+            console.log('No mints for this date');
+          }
+          
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify([])
+          };
+        }
+        
+        // Return recent mints (last 100)
+        try {
+          const allMints = [];
+          const { blobs } = await mintStore.list();
+          
+          for (const blob of blobs.slice(0, 100)) {
+            if (blob.key.startsWith('LIMBO-')) {
+              try {
+                const record = await mintStore.get(blob.key);
+                if (record) {
+                  allMints.push(JSON.parse(record));
+                }
+              } catch (e) {
+                console.error('Error fetching record:', e);
+              }
+            }
+          }
+          
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(allMints)
+          };
+        } catch (e) {
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify([])
+          };
+        }
+      }
+      
+      // User access - requires authentication
+      if (walletAddress && token) {
+        // Validate token
+        try {
+          const tokenData = JSON.parse(Buffer.from(token, 'base64').toString());
+          
+          if (tokenData.wallet !== walletAddress) {
+            return {
+              statusCode: 401,
+              headers,
+              body: JSON.stringify({ error: 'Invalid token' })
+            };
+          }
+          
+          if (tokenData.expires < Date.now()) {
+            return {
+              statusCode: 401,
+              headers,
+              body: JSON.stringify({ error: 'Token expired' })
+            };
+          }
+        } catch (e) {
+          return {
+            statusCode: 401,
+            headers,
+            body: JSON.stringify({ error: 'Invalid token format' })
+          };
+        }
+        
+        // Get user's mints
         const userKey = `user_${walletAddress}`;
         let userHistory = [];
         
@@ -134,7 +280,7 @@ exports.handler = async (event, context) => {
             userHistory = JSON.parse(historyData);
           }
         } catch (e) {
-          // No history found
+          console.log('No history for user');
         }
         
         const fullRecords = [];
@@ -161,7 +307,7 @@ exports.handler = async (event, context) => {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
-          error: 'Wallet address required' 
+          error: 'Authentication required' 
         })
       };
     }
@@ -181,7 +327,8 @@ exports.handler = async (event, context) => {
       headers,
       body: JSON.stringify({ 
         error: 'Storage operation failed',
-        details: error.message
+        details: error.message,
+        type: error.constructor.name
       })
     };
   }
