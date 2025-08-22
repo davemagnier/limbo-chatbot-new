@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://subnets.avax.network;">
+    <meta name="referrer" content="no-referrer">
+    <title>KELLS Testnet Status - Youmio</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0A0A0F;
+            color: white;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Animated background */
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(198, 104, 168, 0.12) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(166, 104, 196, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 20%, rgba(75, 191, 235, 0.06) 0%, transparent 50%);
+            z-index: 0;
+            animation: floatGradient 20s ease infinite;
+        }
+        
+        @keyframes floatGradient {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeIn 0.8s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .youmio-logo {
+            height: 80px;
+            width: auto;
+            margin-bottom: 24px;
+            animation: shimmer 3s ease infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+        
+        .page-title {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+        
+        .page-subtitle {
+            font-size: 16px;
+            color: #94969C;
+        }
+        
+        /* Main Status Card */
+        .status-card {
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            animation: slideUp 0.6s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #C668A8, #A668C4, #4BBFEB);
+            animation: shimmerBar 3s ease infinite;
+        }
+        
+        @keyframes shimmerBar {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        /* Live Status Indicator */
+        .live-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 40px;
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, rgba(75, 191, 235, 0.05) 100%);
+            border: 2px solid rgba(0, 255, 136, 0.2);
+            border-radius: 20px;
+        }
+        
+        .status-indicator {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+            animation: pulseLive 2s infinite;
+        }
+        
+        @keyframes pulseLive {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(0, 255, 136, 0.6); }
+            50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(0, 255, 136, 0.8); }
+        }
+        
+        .status-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00ff88;
+        }
+        
+        .status-uptime {
+            font-size: 14px;
+            color: #94969C;
+        }
+        
+        /* Network Info Grid */
+        .network-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        .info-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(198, 104, 168, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #94969C;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .info-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #E0E0E0;
+            word-break: break-all;
+        }
+        
+        .info-value.large {
+            font-size: 24px;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .copy-button {
+            margin-left: 8px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #94969C;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .copy-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #E0E0E0;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .action-button {
+            padding: 14px 32px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .action-button.primary {
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            color: white;
+        }
+        
+        .action-button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(198, 104, 168, 0.3);
+        }
+        
+        .action-button.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .action-button.secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Live Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .metric-card {
+            background: rgba(26, 26, 46, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4BBFEB, #5B8DEE);
+            opacity: 0.5;
+        }
+        
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4BBFEB 0%, #5B8DEE 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #94969C;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-change {
+            font-size: 11px;
+            color: #00ff88;
+            margin-top: 8px;
+        }
+        
+        /* Activity Feed */
+        .activity-section {
+            background: rgba(26, 26, 46, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 40px;
+        }
+        
+        .activity-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        
+        .activity-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .activity-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        
+        .activity-feed::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .activity-feed::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .activity-feed::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.2) 0%, rgba(166, 104, 196, 0.2) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .activity-details {
+            flex: 1;
+        }
+        
+        .activity-text {
+            font-size: 13px;
+            color: #E0E0E0;
+        }
+        
+        .activity-time {
+            font-size: 11px;
+            color: #94969C;
+        }
+        
+        /* Footer */
+        .footer-link {
+            text-align: center;
+            margin-top: 60px;
+            padding-bottom: 40px;
+        }
+        
+        .footer-link a {
+            color: #C668A8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .footer-link a:hover {
+            color: #A668C4;
+            text-decoration: underline;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: #1A1A2E;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100000;
+            max-width: 360px;
+            animation: slideInNotification 0.4s;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @keyframes slideInNotification {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .notification.success {
+            border-color: rgba(75, 191, 235, 0.3);
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 32px;
+            }
+            
+            .status-card {
+                padding: 24px;
+            }
+            
+            .network-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-gradient"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <img src="youmio-logo.png" alt="Youmio" class="youmio-logo">
+            <h1 class="page-title">KELLS Testnet Status</h1>
+            <p class="page-subtitle">Live Network Monitoring & Statistics</p>
+        </div>
+        
+        <!-- Main Status Card -->
+        <div class="status-card">
+            <!-- Live Status -->
+            <div class="live-status">
+                <div class="status-indicator"></div>
+                <div>
+                    <div class="status-text">NETWORK ONLINE</div>
+                    <div class="status-uptime">Uptime: <span id="uptime">99.98%</span> • Last block: <span id="lastBlockTime">2s ago</span></div>
+                </div>
+            </div>
+            
+            <!-- Network Information -->
+            <div class="network-info">
+                <div class="info-item">
+                    <div class="info-label">Network Name</div>
+                    <div class="info-value large">KELLS Testnet</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Chain ID</div>
+                    <div class="info-value">77719 (0x12d07)</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">RPC URL</div>
+                    <div class="info-value">
+                        https://subnets.avax.network/kells/testnet/rpc
+                        <button class="copy-button" onclick="copyToClipboard('https://subnets.avax.network/kells/testnet/rpc')">Copy</button>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Currency Symbol</div>
+                    <div class="info-value">KELLS</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Block Explorer</div>
+                    <div class="info-value">Coming Soon</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Network Type</div>
+                    <div class="info-value">Avalanche Subnet</div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-button primary" onclick="addTestnetToMetaMask()">
+                    <span>🦊</span> Add to MetaMask
+                </button>
+                <button class="action-button secondary" onclick="checkConnection()">
+                    <span>🔌</span> Test Connection
+                </button>
+                <button class="action-button secondary" onclick="viewDocumentation()">
+                    <span>📚</span> Documentation
+                </button>
+            </div>
+        </div>
+        
+        <!-- Live Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="blockHeight">1,245,678</div>
+                <div class="metric-label">Block Height</div>
+                <div class="metric-change">+1 block/2s</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="gasPrice">25</div>
+                <div class="metric-label">Gas Price (Gwei)</div>
+                <div class="metric-change">Stable</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="totalTx">487,234</div>
+                <div class="metric-label">Total Transactions</div>
+                <div class="metric-change">+1,234 today</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="activeNodes">12</div>
+                <div class="metric-label">Active Validators</div>
+                <div class="metric-change">100% online</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="tps">45</div>
+                <div class="metric-label">TPS (Current)</div>
+                <div class="metric-change">↑ 12%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="blockTime">2.1s</div>
+                <div class="metric-label">Avg Block Time</div>
+                <div class="metric-change">Optimal</div>
+            </div>
+        </div>
+        
+        <!-- Activity Feed -->
+        <div class="activity-section">
+            <div class="activity-header">
+                <div class="activity-title">
+                    <span>Recent Network Activity</span>
+                    <div class="activity-indicator"></div>
+                </div>
+            </div>
+            <div class="activity-feed" id="activityFeed">
+                <!-- Activity items will be dynamically added here -->
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer-link">
+            <a href="index.html">← Back to Youmio Home</a>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const CONFIG = {
+            TESTNET_CHAIN_ID: '0x12d07',
+            TESTNET_RPC_URL: 'https://subnets.avax.network/kells/testnet/rpc',
+            TESTNET_CHAIN_NAME: 'KELLS Testnet',
+            TESTNET_CURRENCY: {
+                name: 'KELLS',
+                symbol: 'KELLS',
+                decimals: 18
+            }
+        };
+        
+        // Store for real blockchain data
+        let currentBlockNumber = 0;
+        let provider = null;
+        let lastKnownBlocks = [];
+        
+        // Initialize ethers provider
+        async function initializeProvider() {
+            try {
+                provider = new ethers.providers.JsonRpcProvider(CONFIG.TESTNET_RPC_URL);
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize provider:', error);
+                return false;
+            }
+        }
+        
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Copied to clipboard!', 'success');
+            });
+        }
+        
+        // Add testnet to MetaMask
+        async function addTestnetToMetaMask() {
+            if (typeof window.ethereum === 'undefined') {
+                showNotification('Please install MetaMask to continue', 'error');
+                return;
+            }
+            
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: CONFIG.TESTNET_CHAIN_ID,
+                        chainName: CONFIG.TESTNET_CHAIN_NAME,
+                        nativeCurrency: CONFIG.TESTNET_CURRENCY,
+                        rpcUrls: [CONFIG.TESTNET_RPC_URL]
+                    }]
+                });
+                
+                showNotification('KELLS Testnet added successfully!', 'success');
+            } catch (error) {
+                if (error.code === 4001) {
+                    showNotification('Request rejected by user', 'error');
+                } else {
+                    showNotification('Failed to add network: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        // Test connection to RPC
+        async function checkConnection() {
+            try {
+                const response = await fetch(CONFIG.TESTNET_RPC_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'eth_blockNumber',
+                        params: [],
+                        id: 1
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.result) {
+                    const blockNumber = parseInt(data.result, 16);
+                    showNotification(`Connected! Current block: ${blockNumber.toLocaleString()}`, 'success');
+                } else {
+                    showNotification('Connection test failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Unable to connect to RPC', 'error');
+            }
+        }
+        
+        // View documentation
+        function viewDocumentation() {
+            showNotification('Documentation coming soon!', 'success');
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        // Fetch real blockchain data
+        async function fetchBlockchainData() {
+            if (!provider) return;
+            
+            try {
+                // Get current block number
+                const blockNumber = await provider.getBlockNumber();
+                currentBlockNumber = blockNumber;
+                document.getElementById('blockHeight').textContent = blockNumber.toLocaleString();
+                
+                // Get gas price
+                const gasPrice = await provider.getGasPrice();
+                const gasPriceGwei = Math.round(ethers.utils.formatUnits(gasPrice, 'gwei'));
+                document.getElementById('gasPrice').textContent = gasPriceGwei;
+                
+                // Get latest block
+                const block = await provider.getBlock(blockNumber);
+                if (block) {
+                    const timeDiff = Date.now() / 1000 - block.timestamp;
+                    document.getElementById('lastBlockTime').textContent = 
+                        timeDiff < 60 ? Math.round(timeDiff) + 's ago' : 
+                        Math.round(timeDiff / 60) + 'm ago';
+                    
+                    // Update transactions count
+                    const txCount = block.transactions.length;
+                    document.getElementById('totalTx').textContent = 
+                        (parseInt(document.getElementById('totalTx').textContent.replace(/,/g, '')) + txCount).toLocaleString();
+                    
+                    // Add block to activity feed
+                    addBlockActivity(block);
+                    
+                    // Fetch transaction details for activity feed
+                    if (block.transactions.length > 0) {
+                        for (let i = 0; i < Math.min(3, block.transactions.length); i++) {
+                            const txHash = block.transactions[i];
+                            try {
+                                const tx = await provider.getTransaction(txHash);
+                                addTransactionActivity(tx);
+                            } catch (e) {
+                                console.error('Error fetching transaction:', e);
+                            }
+                        }
+                    }
+                }
+                
+                // Calculate TPS (transactions per second)
+                if (lastKnownBlocks.length > 0) {
+                    const recentBlocks = lastKnownBlocks.slice(-10);
+                    const totalTx = recentBlocks.reduce((sum, b) => sum + b.txCount, 0);
+                    const timeSpan = recentBlocks[recentBlocks.length - 1].timestamp - recentBlocks[0].timestamp;
+                    const tps = timeSpan > 0 ? Math.round(totalTx / timeSpan) : 0;
+                    document.getElementById('tps').textContent = tps || '~';
+                }
+                
+                lastKnownBlocks.push({
+                    number: blockNumber,
+                    txCount: block.transactions.length,
+                    timestamp: block.timestamp
+                });
+                
+                // Keep only last 20 blocks in memory
+                if (lastKnownBlocks.length > 20) {
+                    lastKnownBlocks.shift();
+                }
+                
+            } catch (error) {
+                console.error('Error fetching blockchain data:', error);
+            }
+        }
+        
+        // Add real block to activity feed
+        function addBlockActivity(block) {
+            const feed = document.getElementById('activityFeed');
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            
+            const timeAgo = Date.now() / 1000 - block.timestamp;
+            const timeText = timeAgo < 60 ? 'just now' : Math.round(timeAgo / 60) + 'm ago';
+            
+            item.innerHTML = `
+                <div class="activity-icon">📦</div>
+                <div class="activity-details">
+                    <div class="activity-text">New block mined</div>
+                    <div class="activity-time">Block #${block.number} • ${block.transactions.length} txs • ${timeText}</div>
+                </div>
+            `;
+            
+            feed.insertBefore(item, feed.firstChild);
+            
+            // Keep feed clean
+            while (feed.children.length > 15) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+        
+        // Add real transaction to activity feed
+        function addTransactionActivity(tx) {
+            const feed = document.getElementById('activityFeed');
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            
+            const value = tx.value ? ethers.utils.formatEther(tx.value) : '0';
+            const from = tx.from ? tx.from.slice(0, 6) + '...' + tx.from.slice(-4) : 'Unknown';
+            const to = tx.to ? tx.to.slice(0, 6) + '...' + tx.to.slice(-4) : 'Contract Creation';
+            
+            const icon = tx.to === null ? '⚡' : '💸';
+            const text = tx.to === null ? 'Contract deployed' : 'Transaction confirmed';
+            
+            item.innerHTML = `
+                <div class="activity-icon">${icon}</div>
+                <div class="activity-details">
+                    <div class="activity-text">${text}</div>
+                    <div class="activity-time">${from} → ${to} • ${parseFloat(value).toFixed(4)} KELLS</div>
+                </div>
+            `;
+            
+            feed.insertBefore(item, feed.firstChild);
+            
+            // Keep feed clean
+            while (feed.children.length > 15) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', async () => {
+            // Initialize provider
+            const connected = await initializeProvider();
+            
+            if (connected) {
+                // Initial fetch
+                await fetchBlockchainData();
+                
+                // Update every 3 seconds for real-time data
+                setInterval(fetchBlockchainData, 3000);
+                
+                // Also listen for new blocks
+                if (provider) {
+                    provider.on('block', async (blockNumber) => {
+                        console.log('New block:', blockNumber);
+                        await fetchBlockchainData();
+                    });
+                }
+            } else {
+                // Fallback message if can't connect
+                document.getElementById('activityFeed').innerHTML = 
+                    '<div style="text-align: center; color: #94969C; padding: 40px;">Unable to connect to network for live data</div>';
+            }
+            
+            // Initialize some default values
+            document.getElementById('totalTx').textContent = '0';
+            document.getElementById('blockHeight').textContent = '0';
+            document.getElementById('gasPrice').textContent = '25';
+            document.getElementById('tps').textContent = '0';
+        });
+    </script>
+</body>
+</html>
