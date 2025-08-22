@@ -1,4 +1,4 @@
-// mint-store.js - Properly configured for Netlify Blobs
+// mint-store.js - With explicit Netlify Blobs configuration
 const { getStore } = require("@netlify/blobs");
 
 exports.handler = async (event, context) => {
@@ -19,9 +19,29 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Initialize the store - should work automatically in Netlify Functions
-    // The siteID and token are automatically provided by Netlify
-    const mintStore = getStore("minted-conversations");
+    // Explicit configuration for Netlify Blobs
+    // These values MUST be set as environment variables in Netlify
+    const siteID = process.env.SITE_ID;
+    const token = process.env.NETLIFY_AUTH_TOKEN;
+    
+    if (!siteID || !token) {
+      return {
+        statusCode: 503,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Configuration missing',
+          message: 'SITE_ID and NETLIFY_AUTH_TOKEN environment variables are required',
+          setup: 'Please add these in Netlify Dashboard > Site configuration > Environment variables'
+        })
+      };
+    }
+    
+    // Initialize the store with explicit configuration
+    const mintStore = getStore({
+      name: "minted-conversations",
+      siteID: siteID,
+      token: token
+    });
     
     // Test endpoint
     if (event.path.includes('test')) {
@@ -37,6 +57,7 @@ exports.handler = async (event, context) => {
           body: JSON.stringify({ 
             status: 'ok',
             message: 'Mint store working correctly',
+            storage: 'netlify-blobs',
             testResult: testValue === 'working' ? 'passed' : 'failed'
           })
         };
@@ -343,19 +364,6 @@ exports.handler = async (event, context) => {
     
   } catch (error) {
     console.error('Mint store error:', error);
-    
-    // Check if it's the missing environment error
-    if (error.message && error.message.includes('environment has not been configured')) {
-      return {
-        statusCode: 503,
-        headers,
-        body: JSON.stringify({ 
-          error: 'Netlify Blobs not configured',
-          message: 'The function needs to be deployed to Netlify to access blob storage',
-          details: 'Local development requires Netlify CLI with "netlify dev" command'
-        })
-      };
-    }
     
     return {
       statusCode: 500,
