@@ -19,24 +19,38 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Initialize the store with proper configuration
-    // Netlify automatically provides these in production
-    const mintStore = getStore({
-      name: "minted-conversations",
-      consistency: "strong"
-    });
+    // Initialize the store - should work automatically in Netlify Functions
+    // The siteID and token are automatically provided by Netlify
+    const mintStore = getStore("minted-conversations");
     
     // Test endpoint
     if (event.path.includes('test')) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ 
-          status: 'ok', 
-          message: 'Mint store function is working',
-          environment: process.env.CONTEXT || 'unknown'
-        })
-      };
+      try {
+        // Test write and read
+        await mintStore.set('test-connection', 'working');
+        const testValue = await mintStore.get('test-connection');
+        await mintStore.delete('test-connection');
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ 
+            status: 'ok',
+            message: 'Mint store working correctly',
+            testResult: testValue === 'working' ? 'passed' : 'failed'
+          })
+        };
+      } catch (testError) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ 
+            status: 'error',
+            message: 'Function running but storage test failed',
+            error: testError.message
+          })
+        };
+      }
     }
     
     if (event.httpMethod === 'POST') {
@@ -44,7 +58,7 @@ exports.handler = async (event, context) => {
       
       // Handle authentication
       if (data.action === 'authenticate') {
-        const token = Buffer.from(JSON.stringify({
+        const authToken = Buffer.from(JSON.stringify({
           wallet: data.walletAddress,
           expires: Date.now() + 3600000,
           timestamp: Date.now()
@@ -55,7 +69,7 @@ exports.handler = async (event, context) => {
           headers,
           body: JSON.stringify({ 
             success: true,
-            token,
+            token: authToken,
             message: 'Authentication successful'
           })
         };
@@ -80,17 +94,17 @@ exports.handler = async (event, context) => {
           }
         };
         
-        // Store the main record
-        await mintStore.set(data.referenceNumber, JSON.stringify(mintRecord));
+        // Store the main record using setJSON
+        await mintStore.setJSON(data.referenceNumber, mintRecord);
         
         // Store in user history
         const userKey = `user_${data.walletAddress}`;
         let userHistory = [];
         
         try {
-          const existingHistory = await mintStore.get(userKey);
+          const existingHistory = await mintStore.get(userKey, { type: 'json' });
           if (existingHistory) {
-            userHistory = JSON.parse(existingHistory);
+            userHistory = existingHistory;
           }
         } catch (e) {
           console.log('No existing history for user');
@@ -102,16 +116,16 @@ exports.handler = async (event, context) => {
           type: data.type
         });
         
-        await mintStore.set(userKey, JSON.stringify(userHistory));
+        await mintStore.setJSON(userKey, userHistory);
         
         // Also store in daily index for admin access
         const dateKey = `index_${new Date().toISOString().split('T')[0]}`;
         let dailyIndex = [];
         
         try {
-          const existingIndex = await mintStore.get(dateKey);
+          const existingIndex = await mintStore.get(dateKey, { type: 'json' });
           if (existingIndex) {
-            dailyIndex = JSON.parse(existingIndex);
+            dailyIndex = existingIndex;
           }
         } catch (e) {
           console.log('No existing daily index');
@@ -123,7 +137,7 @@ exports.handler = async (event, context) => {
           timestamp: mintRecord.timestamp
         });
         
-        await mintStore.set(dateKey, JSON.stringify(dailyIndex));
+        await mintStore.setJSON(dateKey, dailyIndex);
         
         return {
           statusCode: 200,
@@ -147,21 +161,21 @@ exports.handler = async (event, context) => {
     } else if (event.httpMethod === 'GET') {
       const params = event.queryStringParameters || {};
       const walletAddress = params.wallet;
-      const token = params.token;
+      const authToken = params.token;
       const adminKey = params.adminKey;
       const dateFilter = params.date;
       const referenceNumber = params.ref;
       
       // Admin access - requires admin key
-      if (adminKey === process.env.ADMIN_KEY) {
+      if (adminKey && adminKey === process.env.ADMIN_KEY) {
         if (referenceNumber) {
           // Get specific mint by reference
           try {
-            const record = await mintStore.get(referenceNumber);
+            const record = await mintStore.get(referenceNumber, { type: 'json' });
             return {
               statusCode: 200,
               headers,
-              body: record || JSON.stringify({ error: 'Mint not found' })
+              body: JSON.stringify(record || { error: 'Mint not found' })
             };
           } catch (e) {
             return {
@@ -176,16 +190,15 @@ exports.handler = async (event, context) => {
           // Get all mints for a specific date
           const dateKey = `index_${dateFilter}`;
           try {
-            const dailyIndex = await mintStore.get(dateKey);
+            const dailyIndex = await mintStore.get(dateKey, { type: 'json' });
             if (dailyIndex) {
-              const index = JSON.parse(dailyIndex);
               const fullRecords = [];
               
-              for (const item of index) {
+              for (const item of dailyIndex) {
                 try {
-                  const record = await mintStore.get(item.referenceNumber);
+                  const record = await mintStore.get(item.referenceNumber, { type: 'json' });
                   if (record) {
-                    fullRecords.push(JSON.parse(record));
+                    fullRecords.push(record);
                   }
                 } catch (e) {
                   console.error('Error fetching record:', e);
@@ -214,18 +227,22 @@ exports.handler = async (event, context) => {
           const allMints = [];
           const { blobs } = await mintStore.list();
           
-          for (const blob of blobs.slice(0, 100)) {
-            if (blob.key.startsWith('LIMBO-')) {
-              try {
-                const record = await mintStore.get(blob.key);
-                if (record) {
-                  allMints.push(JSON.parse(record));
-                }
-              } catch (e) {
-                console.error('Error fetching record:', e);
+          // Filter for mint records (start with LIMBO-)
+          const mintBlobs = blobs.filter(b => b.key.startsWith('LIMBO-')).slice(0, 100);
+          
+          for (const blob of mintBlobs) {
+            try {
+              const record = await mintStore.get(blob.key, { type: 'json' });
+              if (record) {
+                allMints.push(record);
               }
+            } catch (e) {
+              console.error('Error fetching record:', e);
             }
           }
+          
+          // Sort by timestamp (newest first)
+          allMints.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
           
           return {
             statusCode: 200,
@@ -233,6 +250,7 @@ exports.handler = async (event, context) => {
             body: JSON.stringify(allMints)
           };
         } catch (e) {
+          console.error('Error listing mints:', e);
           return {
             statusCode: 200,
             headers,
@@ -242,10 +260,10 @@ exports.handler = async (event, context) => {
       }
       
       // User access - requires authentication
-      if (walletAddress && token) {
+      if (walletAddress && authToken) {
         // Validate token
         try {
-          const tokenData = JSON.parse(Buffer.from(token, 'base64').toString());
+          const tokenData = JSON.parse(Buffer.from(authToken, 'base64').toString());
           
           if (tokenData.wallet !== walletAddress) {
             return {
@@ -275,9 +293,9 @@ exports.handler = async (event, context) => {
         let userHistory = [];
         
         try {
-          const historyData = await mintStore.get(userKey);
-          if (historyData) {
-            userHistory = JSON.parse(historyData);
+          userHistory = await mintStore.get(userKey, { type: 'json' });
+          if (!userHistory) {
+            userHistory = [];
           }
         } catch (e) {
           console.log('No history for user');
@@ -287,14 +305,17 @@ exports.handler = async (event, context) => {
         
         for (const item of userHistory) {
           try {
-            const record = await mintStore.get(item.referenceNumber);
+            const record = await mintStore.get(item.referenceNumber, { type: 'json' });
             if (record) {
-              fullRecords.push(JSON.parse(record));
+              fullRecords.push(record);
             }
           } catch (e) {
             console.error('Error fetching record:', e);
           }
         }
+        
+        // Sort by timestamp (newest first)
+        fullRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         
         return {
           statusCode: 200,
@@ -322,6 +343,20 @@ exports.handler = async (event, context) => {
     
   } catch (error) {
     console.error('Mint store error:', error);
+    
+    // Check if it's the missing environment error
+    if (error.message && error.message.includes('environment has not been configured')) {
+      return {
+        statusCode: 503,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Netlify Blobs not configured',
+          message: 'The function needs to be deployed to Netlify to access blob storage',
+          details: 'Local development requires Netlify CLI with "netlify dev" command'
+        })
+      };
+    }
+    
     return {
       statusCode: 500,
       headers,
