@@ -3,20 +3,3 @@
 
 [functions]
   node_bundler = "esbuild"
-
-# Enable Blobs
-[blobs]
-  enabled = true
-
-# Function-specific configuration
-[[functions]]
-  path = "functions/mint-store.js"
-  
-[[functions]]
-  path = "functions/chat.js"
-  
-[[functions]]
-  path = "functions/image.js"
-  
-[[functions]]
-  path = "functions/health.js"
