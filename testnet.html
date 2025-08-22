@@ -153,24 +153,44 @@
             box-shadow: 0 0 6px rgba(255, 100, 100, 0.5);
         }
         
-        /* Chrome Extension Button */
+        /* Updated Chrome Extension Button to match other buttons */
         .extension-button {
-            background: linear-gradient(135deg, rgba(198, 104, 168, 0.15) 0%, rgba(166, 104, 196, 0.15) 100%);
-            border: 2px solid rgba(198, 104, 168, 0.3);
-            border-radius: 14px;
-            padding: 8px 16px;
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.2) 0%, rgba(166, 104, 196, 0.2) 100%);
+            border: 2px solid rgba(198, 104, 168, 0.4);
+            border-radius: 24px;
+            padding: 10px 18px;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             margin-right: 12px;
+            box-shadow: 0 2px 8px rgba(198, 104, 168, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Add shimmer effect to make it pop */
+        .extension-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(198, 104, 168, 0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .extension-button:hover {
-            background: linear-gradient(135deg, rgba(198, 104, 168, 0.25) 0%, rgba(166, 104, 196, 0.25) 100%);
-            border-color: rgba(198, 104, 168, 0.5);
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.3) 0%, rgba(166, 104, 196, 0.3) 100%);
+            border-color: rgba(198, 104, 168, 0.6);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(198, 104, 168, 0.2);
+            box-shadow: 0 6px 16px rgba(198, 104, 168, 0.3);
         }
 
         .extension-button-content {
@@ -178,22 +198,27 @@
             flex-direction: column;
             align-items: center;
             gap: 2px;
+            position: relative;
+            z-index: 1;
         }
 
         .extension-main-text {
-            color: #C668A8;
+            color: #D988C9;
             font-size: 13px;
             font-weight: 600;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .extension-sub-text {
-            color: #94969C;
+            color: #B094C0;
             font-size: 10px;
             font-weight: 500;
         }
 
-        /* Extension Modal */
+        /* Updated Extension Modal for compact design */
         .extension-modal {
             display: none;
             position: fixed;
@@ -226,7 +251,7 @@
         }
 
         .extension-modal-header {
-            padding: 24px;
+            padding: 20px 24px;
             border-bottom: 2px solid rgba(255, 255, 255, 0.05);
             display: flex;
             align-items: center;
@@ -235,19 +260,26 @@
         }
 
         .extension-modal-icon {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            padding: 8px;
+        }
+        
+        .extension-modal-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .extension-modal-header h2 {
             flex: 1;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
             -webkit-background-clip: text;
@@ -257,28 +289,35 @@
 
         .extension-modal-header .modal-close {
             position: absolute;
-            right: 24px;
-            top: 24px;
+            right: 20px;
+            top: 20px;
         }
 
         .extension-modal-body {
-            padding: 24px;
+            padding: 20px 24px 24px;
         }
 
         .extension-description {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
 
         .extension-description p {
             color: #E0E0E0;
-            font-size: 15px;
-            margin-bottom: 16px;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .browser-note {
+            color: #94969C;
+            font-size: 12px;
+            font-style: italic;
+            margin-bottom: 12px;
         }
 
         .extension-features {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -287,26 +326,27 @@
             background: rgba(75, 191, 235, 0.1);
             border: 1px solid rgba(75, 191, 235, 0.3);
             color: #4BBFEB;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
         }
 
         .installation-steps h3 {
-            font-size: 18px;
-            margin-bottom: 20px;
+            font-size: 16px;
+            margin-bottom: 16px;
             color: #E0E0E0;
         }
 
+        /* Compact step cards */
         .step-card {
             display: flex;
-            gap: 16px;
+            gap: 14px;
             background: rgba(255, 255, 255, 0.03);
             border: 2px solid rgba(255, 255, 255, 0.06);
             border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
             transition: all 0.3s;
         }
 
@@ -317,15 +357,15 @@
         }
 
         .step-number {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 14px;
             flex-shrink: 0;
         }
 
@@ -334,30 +374,31 @@
         }
 
         .step-content h4 {
-            font-size: 14px;
-            margin-bottom: 6px;
+            font-size: 13px;
+            margin-bottom: 4px;
             color: #E0E0E0;
         }
 
         .step-content p {
-            font-size: 12px;
+            font-size: 11px;
             color: #94969C;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            line-height: 1.4;
         }
 
         .download-btn {
             background: linear-gradient(135deg, #4BBFEB 0%, #5B8DEE 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 10px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .download-btn:hover {
@@ -371,23 +412,23 @@
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            padding: 8px 12px;
+            padding: 6px 10px;
             align-items: center;
         }
 
         .url-copy-box code {
             flex: 1;
             color: #4BBFEB;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .copy-btn {
             background: rgba(75, 191, 235, 0.2);
             border: 1px solid rgba(75, 191, 235, 0.3);
             color: #4BBFEB;
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 6px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -398,16 +439,16 @@
         }
 
         .extension-footer {
-            margin-top: 24px;
-            padding-top: 20px;
+            margin-top: 20px;
+            padding-top: 16px;
             border-top: 2px solid rgba(255, 255, 255, 0.05);
             text-align: center;
         }
 
         .help-text {
             color: #94969C;
-            font-size: 12px;
-            margin-bottom: 16px;
+            font-size: 11px;
+            margin-bottom: 12px;
         }
         
         /* Onboarding Overlay */
@@ -610,19 +651,6 @@
         .onboarding-step.completed {
             background: rgba(75, 191, 235, 0.1);
             border-color: rgba(75, 191, 235, 0.3);
-        }
-        
-        .step-number {
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 6px;
-            font-weight: 700;
-            font-size: 12px;
         }
         
         .step-title {
@@ -1742,7 +1770,7 @@
             }
 
             .extension-button {
-                padding: 6px 10px;
+                padding: 8px 12px;
                 margin-right: 8px;
             }
             
@@ -1957,7 +1985,7 @@
         <div class="extension-modal-content">
             <div class="extension-modal-header">
                 <div class="extension-modal-icon">
-                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" alt="Youmio" style="width: 48px; height: 48px;">
+                    <img src="youmio-icon.png" alt="Youmio">
                 </div>
                 <h2>Youmio Verify Extension</h2>
                 <button class="modal-close" onclick="closeExtensionModal()">×</button>
@@ -1966,6 +1994,7 @@
             <div class="extension-modal-body">
                 <div class="extension-description">
                     <p>Mint AI chat conversations directly to blockchain from any AI chat interface!</p>
+                    <p class="browser-note">Works with browser-based AI chats only (ChatGPT, Claude, etc.)</p>
                     <div class="extension-features">
                         <div class="feature-badge">✓ Works with Claude, ChatGPT & more</div>
                         <div class="feature-badge">✓ One-click minting</div>
@@ -2012,6 +2041,14 @@
                         <div class="step-content">
                             <h4>Load Extension</h4>
                             <p>Click "Load unpacked" and select the unzipped folder</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h4>Start Minting!</h4>
+                            <p>Visit any browser-based AI chat (ChatGPT, Claude, etc.) and you'll see "Mint to Chain" buttons on AI responses</p>
                         </div>
                     </div>
                 </div>
@@ -2070,7 +2107,9 @@
                 <!-- Chrome Extension Button -->
                 <button class="extension-button" onclick="openExtensionModal()">
                     <div class="extension-button-content">
-                        <span class="extension-main-text">🔗 Try our Chrome Extension</span>
+                        <span class="extension-main-text">
+                            <span>🔗</span> Try our Chrome Extension
+                        </span>
                         <span class="extension-sub-text">Demo Only</span>
                     </div>
                 </button>
@@ -3387,7 +3426,7 @@
                     body: JSON.stringify({
                         ...messageData,
                         walletAddress: userAddress,
-                        tokenBalance: tokenBalance,
+tokenBalance: tokenBalance,
                         networkChainId: CONFIG.TESTNET_CHAIN_ID,
                         transactionHash: null
                     })
@@ -3434,7 +3473,7 @@
                     },
                     body: JSON.stringify({ 
                         prompt: userMessage,
-knowledge: knowledge,
+                        knowledge: knowledge,
                         personality: settings.personality,
                         behavior: settings.behavior,
                         conversationHistory: conversationHistory.slice(-10) // Last 10 messages for context
