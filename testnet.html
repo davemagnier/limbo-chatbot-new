@@ -153,6 +153,263 @@
             box-shadow: 0 0 6px rgba(255, 100, 100, 0.5);
         }
         
+        /* Chrome Extension Button */
+        .extension-button {
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.15) 0%, rgba(166, 104, 196, 0.15) 100%);
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            border-radius: 14px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            margin-right: 12px;
+        }
+
+        .extension-button:hover {
+            background: linear-gradient(135deg, rgba(198, 104, 168, 0.25) 0%, rgba(166, 104, 196, 0.25) 100%);
+            border-color: rgba(198, 104, 168, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(198, 104, 168, 0.2);
+        }
+
+        .extension-button-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .extension-main-text {
+            color: #C668A8;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .extension-sub-text {
+            color: #94969C;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        /* Extension Modal */
+        .extension-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 10000;
+            animation: fadeIn 0.3s;
+        }
+
+        .extension-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .extension-modal-content {
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            background: #1A1A2E;
+            border-radius: 24px;
+            border: 2px solid rgba(198, 104, 168, 0.3);
+            overflow-y: auto;
+            animation: slideUp 0.3s;
+        }
+
+        .extension-modal-header {
+            padding: 24px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+        }
+
+        .extension-modal-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .extension-modal-header h2 {
+            flex: 1;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .extension-modal-header .modal-close {
+            position: absolute;
+            right: 24px;
+            top: 24px;
+        }
+
+        .extension-modal-body {
+            padding: 24px;
+        }
+
+        .extension-description {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .extension-description p {
+            color: #E0E0E0;
+            font-size: 15px;
+            margin-bottom: 16px;
+        }
+
+        .extension-features {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .feature-badge {
+            background: rgba(75, 191, 235, 0.1);
+            border: 1px solid rgba(75, 191, 235, 0.3);
+            color: #4BBFEB;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .installation-steps h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #E0E0E0;
+        }
+
+        .step-card {
+            display: flex;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+        }
+
+        .step-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(198, 104, 168, 0.2);
+            transform: translateX(4px);
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #C668A8 0%, #A668C4 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #E0E0E0;
+        }
+
+        .step-content p {
+            font-size: 12px;
+            color: #94969C;
+            margin-bottom: 10px;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #4BBFEB 0%, #5B8DEE 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(75, 191, 235, 0.3);
+        }
+
+        .url-copy-box {
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 12px;
+            align-items: center;
+        }
+
+        .url-copy-box code {
+            flex: 1;
+            color: #4BBFEB;
+            font-size: 12px;
+        }
+
+        .copy-btn {
+            background: rgba(75, 191, 235, 0.2);
+            border: 1px solid rgba(75, 191, 235, 0.3);
+            color: #4BBFEB;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(75, 191, 235, 0.3);
+        }
+
+        .extension-footer {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+        }
+
+        .help-text {
+            color: #94969C;
+            font-size: 12px;
+            margin-bottom: 16px;
+        }
+        
         /* Onboarding Overlay */
         .onboarding-overlay {
             position: fixed;
@@ -1483,6 +1740,29 @@
                 padding: 8px 14px;
                 font-size: 12px;
             }
+
+            .extension-button {
+                padding: 6px 10px;
+                margin-right: 8px;
+            }
+            
+            .extension-main-text {
+                font-size: 11px;
+            }
+            
+            .extension-sub-text {
+                font-size: 9px;
+            }
+            
+            .extension-modal-content {
+                margin: 10px;
+                max-height: 95vh;
+            }
+            
+            .extension-features {
+                flex-direction: column;
+                align-items: center;
+            }
             
             .content-wrapper {
                 display: block;
@@ -1672,6 +1952,80 @@
         </div>
     </div>
     
+    <!-- Chrome Extension Modal -->
+    <div class="extension-modal" id="extensionModal">
+        <div class="extension-modal-content">
+            <div class="extension-modal-header">
+                <div class="extension-modal-icon">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" alt="Youmio" style="width: 48px; height: 48px;">
+                </div>
+                <h2>Youmio Verify Extension</h2>
+                <button class="modal-close" onclick="closeExtensionModal()">×</button>
+            </div>
+            
+            <div class="extension-modal-body">
+                <div class="extension-description">
+                    <p>Mint AI chat conversations directly to blockchain from any AI chat interface!</p>
+                    <div class="extension-features">
+                        <div class="feature-badge">✓ Works with Claude, ChatGPT & more</div>
+                        <div class="feature-badge">✓ One-click minting</div>
+                        <div class="feature-badge">✓ Testnet Demo</div>
+                    </div>
+                </div>
+                
+                <div class="installation-steps">
+                    <h3>Quick Installation</h3>
+                    
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Download Extension</h4>
+                            <p>Click below to download the extension files</p>
+                            <button class="download-btn" onclick="downloadExtension()">
+                                <span>⬇</span> Download Extension.zip
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Open Chrome Extensions</h4>
+                            <p>Go to Chrome settings or type in address bar:</p>
+                            <div class="url-copy-box">
+                                <code>chrome://extensions/</code>
+                                <button onclick="copyToClipboard('chrome://extensions/')" class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Enable Developer Mode</h4>
+                            <p>Toggle the "Developer mode" switch in the top right</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Load Extension</h4>
+                            <p>Click "Load unpacked" and select the unzipped folder</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="extension-footer">
+                    <p class="help-text">Need help? The extension adds "Mint to Chain" buttons to AI chat messages</p>
+                    <button class="action-button primary" onclick="downloadExtension()">
+                        Get Started - Download Extension
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Mints Modal -->
     <div class="mints-modal" id="mintsModal">
         <div class="mints-modal-content">
@@ -1713,6 +2067,14 @@
                 </div>
             </div>
             <div class="network-status">
+                <!-- Chrome Extension Button -->
+                <button class="extension-button" onclick="openExtensionModal()">
+                    <div class="extension-button-content">
+                        <span class="extension-main-text">🔗 Try our Chrome Extension</span>
+                        <span class="extension-sub-text">Demo Only</span>
+                    </div>
+                </button>
+                
                 <button class="network-button" id="networkButton" onclick="handleNetworkClick()">
                     <span class="network-led" id="networkLed"></span>
                     <span id="networkText">KELLS Testnet</span>
@@ -1810,7 +2172,7 @@
                         </div>
                         <!-- NEW: My Mints Button -->
                         <button class="view-mints-button" id="viewMintsButton" onclick="openMyMints()">
-                            <span>🔐</span> View My Minted Chats
+                            <span>📜</span> View My Minted Chats
                         </button>
                     </div>
                 </div>
@@ -1911,6 +2273,56 @@
             x: false,
             discord: false
         };
+
+        // Chrome Extension Functions
+        function openExtensionModal() {
+            const modal = document.getElementById('extensionModal');
+            modal.classList.add('show');
+        }
+
+        function closeExtensionModal() {
+            const modal = document.getElementById('extensionModal');
+            modal.classList.remove('show');
+        }
+
+        // Close modal on escape key or background click
+        document.getElementById('extensionModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('extensionModal')) {
+                closeExtensionModal();
+            }
+        });
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Copied to clipboard!', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const input = document.createElement('input');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showNotification('Copied to clipboard!', 'success');
+            });
+        }
+
+        function downloadExtension() {
+            // Create a link to download your extension
+            // You'll need to host the extension.zip file somewhere
+            // For now, this shows an alert with instructions
+            
+            showNotification('Extension download starting...', 'success');
+            
+            // Replace this URL with your actual hosted extension.zip file
+            const extensionUrl = 'https://your-domain.com/youmio-verify-extension.zip';
+            
+            // For demo purposes, show instructions
+            alert(`Demo Mode: In production, this would download the extension.\n\nTo install manually:\n1. Get the extension files from the developer\n2. Unzip the files\n3. Go to chrome://extensions/\n4. Enable Developer mode\n5. Click "Load unpacked"\n6. Select the extension folder`);
+            
+            // In production, uncomment this:
+            // window.open(extensionUrl, '_blank');
+        }
         
         // FIXED: Load admin settings helper functions
         async function loadAdminSettings() {
@@ -3022,7 +3434,7 @@
                     },
                     body: JSON.stringify({ 
                         prompt: userMessage,
-                        knowledge: knowledge,
+knowledge: knowledge,
                         personality: settings.personality,
                         behavior: settings.behavior,
                         conversationHistory: conversationHistory.slice(-10) // Last 10 messages for context
@@ -3232,6 +3644,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeMyMints();
+                closeExtensionModal();
             }
         });
         
