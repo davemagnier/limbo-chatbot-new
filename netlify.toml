@@ -1,16 +1,22 @@
 [build]
   functions = "functions"
-  publish = "."
 
 [functions]
   node_bundler = "esbuild"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+# Enable Blobs
+[blobs]
+  enabled = true
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
+# Function-specific configuration
+[[functions]]
+  path = "functions/mint-store.js"
+  
+[[functions]]
+  path = "functions/chat.js"
+  
+[[functions]]
+  path = "functions/image.js"
+  
+[[functions]]
+  path = "functions/health.js"
