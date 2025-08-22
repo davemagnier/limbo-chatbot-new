@@ -177,6 +177,19 @@
             filter: brightness(1.1);
         }
         
+        .status-button {
+            background: linear-gradient(135deg, #4BBFEB 0%, #5B8DEE 100%);
+            color: white;
+            border: 2px solid rgba(75, 191, 235, 0.3);
+            box-shadow: 0 8px 24px rgba(75, 191, 235, 0.25);
+        }
+        
+        .status-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(75, 191, 235, 0.35);
+            filter: brightness(1.1);
+        }
+        
         .status {
             margin-top: 60px;
             font-size: 12px;
@@ -228,14 +241,17 @@
     
     <div class="container">
         <img src="youmio-logo.png" alt="Youmio" class="logo">
-        <p class="tagline">Try the testnet and chat with Limbo here</p>
+        <p class="tagline">Chat with Limbo • Test the network • Monitor status</p>
         
         <div class="buttons">
             <a href="limbo-chatbot.html" class="main-button primary-button">
                 Launch Chatbot
             </a>
             <a href="testnet.html" class="main-button testnet-button">
-                Testnet
+                Testnet Demo
+            </a>
+            <a href="testnet-status.html" class="main-button status-button">
+                Network Status
             </a>
             <a href="limbo-admin.html" class="main-button secondary-button">
                 Admin Panel
