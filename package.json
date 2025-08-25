@@ -10,7 +10,8 @@
   "dependencies": {
     "@netlify/blobs": "^7.0.0",
     "@netlify/functions": "^2.8.0",
-    "openai": "^4.52.1"
+    "openai": "^4.52.1",
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "netlify-cli": "^17.0.0"
@@ -29,7 +30,9 @@
     "testnet",
     "web3",
     "netlify",
-    "blobs"
+    "blobs",
+    "kells",
+    "avalanche"
   ],
   "author": "Your Name",
   "license": "MIT"
