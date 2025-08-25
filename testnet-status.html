@@ -23,7 +23,7 @@
         
         /* Container - Always centered */
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             width: 100%;
             margin: 0 auto;
             padding: 40px 20px;
@@ -100,132 +100,75 @@
             letter-spacing: 0.06em;
         }
         
-        /* Metrics Container */
-        .metrics-container {
-            width: 100%;
-            max-width: 1200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-        }
-        
-        /* Primary Metrics Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-        
-        .metric-card {
+        /* Info Message */
+        .info-message {
             background: linear-gradient(135deg, 
-                rgba(88, 80, 115, 0.15) 0%, 
-                rgba(131, 88, 115, 0.12) 50%,
-                rgba(163, 88, 115, 0.08) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 16px;
-            padding: 24px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .metric-card:hover {
-            background: linear-gradient(135deg, 
-                rgba(88, 80, 115, 0.18) 0%, 
-                rgba(131, 88, 115, 0.15) 50%,
-                rgba(163, 88, 115, 0.10) 100%);
-            border-color: rgba(255, 255, 255, 0.08);
-            transform: translateY(-1px);
-        }
-        
-        .metric-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        
-        .metric-icon {
-            font-size: 16px;
-            opacity: 0.7;
-        }
-        
-        .metric-label {
-            font-size: 10px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-        
-        .metric-value {
-            font-size: 28px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.9);
-            letter-spacing: -0.02em;
-            margin-bottom: 4px;
-        }
-        
-        .metric-subtext {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.4);
-            margin-bottom: 8px;
-        }
-        
-        .metric-change {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-        
-        .metric-change.positive {
-            color: #86EFAC;
-        }
-        
-        .metric-change.negative {
-            color: #FCA5A5;
-        }
-        
-        .metric-change .arrow {
-            font-size: 9px;
-        }
-        
-        /* Secondary Metrics */
-        .secondary-metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            margin-bottom: 32px;
-            width: 100%;
-        }
-        
-        .small-metric {
-            background: linear-gradient(135deg, 
-                rgba(75, 70, 95, 0.12) 0%, 
-                rgba(115, 75, 95, 0.08) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+                rgba(219, 112, 147, 0.08) 0%, 
+                rgba(194, 72, 118, 0.05) 100%);
+            border: 1px solid rgba(219, 112, 147, 0.2);
             border-radius: 12px;
-            padding: 18px;
+            padding: 16px 20px;
+            margin-bottom: 32px;
             text-align: center;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(10px);
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
         }
         
-        .small-metric:hover {
+        .info-message a {
+            color: #DB7093;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .info-message a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Network Config Section */
+        .config-section {
             background: linear-gradient(135deg, 
                 rgba(75, 70, 95, 0.15) 0%, 
                 rgba(115, 75, 95, 0.10) 100%);
-            border-color: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            width: 100%;
+            backdrop-filter: blur(10px);
         }
         
-        .small-metric-label {
-            font-size: 9px;
+        .config-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 24px;
+            letter-spacing: -0.01em;
+            text-align: center;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .config-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+        
+        .config-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.06);
+            transform: translateY(-1px);
+        }
+        
+        .config-label {
+            font-size: 10px;
             font-weight: 500;
             color: rgba(255, 255, 255, 0.35);
             text-transform: uppercase;
@@ -233,11 +176,49 @@
             margin-bottom: 8px;
         }
         
-        .small-metric-value {
+        .config-value {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            word-break: break-all;
+        }
+        
+        .config-value.large {
             font-size: 18px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.85);
-            letter-spacing: -0.01em;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .config-value a {
+            color: #DB7093;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .config-value a:hover {
+            color: #E799B0;
+        }
+        
+        .copy-btn {
+            padding: 3px 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 9px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: auto;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: rgba(255, 255, 255, 0.6);
         }
         
         /* Action Buttons */
@@ -251,7 +232,7 @@
         }
         
         .btn {
-            padding: 12px 28px;
+            padding: 14px 32px;
             border-radius: 10px;
             font-size: 13px;
             font-weight: 500;
@@ -306,87 +287,6 @@
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.06);
             border-color: rgba(255, 255, 255, 0.12);
-        }
-        
-        /* Network Config Section */
-        .config-section {
-            background: linear-gradient(135deg, 
-                rgba(75, 70, 95, 0.15) 0%, 
-                rgba(115, 75, 95, 0.10) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 20px;
-            padding: 28px;
-            margin-bottom: 40px;
-            width: 100%;
-            max-width: 1200px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .config-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 20px;
-            letter-spacing: -0.01em;
-        }
-        
-        .config-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-        
-        .config-item {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        
-        .config-label {
-            font-size: 10px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.35);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-        
-        .config-value {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.75);
-            font-weight: 400;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            word-break: break-all;
-        }
-        
-        .config-value a {
-            color: #DB7093;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-        
-        .config-value a:hover {
-            color: #E799B0;
-        }
-        
-        .copy-btn {
-            padding: 3px 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 4px;
-            color: rgba(255, 255, 255, 0.45);
-            font-size: 9px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.07);
-            color: rgba(255, 255, 255, 0.6);
         }
         
         /* Footer */
@@ -460,16 +360,6 @@
                 height: 60px;
             }
             
-            .metrics-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-            
-            .secondary-metrics {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-            
             .config-grid {
                 grid-template-columns: 1fr;
             }
@@ -482,31 +372,11 @@
                 width: 100%;
                 justify-content: center;
             }
-            
-            .metric-value {
-                font-size: 24px;
-            }
-            
-            .small-metric {
-                padding: 14px;
-            }
-            
-            .small-metric-value {
-                font-size: 16px;
-            }
         }
         
         @media (max-width: 480px) {
             .logo {
                 height: 48px;
-            }
-            
-            .secondary-metrics {
-                grid-template-columns: 1fr;
-            }
-            
-            .config-value {
-                font-size: 12px;
             }
         }
     </style>
@@ -517,82 +387,58 @@
         <header class="header">
             <img src="youmio-logo.png" alt="Youmio" class="logo">
             <h1 class="page-title">KELLS Testnet</h1>
-            <p class="page-subtitle">Avalanche L1 Network Status</p>
+            <p class="page-subtitle">Avalanche L1 Network</p>
             <div class="status-badge">
                 <div class="status-dot"></div>
                 <span class="status-text">Network Active</span>
             </div>
         </header>
         
-        <!-- Metrics Container -->
-        <div class="metrics-container">
-            <!-- Primary Metrics -->
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-icon">📦</span>
-                        <span class="metric-label">Block Height</span>
-                    </div>
-                    <div class="metric-value" id="blockHeight">1,247,895</div>
-                    <div class="metric-subtext">Latest block</div>
-                    <div class="metric-change positive">
-                        <span class="arrow">↑</span>
-                        <span>2.1s avg block time</span>
+        <!-- Info Message -->
+        <div class="info-message">
+            For live network statistics, visit the 
+            <a href="https://explorer-test.avax.network/kells" target="_blank">KELLS Explorer</a>
+        </div>
+        
+        <!-- Network Configuration -->
+        <div class="config-section">
+            <h2 class="config-title">Network Configuration</h2>
+            <div class="config-grid">
+                <div class="config-item">
+                    <div class="config-label">Network Name</div>
+                    <div class="config-value large">KELLS Testnet</div>
+                </div>
+                
+                <div class="config-item">
+                    <div class="config-label">Chain ID</div>
+                    <div class="config-value large">77719 (0x12d07)</div>
+                </div>
+                
+                <div class="config-item">
+                    <div class="config-label">Currency Symbol</div>
+                    <div class="config-value large">KELLS</div>
+                </div>
+                
+                <div class="config-item">
+                    <div class="config-label">RPC URL</div>
+                    <div class="config-value">
+                        <span style="font-size: 12px;">https://subnets.avax.network/kells/testnet/rpc</span>
+                        <button class="copy-btn" onclick="copyToClipboard('https://subnets.avax.network/kells/testnet/rpc')">Copy</button>
                     </div>
                 </div>
                 
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-icon">⛽</span>
-                        <span class="metric-label">Gas Price</span>
-                    </div>
-                    <div class="metric-value" id="gasPrice">25 Gwei</div>
-                    <div class="metric-subtext">Current base fee</div>
-                    <div class="metric-change negative">
-                        <span class="arrow">↓</span>
-                        <span>5% from 1hr ago</span>
+                <div class="config-item">
+                    <div class="config-label">Block Explorer</div>
+                    <div class="config-value">
+                        <a href="https://explorer-test.avax.network/kells" target="_blank">
+                            explorer-test.avax.network/kells
+                        </a>
                     </div>
                 </div>
                 
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-icon">⚡</span>
-                        <span class="metric-label">Network TPS</span>
-                    </div>
-                    <div class="metric-value" id="tps">157</div>
-                    <div class="metric-subtext">Transactions per second</div>
-                    <div class="metric-change positive">
-                        <span class="arrow">↑</span>
-                        <span>12% capacity</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Secondary Metrics -->
-            <div class="secondary-metrics">
-                <div class="small-metric">
-                    <div class="small-metric-label">Block Size</div>
-                    <div class="small-metric-value" id="blockSize">45.2 KB</div>
-                </div>
-                
-                <div class="small-metric">
-                    <div class="small-metric-label">Priority Fee</div>
-                    <div class="small-metric-value" id="priorityFee">2 Gwei</div>
-                </div>
-                
-                <div class="small-metric">
-                    <div class="small-metric-label">Pending Txs</div>
-                    <div class="small-metric-value" id="pendingTx">12</div>
-                </div>
-                
-                <div class="small-metric">
-                    <div class="small-metric-label">Active Validators</div>
-                    <div class="small-metric-value" id="validators">12</div>
-                </div>
-                
-                <div class="small-metric">
-                    <div class="small-metric-label">Network Load</div>
-                    <div class="small-metric-value" id="networkLoad">24%</div>
+                <div class="config-item">
+                    <div class="config-label">Network Type</div>
+                    <div class="config-value">Avalanche L1 (Subnet)</div>
                 </div>
             </div>
         </div>
@@ -606,51 +452,8 @@
                 🚀 Apply to Access Testnet
             </a>
             <a href="https://explorer-test.avax.network/kells" target="_blank" class="btn btn-secondary">
-                🔍 View Explorer
+                🔍 View Live Explorer
             </a>
-        </div>
-        
-        <!-- Network Configuration -->
-        <div class="config-section">
-            <h2 class="config-title">Network Configuration</h2>
-            <div class="config-grid">
-                <div class="config-item">
-                    <div class="config-label">Network Name</div>
-                    <div class="config-value">KELLS Testnet</div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">Chain ID</div>
-                    <div class="config-value">77719 (0x12d07)</div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">Currency Symbol</div>
-                    <div class="config-value">KELLS</div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">RPC URL</div>
-                    <div class="config-value">
-                        <span style="font-size: 11px;">https://subnets.avax.network/kells/testnet/rpc</span>
-                        <button class="copy-btn" onclick="copyToClipboard('https://subnets.avax.network/kells/testnet/rpc')">Copy</button>
-                    </div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">Explorer</div>
-                    <div class="config-value">
-                        <a href="https://explorer-test.avax.network/kells" target="_blank">
-                            explorer-test.avax.network/kells
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">Network Type</div>
-                    <div class="config-value">Avalanche L1 (Subnet)</div>
-                </div>
-            </div>
         </div>
         
         <!-- Footer -->
@@ -729,33 +532,6 @@
             document.body.appendChild(notification);
             setTimeout(() => notification.remove(), 3000);
         }
-        
-        // Simulate live updates (replace with real API calls when available)
-        function updateMetrics() {
-            // These would be fetched from the explorer API or RPC
-            const blockHeight = document.getElementById('blockHeight');
-            const currentBlock = parseInt(blockHeight.textContent.replace(/,/g, ''));
-            blockHeight.textContent = (currentBlock + 1).toLocaleString();
-            
-            // Update gas price
-            const gasPrice = 20 + Math.floor(Math.random() * 10);
-            document.getElementById('gasPrice').textContent = gasPrice + ' Gwei';
-            
-            // Update TPS
-            const tps = 140 + Math.floor(Math.random() * 40);
-            document.getElementById('tps').textContent = tps;
-            
-            // Update smaller metrics
-            document.getElementById('pendingTx').textContent = Math.floor(Math.random() * 50);
-            document.getElementById('networkLoad').textContent = (15 + Math.floor(Math.random() * 30)) + '%';
-            document.getElementById('blockSize').textContent = (30 + Math.random() * 30).toFixed(1) + ' KB';
-        }
-        
-        // Initialize
-        window.addEventListener('load', () => {
-            // Update metrics every 3 seconds
-            setInterval(updateMetrics, 3000);
-        });
     </script>
 </body>
 </html>
