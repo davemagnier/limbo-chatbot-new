@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://subnets.avax.network;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8888 https://*.netlify.app;">
     <meta name="referrer" content="no-referrer">
     <title>KELLS Testnet Status - Youmio</title>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
@@ -144,6 +143,16 @@
             border-radius: 20px;
         }
         
+        .live-status.offline {
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.05) 0%, rgba(255, 149, 0, 0.05) 100%);
+            border-color: rgba(255, 59, 48, 0.2);
+        }
+        
+        .live-status.connecting {
+            background: linear-gradient(135deg, rgba(255, 204, 0, 0.05) 0%, rgba(255, 149, 0, 0.05) 100%);
+            border-color: rgba(255, 204, 0, 0.2);
+        }
+        
         .status-indicator {
             width: 24px;
             height: 24px;
@@ -153,9 +162,26 @@
             animation: pulseLive 2s infinite;
         }
         
+        .status-indicator.offline {
+            background: #ff3b30;
+            box-shadow: 0 0 20px rgba(255, 59, 48, 0.6);
+            animation: none;
+        }
+        
+        .status-indicator.connecting {
+            background: #ffcc00;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.6);
+            animation: pulse 1s infinite;
+        }
+        
         @keyframes pulseLive {
             0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(0, 255, 136, 0.6); }
             50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(0, 255, 136, 0.8); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
         .status-text {
@@ -164,9 +190,49 @@
             color: #00ff88;
         }
         
+        .status-text.offline {
+            color: #ff3b30;
+        }
+        
+        .status-text.connecting {
+            color: #ffcc00;
+        }
+        
         .status-uptime {
             font-size: 14px;
             color: #94969C;
+        }
+        
+        /* Error Message Box */
+        .error-box {
+            background: rgba(255, 59, 48, 0.1);
+            border: 2px solid rgba(255, 59, 48, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: none;
+        }
+        
+        .error-box.visible {
+            display: block;
+        }
+        
+        .error-title {
+            color: #ff3b30;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .error-details {
+            color: #E0E0E0;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .error-solution {
+            color: #ffcc00;
+            font-size: 14px;
+            font-style: italic;
         }
         
         /* Network Info Grid */
@@ -307,9 +373,9 @@
             animation: pulse 2s infinite;
         }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+        .activity-indicator.offline {
+            background: #ff3b30;
+            animation: none;
         }
         
         .activity-feed {
@@ -419,6 +485,10 @@
             border-color: rgba(75, 191, 235, 0.3);
         }
         
+        .notification.error {
+            border-color: rgba(255, 59, 48, 0.3);
+        }
+        
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .page-title {
@@ -461,12 +531,19 @@
         <!-- Main Status Card -->
         <div class="status-card">
             <!-- Live Status -->
-            <div class="live-status">
-                <div class="status-indicator"></div>
+            <div class="live-status" id="liveStatus">
+                <div class="status-indicator" id="statusIndicator"></div>
                 <div>
-                    <div class="status-text">NETWORK ONLINE</div>
-                    <div class="status-uptime">Uptime: <span id="uptime">99.98%</span> • Last block: <span id="lastBlockTime">2s ago</span></div>
+                    <div class="status-text" id="statusText">CONNECTING...</div>
+                    <div class="status-uptime">Uptime: <span id="uptime">--</span> • Last block: <span id="lastBlockTime">--</span></div>
                 </div>
+            </div>
+            
+            <!-- Error Message Box -->
+            <div class="error-box" id="errorBox">
+                <div class="error-title" id="errorTitle">Connection Error</div>
+                <div class="error-details" id="errorDetails"></div>
+                <div class="error-solution" id="errorSolution"></div>
             </div>
             
             <!-- Network Information -->
@@ -499,16 +576,16 @@
                     <div class="info-value">Avalanche Subnet</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Gas Price</div>
-                    <div class="info-value"><span id="gasPrice">25</span> Gwei</div>
+                    <div class="info-label">Current Block</div>
+                    <div class="info-value"><span id="currentBlock">--</span></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Active Validators</div>
-                    <div class="info-value"><span id="activeNodes">12</span> (100% online)</div>
+                    <div class="info-label">Gas Price</div>
+                    <div class="info-value"><span id="gasPrice">--</span> Gwei</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Avg Block Time</div>
-                    <div class="info-value"><span id="blockTime">2.1s</span></div>
+                    <div class="info-value"><span id="blockTime">--</span></div>
                 </div>
             </div>
             
@@ -516,6 +593,9 @@
             <div class="action-buttons">
                 <button class="action-button primary" onclick="addTestnetToMetaMask()">
                     <span>🦊</span> Add to MetaMask
+                </button>
+                <button class="action-button secondary" onclick="refreshData()">
+                    <span>🔄</span> Refresh Data
                 </button>
             </div>
         </div>
@@ -525,11 +605,13 @@
             <div class="activity-header">
                 <div class="activity-title">
                     <span>Recent Network Activity</span>
-                    <div class="activity-indicator"></div>
+                    <div class="activity-indicator" id="activityIndicator"></div>
                 </div>
             </div>
             <div class="activity-feed" id="activityFeed">
-                <!-- Activity items will be dynamically added here -->
+                <div style="text-align: center; color: #94969C; padding: 40px;">
+                    Waiting for network connection...
+                </div>
             </div>
         </div>
         
@@ -551,29 +633,35 @@
                 name: 'KELLS',
                 symbol: 'KELLS',
                 decimals: 18
-            }
+            },
+            // Netlify Function endpoint
+            API_ENDPOINT: window.location.hostname === 'localhost' 
+                ? 'http://localhost:8888/.netlify/functions/testnet-status' 
+                : '/.netlify/functions/testnet-status',
+            POLLING_INTERVAL: 5000, // 5 seconds
+            MAX_ACTIVITY_ITEMS: 20
         };
         
-        // Store for real blockchain data
-        let currentBlockNumber = 0;
-        let provider = null;
-        let lastKnownBlocks = [];
+        // State management
+        let networkStatus = {
+            isOnline: false,
+            currentBlock: 0,
+            gasPrice: '--',
+            avgBlockTime: '--',
+            lastUpdate: null,
+            uptime: 99.98
+        };
         
-        // Initialize ethers provider
-        async function initializeProvider() {
-            try {
-                provider = new ethers.providers.JsonRpcProvider(CONFIG.TESTNET_RPC_URL);
-                return true;
-            } catch (error) {
-                console.error('Failed to initialize provider:', error);
-                return false;
-            }
-        }
+        // Track unique transactions to prevent duplicates
+        const seenTransactions = new Set();
+        const seenBlocks = new Set();
         
         // Copy to clipboard
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
                 showNotification('Copied to clipboard!', 'success');
+            }).catch(err => {
+                showNotification('Failed to copy', 'error');
             });
         }
         
@@ -614,165 +702,255 @@
             setTimeout(() => notification.remove(), 3000);
         }
         
-        // Fetch real blockchain data
-        async function fetchBlockchainData() {
-            if (!provider) return;
+        // Update UI status
+        function updateStatus(status) {
+            const statusElement = document.getElementById('liveStatus');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            const activityIndicator = document.getElementById('activityIndicator');
             
-            try {
-                // Get current block number
-                const blockNumber = await provider.getBlockNumber();
-                currentBlockNumber = blockNumber;
-                
-                // Update last block time in status
-                const block = await provider.getBlock(blockNumber);
-                if (block) {
-                    const timeDiff = Date.now() / 1000 - block.timestamp;
-                    document.getElementById('lastBlockTime').textContent = 
-                        timeDiff < 60 ? Math.round(timeDiff) + 's ago' : 
-                        Math.round(timeDiff / 60) + 'm ago';
-                    
-                    // Add block to activity feed
-                    addBlockActivity(block);
-                    
-                    // Fetch transaction details for activity feed
-                    if (block.transactions.length > 0) {
-                        for (let i = 0; i < Math.min(3, block.transactions.length); i++) {
-                            const txHash = block.transactions[i];
-                            try {
-                                const tx = await provider.getTransaction(txHash);
-                                addTransactionActivity(tx);
-                            } catch (e) {
-                                console.error('Error fetching transaction:', e);
-                            }
-                        }
-                    }
-                }
-                
-                // Get gas price and update in network info
-                const gasPrice = await provider.getGasPrice();
-                const gasPriceGwei = Math.round(ethers.utils.formatUnits(gasPrice, 'gwei'));
-                const gasPriceElement = document.getElementById('gasPrice');
-                if (gasPriceElement) {
-                    gasPriceElement.textContent = gasPriceGwei;
-                }
-                
-                // Calculate average block time if we have enough data
-                if (lastKnownBlocks.length > 1) {
-                    const recentBlocks = lastKnownBlocks.slice(-5);
-                    const timeSpan = recentBlocks[recentBlocks.length - 1].timestamp - recentBlocks[0].timestamp;
-                    const blockCount = recentBlocks.length - 1;
-                    const avgBlockTime = blockCount > 0 ? (timeSpan / blockCount).toFixed(1) : '2.1';
-                    const blockTimeElement = document.getElementById('blockTime');
-                    if (blockTimeElement) {
-                        blockTimeElement.textContent = avgBlockTime + 's';
-                    }
-                }
-                
-                lastKnownBlocks.push({
-                    number: blockNumber,
-                    txCount: block.transactions.length,
-                    timestamp: block.timestamp
-                });
-                
-                // Keep only last 20 blocks in memory
-                if (lastKnownBlocks.length > 20) {
-                    lastKnownBlocks.shift();
-                }
-                
-            } catch (error) {
-                console.error('Error fetching blockchain data:', error);
+            // Remove all status classes
+            statusElement.classList.remove('offline', 'connecting');
+            statusIndicator.classList.remove('offline', 'connecting');
+            statusText.classList.remove('offline', 'connecting');
+            activityIndicator.classList.remove('offline');
+            
+            if (status === 'online') {
+                statusText.textContent = 'NETWORK ONLINE';
+                activityIndicator.style.background = '#00ff88';
+                networkStatus.isOnline = true;
+            } else if (status === 'offline') {
+                statusElement.classList.add('offline');
+                statusIndicator.classList.add('offline');
+                statusText.classList.add('offline');
+                activityIndicator.classList.add('offline');
+                statusText.textContent = 'CONNECTION FAILED';
+                activityIndicator.style.background = '#ff3b30';
+                networkStatus.isOnline = false;
+            } else if (status === 'connecting') {
+                statusElement.classList.add('connecting');
+                statusIndicator.classList.add('connecting');
+                statusText.classList.add('connecting');
+                statusText.textContent = 'CONNECTING...';
+                activityIndicator.style.background = '#ffcc00';
             }
         }
         
-        // Add real block to activity feed
-        function addBlockActivity(block) {
-            const feed = document.getElementById('activityFeed');
-            const item = document.createElement('div');
-            item.className = 'activity-item';
+        // Show error message
+        function showError(error, details, solution) {
+            const errorBox = document.getElementById('errorBox');
+            const errorTitle = document.getElementById('errorTitle');
+            const errorDetails = document.getElementById('errorDetails');
+            const errorSolution = document.getElementById('errorSolution');
             
-            const timeAgo = Date.now() / 1000 - block.timestamp;
-            const timeText = timeAgo < 60 ? 'just now' : Math.round(timeAgo / 60) + 'm ago';
-            
-            item.innerHTML = `
-                <div class="activity-icon">📦</div>
-                <div class="activity-details">
-                    <div class="activity-text">New block mined</div>
-                    <div class="activity-time">Block #${block.number} • ${block.transactions.length} txs • ${timeText}</div>
-                </div>
-            `;
-            
-            feed.insertBefore(item, feed.firstChild);
-            
-            // Keep feed clean
-            while (feed.children.length > 15) {
-                feed.removeChild(feed.lastChild);
-            }
+            errorBox.classList.add('visible');
+            errorTitle.textContent = error || 'Connection Error';
+            errorDetails.textContent = details || 'Unable to connect to the testnet';
+            errorSolution.textContent = solution || 'Please check your connection and try again';
         }
         
-        // Add real transaction to activity feed
-        function addTransactionActivity(tx) {
+        // Hide error message
+        function hideError() {
+            const errorBox = document.getElementById('errorBox');
+            errorBox.classList.remove('visible');
+        }
+        
+        // Format time ago
+        function formatTimeAgo(timestamp) {
+            const now = Date.now() / 1000;
+            const diff = now - timestamp;
+            
+            if (diff < 60) return Math.round(diff) + 's ago';
+            if (diff < 3600) return Math.round(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.round(diff / 3600) + 'h ago';
+            return Math.round(diff / 86400) + 'd ago';
+        }
+        
+        // Add activity to feed
+        function addActivityItem(type, data) {
             const feed = document.getElementById('activityFeed');
+            
+            // Clear waiting message if present
+            if (feed.children.length === 1 && feed.children[0].textContent.includes('Waiting')) {
+                feed.innerHTML = '';
+            }
+            
             const item = document.createElement('div');
             item.className = 'activity-item';
             
-            const value = tx.value ? ethers.utils.formatEther(tx.value) : '0';
-            const from = tx.from ? tx.from.slice(0, 6) + '...' + tx.from.slice(-4) : 'Unknown';
-            const to = tx.to ? tx.to.slice(0, 6) + '...' + tx.to.slice(-4) : 'Contract Creation';
+            let icon, text, details;
             
-            const icon = tx.to === null ? '⚡' : '💸';
-            const text = tx.to === null ? 'Contract deployed' : 'Transaction confirmed';
+            if (type === 'block') {
+                // Check if we've seen this block
+                if (seenBlocks.has(data.number)) return;
+                seenBlocks.add(data.number);
+                
+                icon = '📦';
+                text = 'New block mined';
+                details = `Block #${data.number} • ${data.transactions || 0} txs • ${formatTimeAgo(data.timestamp)}`;
+            } else if (type === 'transaction') {
+                // Check if we've seen this transaction
+                if (seenTransactions.has(data.hash)) return;
+                seenTransactions.add(data.hash);
+                
+                icon = data.to ? '💸' : '⚡';
+                text = data.to ? 'Transaction confirmed' : 'Contract deployed';
+                const from = data.from ? data.from.slice(0, 6) + '...' + data.from.slice(-4) : 'Unknown';
+                const to = data.to ? data.to.slice(0, 6) + '...' + data.to.slice(-4) : 'Contract Creation';
+                const value = parseFloat(data.value || 0).toFixed(4);
+                details = `${from} → ${to} • ${value} KELLS`;
+            } else {
+                return;
+            }
             
             item.innerHTML = `
                 <div class="activity-icon">${icon}</div>
                 <div class="activity-details">
                     <div class="activity-text">${text}</div>
-                    <div class="activity-time">${from} → ${to} • ${parseFloat(value).toFixed(4)} KELLS</div>
+                    <div class="activity-time">${details}</div>
                 </div>
             `;
             
             feed.insertBefore(item, feed.firstChild);
             
-            // Keep feed clean
-            while (feed.children.length > 15) {
+            // Maintain max items and clean old entries
+            while (feed.children.length > CONFIG.MAX_ACTIVITY_ITEMS) {
                 feed.removeChild(feed.lastChild);
             }
+            
+            // Clean up old entries from Sets to prevent memory leaks
+            if (seenBlocks.size > 100) {
+                const blocksArray = Array.from(seenBlocks);
+                blocksArray.slice(0, 50).forEach(block => seenBlocks.delete(block));
+            }
+            if (seenTransactions.size > 200) {
+                const txArray = Array.from(seenTransactions);
+                txArray.slice(0, 100).forEach(tx => seenTransactions.delete(tx));
+            }
+        }
+        
+        // Fetch data from Netlify Function
+        async function fetchData() {
+            try {
+                updateStatus('connecting');
+                
+                const response = await fetch(CONFIG.API_ENDPOINT, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // Add timeout
+                    signal: AbortSignal.timeout(10000)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Check if connection was successful
+                if (data.success === false) {
+                    // Show error details
+                    updateStatus('offline');
+                    showError(data.error, data.details, data.solution);
+                    
+                    // Update activity feed with error message
+                    const feed = document.getElementById('activityFeed');
+                    feed.innerHTML = `
+                        <div style="text-align: center; color: #ff3b30; padding: 40px;">
+                            ${data.error}<br>
+                            <span style="color: #94969C; font-size: 12px;">${data.solution}</span>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Connection successful - hide error box
+                hideError();
+                updateStatus('online');
+                
+                // Update block info
+                if (data.blockData) {
+                    document.getElementById('currentBlock').textContent = data.blockData.current || '--';
+                    document.getElementById('lastBlockTime').textContent = 
+                        formatTimeAgo(data.blockData.timestamp);
+                    
+                    // Add new block to activity if it's different from last
+                    if (data.blockData.current !== networkStatus.currentBlock) {
+                        addActivityItem('block', {
+                            number: data.blockData.current,
+                            timestamp: data.blockData.timestamp,
+                            transactions: data.blockData.transactions
+                        });
+                        networkStatus.currentBlock = data.blockData.current;
+                    }
+                }
+                
+                // Update gas price
+                if (data.gasPrice) {
+                    document.getElementById('gasPrice').textContent = 
+                        Math.round(parseFloat(data.gasPrice));
+                    networkStatus.gasPrice = data.gasPrice;
+                }
+                
+                // Update average block time
+                if (data.avgBlockTime) {
+                    document.getElementById('blockTime').textContent = data.avgBlockTime + 's';
+                    networkStatus.avgBlockTime = data.avgBlockTime;
+                }
+                
+                // Update uptime
+                document.getElementById('uptime').textContent = networkStatus.uptime.toFixed(2) + '%';
+                
+                // Process recent blocks
+                if (data.recentBlocks && Array.isArray(data.recentBlocks)) {
+                    data.recentBlocks.forEach(block => {
+                        addActivityItem('block', block);
+                    });
+                }
+                
+                // Process recent transactions
+                if (data.recentTransactions && Array.isArray(data.recentTransactions)) {
+                    data.recentTransactions.forEach(tx => {
+                        addActivityItem('transaction', tx);
+                    });
+                }
+                
+                networkStatus.lastUpdate = Date.now();
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                updateStatus('offline');
+                showError('Network Error', error.message, 'Check your internet connection and try again');
+                
+                // Show error in activity feed
+                const feed = document.getElementById('activityFeed');
+                if (feed.children.length === 0 || 
+                    (feed.children.length === 1 && feed.children[0].textContent.includes('Waiting'))) {
+                    feed.innerHTML = `
+                        <div style="text-align: center; color: #94969C; padding: 40px;">
+                            Unable to fetch network data.<br>
+                            Check console for details.
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Manual refresh
+        function refreshData() {
+            showNotification('Refreshing data...', 'success');
+            fetchData();
         }
         
         // Initialize on load
         window.addEventListener('load', async () => {
-            // Initialize provider
-            // NOTE: If the testnet is allowlist-gated, the RPC connection will only work
-            // for allowlisted addresses. The page will still show static info.
-            const connected = await initializeProvider();
+            // Initial fetch
+            await fetchData();
             
-            if (connected) {
-                // Initial fetch
-                await fetchBlockchainData();
-                
-                // Update every 3 seconds for real-time data
-                setInterval(fetchBlockchainData, 3000);
-                
-                // Also listen for new blocks
-                if (provider) {
-                    provider.on('block', async (blockNumber) => {
-                        console.log('New block:', blockNumber);
-                        await fetchBlockchainData();
-                    });
-                }
-            } else {
-                // If can't connect (possibly due to allowlist gating), show placeholder
-                document.getElementById('activityFeed').innerHTML = 
-                    '<div style="text-align: center; color: #94969C; padding: 40px;">Network data available for allowlisted addresses only</div>';
-            }
-            
-            // Initialize default values
-            const gasPriceEl = document.getElementById('gasPrice');
-            const activeNodesEl = document.getElementById('activeNodes');
-            const blockTimeEl = document.getElementById('blockTime');
-            
-            if (gasPriceEl) gasPriceEl.textContent = '25';
-            if (activeNodesEl) activeNodesEl.textContent = '12';
-            if (blockTimeEl) blockTimeEl.textContent = '2.1s';
+            // Set up polling
+            setInterval(fetchData, CONFIG.POLLING_INTERVAL);
         });
     </script>
 </body>
