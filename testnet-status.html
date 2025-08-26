@@ -52,7 +52,7 @@
         }
         
         .page-title {
-            font-size: 36px;
+            font-size: 28px;
             font-weight: 600;
             color: rgba(255, 255, 255, 0.9);
             margin-bottom: 8px;
@@ -469,7 +469,7 @@
         <!-- Header -->
         <header class="header">
             <img src="youmio-logo.png" alt="Youmio" class="logo">
-            <h1 class="page-title">TESTNET</h1>
+            <h1 class="page-title">Youmio Chain Testnet</h1>
             <p class="page-subtitle">Avalanche L1 Network</p>
             <div class="status-badge">
                 <div class="status-dot"></div>
@@ -547,6 +547,7 @@
             <img src="youmio-logo.png" alt="Youmio" class="footer-logo">
             
             <!-- Social Links -->
+            <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px; margin-bottom: 16px;">Join the Journey</p>
             <div class="social-links">
                 <a href="https://discord.com/invite/youmio" target="_blank" class="social-link" aria-label="Discord">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -624,8 +625,9 @@
         async function fetchDirectRPCData() {
             try {
                 const rpcUrl = CONFIG.RPC_URL;
+                const results = {};
                 
-                // Try to get block number
+                // Get block number
                 const blockResponse = await fetch(rpcUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -640,12 +642,105 @@
                 if (blockResponse.ok) {
                     const blockData = await blockResponse.json();
                     if (blockData.result) {
-                        const blockNumber = parseInt(blockData.result, 16);
-                        updateLiveData({
-                            stats: {
-                                blockHeight: blockNumber.toLocaleString()
-                            }
+                        results.blockHeight = parseInt(blockData.result, 16).toLocaleString();
+                        
+                        // Get latest block for more details
+                        const blockDetailsResponse = await fetch(rpcUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                method: 'eth_getBlockByNumber',
+                                params: ['latest', true],
+                                id: 2
+                            })
                         });
+                        
+                        if (blockDetailsResponse.ok) {
+                            const blockDetails = await blockDetailsResponse.json();
+                            if (blockDetails.result) {
+                                results.transactionCount = blockDetails.result.transactions ? 
+                                    blockDetails.result.transactions.length.toString() : '0';
+                                results.gasUsed = parseInt(blockDetails.result.gasUsed, 16).toLocaleString();
+                                results.blockTime = new Date(parseInt(blockDetails.result.timestamp, 16) * 1000).toLocaleTimeString();
+                            }
+                        }
+                        
+                        // Get gas price
+                        const gasResponse = await fetch(rpcUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                method: 'eth_gasPrice',
+                                params: [],
+                                id: 3
+                            })
+                        });
+                        
+                        if (gasResponse.ok) {
+                            const gasData = await gasResponse.json();
+                            if (gasData.result) {
+                                results.gasPrice = (parseInt(gasData.result, 16) / 1e9).toFixed(2) + ' Gwei';
+                            }
+                        }
+                        
+                        // Get chain ID to verify
+                        const chainResponse = await fetch(rpcUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                method: 'eth_chainId',
+                                params: [],
+                                id: 4
+                            })
+                        });
+                        
+                        if (chainResponse.ok) {
+                            const chainData = await chainResponse.json();
+                            if (chainData.result) {
+                                results.chainId = parseInt(chainData.result, 16).toString();
+                            }
+                        }
+                        
+                        // Get syncing status
+                        const syncResponse = await fetch(rpcUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                method: 'eth_syncing',
+                                params: [],
+                                id: 5
+                            })
+                        });
+                        
+                        if (syncResponse.ok) {
+                            const syncData = await syncResponse.json();
+                            results.syncStatus = syncData.result === false ? 'Synced' : 'Syncing';
+                        }
+                        
+                        // Get peer count
+                        const peerResponse = await fetch(rpcUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                method: 'net_peerCount',
+                                params: [],
+                                id: 6
+                            })
+                        });
+                        
+                        if (peerResponse.ok) {
+                            const peerData = await peerResponse.json();
+                            if (peerData.result) {
+                                results.peerCount = parseInt(peerData.result, 16).toString();
+                            }
+                        }
+                        
+                        updateLiveData({ stats: results });
                         return;
                     }
                 }
@@ -681,8 +776,29 @@
                 if (data.stats.blockHeight) {
                     statsHTML += createStatItem('Current Block Height', data.stats.blockHeight);
                 }
+                if (data.stats.transactionCount !== undefined) {
+                    statsHTML += createStatItem('Transactions in Block', data.stats.transactionCount);
+                }
                 if (data.stats.totalTransactions) {
                     statsHTML += createStatItem('Total Transactions', data.stats.totalTransactions);
+                }
+                if (data.stats.gasPrice) {
+                    statsHTML += createStatItem('Gas Price', data.stats.gasPrice);
+                }
+                if (data.stats.gasUsed) {
+                    statsHTML += createStatItem('Gas Used', data.stats.gasUsed);
+                }
+                if (data.stats.blockTime) {
+                    statsHTML += createStatItem('Block Time', data.stats.blockTime);
+                }
+                if (data.stats.chainId) {
+                    statsHTML += createStatItem('Chain ID', data.stats.chainId);
+                }
+                if (data.stats.syncStatus) {
+                    statsHTML += createStatItem('Sync Status', data.stats.syncStatus);
+                }
+                if (data.stats.peerCount) {
+                    statsHTML += createStatItem('Connected Peers', data.stats.peerCount);
                 }
                 if (data.stats.validators) {
                     statsHTML += createStatItem('Active Validators', data.stats.validators);
@@ -693,18 +809,21 @@
             }
             
             if (data.blocks) {
-                if (data.blocks.number) {
-                    statsHTML += createStatItem('Latest Block', data.blocks.number);
+                if (data.blocks.number && !data.stats?.blockHeight) {
+                    statsHTML += createStatItem('Latest Block', data.blocks.number.toLocaleString());
                 }
-                if (data.blocks.timestamp) {
+                if (data.blocks.timestamp && !data.stats?.blockTime) {
                     statsHTML += createStatItem('Block Time', formatTimestamp(data.blocks.timestamp));
                 }
-                if (data.blocks.gasUsed) {
+                if (data.blocks.gasUsed && !data.stats?.gasUsed) {
                     statsHTML += createStatItem('Gas Used', data.blocks.gasUsed);
+                }
+                if (data.blocks.transactions !== undefined && !data.stats?.transactionCount) {
+                    statsHTML += createStatItem('Transactions', data.blocks.transactions.toString());
                 }
             }
             
-            if (data.validators && Array.isArray(data.validators)) {
+            if (data.validators && Array.isArray(data.validators) && !data.stats?.validators) {
                 statsHTML += createStatItem('Validator Count', data.validators.length.toString());
             }
             
