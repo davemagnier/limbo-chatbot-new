@@ -160,6 +160,13 @@
             border-color: rgba(255, 255, 255, 0.12);
         }
         
+        /* Main content wrapper - ensures consistent width */
+        .main-content {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
         /* UNIFIED Config Section Styles - Used by BOTH sections identically */
         .config-section {
             background: linear-gradient(135deg, 
@@ -305,8 +312,8 @@
             border: 1px solid rgba(219, 112, 147, 0.2);
             border-radius: 12px;
             padding: 16px 20px;
-            margin-top: 32px;
-            margin-bottom: 32px;
+            margin-top: 16px;
+            margin-bottom: 16px;
             text-align: center;
             font-size: 13px;
             color: rgba(255, 255, 255, 0.7);
@@ -327,21 +334,10 @@
         /* Footer */
         .footer {
             text-align: center;
-            padding: 40px 0 20px;
+            padding: 20px 0 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
-            margin-top: 40px;
+            margin-top: 20px;
             width: 100%;
-        }
-        
-        .footer-logo {
-            height: 50px;
-            opacity: 0.5;
-            margin-bottom: 20px;
-            transition: opacity 0.3s ease;
-        }
-        
-        .footer-logo:hover {
-            opacity: 0.7;
         }
         
         .footer-link {
@@ -349,6 +345,8 @@
             text-decoration: none;
             font-size: 12px;
             transition: color 0.2s ease;
+            margin-top: 10px;
+            display: inline-block;
         }
         
         .footer-link:hover {
@@ -509,51 +507,54 @@
             </a>
         </div>
         
-        <!-- Network Configuration -->
-        <div class="config-section">
-            <h2 class="config-title">Network Configuration</h2>
-            <div class="config-grid">
-                <div class="config-item">
-                    <div class="config-label">Network Name</div>
-                    <div class="config-value large">KELLS Testnet</div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">Chain ID</div>
-                    <div class="config-value large">77719 (0x12d07)</div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">Currency Symbol</div>
-                    <div class="config-value large">KELLS</div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">RPC URL</div>
-                    <div class="config-value">
-                        <span style="font-size: 12px;">https://subnets.avax.network/kells/testnet/rpc</span>
-                        <button class="copy-btn" onclick="copyToClipboard('https://subnets.avax.network/kells/testnet/rpc')">Copy</button>
+        <!-- Main Content Container - ensures both sections have same width -->
+        <div class="main-content">
+            <!-- Network Configuration -->
+            <div class="config-section">
+                <h2 class="config-title">Network Configuration</h2>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <div class="config-label">Network Name</div>
+                        <div class="config-value large">KELLS Testnet</div>
                     </div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">Block Explorer</div>
-                    <div class="config-value">
-                        <a href="https://explorer-test.avax.network/kells" target="_blank">
-                            explorer-test.avax.network/kells
-                        </a>
+                    
+                    <div class="config-item">
+                        <div class="config-label">Chain ID</div>
+                        <div class="config-value large">77719 (0x12d07)</div>
                     </div>
-                </div>
-                
-                <div class="config-item">
-                    <div class="config-label">Network Type</div>
-                    <div class="config-value">Avalanche L1 (Subnet)</div>
+                    
+                    <div class="config-item">
+                        <div class="config-label">Currency Symbol</div>
+                        <div class="config-value large">KELLS</div>
+                    </div>
+                    
+                    <div class="config-item">
+                        <div class="config-label">RPC URL</div>
+                        <div class="config-value">
+                            <span style="font-size: 12px;">https://subnets.avax.network/kells/testnet/rpc</span>
+                            <button class="copy-btn" onclick="copyToClipboard('https://subnets.avax.network/kells/testnet/rpc')">Copy</button>
+                        </div>
+                    </div>
+                    
+                    <div class="config-item">
+                        <div class="config-label">Block Explorer</div>
+                        <div class="config-value">
+                            <a href="https://explorer-test.avax.network/kells" target="_blank">
+                                explorer-test.avax.network/kells
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="config-item">
+                        <div class="config-label">Network Type</div>
+                        <div class="config-value">Avalanche L1 (Subnet)</div>
+                    </div>
                 </div>
             </div>
+            
+            <!-- Live Stats Section -->
+            <div id="live-stats-container"></div>
         </div>
-        
-        <!-- Live Stats Section (dynamically added) -->
-        <div id="live-stats-container"></div>
         
         <!-- Info Message - Moved to bottom -->
         <div class="info-message">
@@ -563,8 +564,6 @@
         
         <!-- Footer -->
         <footer class="footer">
-            <img src="youmio-logo.png" alt="Youmio" class="footer-logo">
-            
             <!-- Social Links -->
             <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px; margin-bottom: 16px;">Join the Journey</p>
             <div class="social-links">
@@ -580,7 +579,7 @@
                 </a>
             </div>
             
-            <a href="index.html" class="footer-link">← Back to Youmio</a>
+            <a href="https://youmio.ai/" target="_blank" class="footer-link">Visit Youmio.ai</a>
         </footer>
     </div>
     
@@ -746,13 +745,16 @@
         function updateLiveData(data) {
             let statsContainer = document.getElementById('live-stats-container');
             
-            // Create container if it doesn't exist
+            // Container should already exist in the HTML, but create if needed
             if (!statsContainer) {
                 statsContainer = document.createElement('div');
                 statsContainer.id = 'live-stats-container';
                 
-                const configSection = document.querySelector('.config-section');
-                configSection.parentNode.insertBefore(statsContainer, configSection.nextSibling);
+                // Find the main-content container and append
+                const mainContent = document.querySelector('.main-content');
+                if (mainContent) {
+                    mainContent.appendChild(statsContainer);
+                }
             }
             
             // Build stats HTML - using exact same structure as Network Configuration
@@ -841,8 +843,10 @@
             if (!statsContainer) {
                 statsContainer = document.createElement('div');
                 statsContainer.id = 'live-stats-container';
-                const configSection = document.querySelector('.config-section');
-                configSection.parentNode.insertBefore(statsContainer, configSection.nextSibling);
+                const mainContent = document.querySelector('.main-content');
+                if (mainContent) {
+                    mainContent.appendChild(statsContainer);
+                }
             }
             
             if (status === 'limited' || status === 'offline') {
