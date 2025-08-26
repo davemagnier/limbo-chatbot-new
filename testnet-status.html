@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KELLS Testnet - Youmio</title>
+    <title>TESTNET - Youmio</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
@@ -35,12 +35,12 @@
         /* Header */
         .header {
             text-align: center;
-            margin-bottom: 48px;
+            margin-bottom: 32px;
             width: 100%;
         }
         
         .logo {
-            height: 80px;
+            height: 120px;
             width: auto;
             margin-bottom: 24px;
             opacity: 0.9;
@@ -52,7 +52,7 @@
         }
         
         .page-title {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 600;
             color: rgba(255, 255, 255, 0.9);
             margin-bottom: 8px;
@@ -66,14 +66,14 @@
             letter-spacing: 0.01em;
         }
         
-        /* Status Badge */
+        /* Status Badge - Now Green */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: rgba(139, 92, 246, 0.08);
-            border: 1px solid rgba(139, 92, 246, 0.15);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
             border-radius: 100px;
             margin-top: 24px;
         }
@@ -82,8 +82,8 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: #A78BFA;
-            box-shadow: 0 0 6px rgba(167, 139, 250, 0.4);
+            background: #10B981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
             animation: pulse 2s infinite;
         }
         
@@ -92,37 +92,72 @@
             50% { opacity: 0.5; }
         }
         
-        .status-text {
-            font-size: 11px;
-            font-weight: 500;
-            color: #A78BFA;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
+        /* Action Buttons - Moved to top */
+        .actions-section {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            width: 100%;
         }
         
-        /* Info Message */
-        .info-message {
-            background: linear-gradient(135deg, 
-                rgba(219, 112, 147, 0.08) 0%, 
-                rgba(194, 72, 118, 0.05) 100%);
-            border: 1px solid rgba(219, 112, 147, 0.2);
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 32px;
-            text-align: center;
+        .btn {
+            padding: 14px 32px;
+            border-radius: 10px;
             font-size: 13px;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.5;
-        }
-        
-        .info-message a {
-            color: #DB7093;
-            text-decoration: none;
             font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.02em;
         }
         
-        .info-message a:hover {
-            text-decoration: underline;
+        .btn-primary {
+            background: linear-gradient(135deg, 
+                rgba(139, 92, 246, 0.8) 0%, 
+                rgba(124, 58, 237, 0.8) 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+            background: linear-gradient(135deg, 
+                rgba(139, 92, 246, 0.9) 0%, 
+                rgba(124, 58, 237, 0.9) 100%);
+        }
+        
+        .btn-pink {
+            background: linear-gradient(135deg, 
+                rgba(219, 112, 147, 0.8) 0%, 
+                rgba(194, 72, 118, 0.8) 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(219, 112, 147, 0.15);
+        }
+        
+        .btn-pink:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(219, 112, 147, 0.2);
+            background: linear-gradient(135deg, 
+                rgba(219, 112, 147, 0.9) 0%, 
+                rgba(194, 72, 118, 0.9) 100%);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
         }
         
         /* Network Config Section */
@@ -221,87 +256,89 @@
             color: rgba(255, 255, 255, 0.6);
         }
         
-        /* Action Buttons */
-        .actions-section {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin: 32px 0;
-            flex-wrap: wrap;
+        /* Loading animation */
+        .loading {
+            opacity: 0.6;
+            position: relative;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.05) 50%,
+                transparent 100%
+            );
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* Live indicator */
+        .live-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            margin-left: 8px;
+        }
+        
+        /* Info Message - Moved to bottom */
+        .info-message {
+            background: linear-gradient(135deg, 
+                rgba(219, 112, 147, 0.08) 0%, 
+                rgba(194, 72, 118, 0.05) 100%);
+            border: 1px solid rgba(219, 112, 147, 0.2);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 32px;
+            margin-bottom: 32px;
+            text-align: center;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
             width: 100%;
         }
         
-        .btn {
-            padding: 14px 32px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .info-message a {
+            color: #DB7093;
             text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: 0.02em;
+            font-weight: 500;
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, 
-                rgba(139, 92, 246, 0.8) 0%, 
-                rgba(124, 58, 237, 0.8) 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
-            background: linear-gradient(135deg, 
-                rgba(139, 92, 246, 0.9) 0%, 
-                rgba(124, 58, 237, 0.9) 100%);
-        }
-        
-        .btn-pink {
-            background: linear-gradient(135deg, 
-                rgba(219, 112, 147, 0.8) 0%, 
-                rgba(194, 72, 118, 0.8) 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(219, 112, 147, 0.15);
-        }
-        
-        .btn-pink:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(219, 112, 147, 0.2);
-            background: linear-gradient(135deg, 
-                rgba(219, 112, 147, 0.9) 0%, 
-                rgba(194, 72, 118, 0.9) 100%);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.04);
-            color: rgba(255, 255, 255, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.12);
+        .info-message a:hover {
+            text-decoration: underline;
         }
         
         /* Footer */
         .footer {
             text-align: center;
             padding: 40px 0 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-            margin-top: 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: 40px;
             width: 100%;
         }
         
         .footer-logo {
-            height: 40px;
-            opacity: 0.25;
-            margin-bottom: 12px;
+            height: 50px;
+            opacity: 0.5;
+            margin-bottom: 20px;
+            transition: opacity 0.3s ease;
+        }
+        
+        .footer-logo:hover {
+            opacity: 0.7;
         }
         
         .footer-link {
@@ -313,6 +350,44 @@
         
         .footer-link:hover {
             color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Social Links */
+        .social-links {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .social-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .social-link svg {
+            width: 20px;
+            height: 20px;
+            fill: rgba(255, 255, 255, 0.6);
+        }
+        
+        .social-link:hover svg {
+            fill: rgba(255, 255, 255, 0.9);
         }
         
         /* Notification */
@@ -353,11 +428,11 @@
             }
             
             .page-title {
-                font-size: 26px;
+                font-size: 28px;
             }
             
             .logo {
-                height: 60px;
+                height: 80px;
             }
             
             .config-grid {
@@ -372,11 +447,19 @@
                 width: 100%;
                 justify-content: center;
             }
+            
+            .social-links {
+                gap: 16px;
+            }
         }
         
         @media (max-width: 480px) {
             .logo {
-                height: 48px;
+                height: 60px;
+            }
+            
+            .page-title {
+                font-size: 24px;
             }
         }
     </style>
@@ -386,7 +469,7 @@
         <!-- Header -->
         <header class="header">
             <img src="youmio-logo.png" alt="Youmio" class="logo">
-            <h1 class="page-title">KELLS Testnet</h1>
+            <h1 class="page-title">TESTNET</h1>
             <p class="page-subtitle">Avalanche L1 Network</p>
             <div class="status-badge">
                 <div class="status-dot"></div>
@@ -394,10 +477,17 @@
             </div>
         </header>
         
-        <!-- Info Message -->
-        <div class="info-message">
-            For live network statistics, visit the 
-            <a href="https://explorer-test.avax.network/kells" target="_blank">KELLS Explorer</a>
+        <!-- Action Buttons - Moved to top -->
+        <div class="actions-section">
+            <button class="btn btn-primary" onclick="addToMetaMask()">
+                🦊 Add to MetaMask
+            </button>
+            <a href="https://testnet.youmio.ai/apply" target="_blank" class="btn btn-pink">
+                🚀 Apply to Access Testnet
+            </a>
+            <a href="https://explorer-test.avax.network/kells" target="_blank" class="btn btn-secondary">
+                🔍 View Live Explorer
+            </a>
         </div>
         
         <!-- Network Configuration -->
@@ -443,23 +533,33 @@
             </div>
         </div>
         
-        <!-- Action Buttons -->
-        <div class="actions-section">
-            <button class="btn btn-primary" onclick="addToMetaMask()">
-                🦊 Add to MetaMask
-            </button>
-            <a href="https://testnet.youmio.ai/apply" target="_blank" class="btn btn-pink">
-                🚀 Apply to Access Testnet
-            </a>
-            <a href="https://explorer-test.avax.network/kells" target="_blank" class="btn btn-secondary">
-                🔍 View Live Explorer
-            </a>
+        <!-- Live Stats Section (dynamically added) -->
+        <div id="live-stats-container"></div>
+        
+        <!-- Info Message - Moved to bottom -->
+        <div class="info-message">
+            For more live network statistics, visit the 
+            <a href="https://explorer-test.avax.network/kells" target="_blank">TESTNET Explorer</a>
         </div>
         
         <!-- Footer -->
         <footer class="footer">
             <img src="youmio-logo.png" alt="Youmio" class="footer-logo">
-            <br>
+            
+            <!-- Social Links -->
+            <div class="social-links">
+                <a href="https://discord.com/invite/youmio" target="_blank" class="social-link" aria-label="Discord">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                    </svg>
+                </a>
+                <a href="https://x.com/youmio_ai" target="_blank" class="social-link" aria-label="X (Twitter)">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+            </div>
+            
             <a href="index.html" class="footer-link">← Back to Youmio</a>
         </footer>
     </div>
@@ -477,6 +577,212 @@
             },
             EXPLORER: 'https://explorer-test.avax.network/kells'
         };
+        
+        // Live data management
+        let liveDataInterval;
+        let isLoadingData = false;
+        
+        // Fetch live data from Netlify function
+        async function fetchKellsData() {
+            if (isLoadingData) return;
+            isLoadingData = true;
+            
+            try {
+                // Show loading state
+                const statsContainer = document.getElementById('live-stats-container');
+                if (statsContainer) {
+                    statsContainer.classList.add('loading');
+                }
+                
+                // Use Netlify function endpoint
+                const apiUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:9999/.netlify/functions/kells-data'
+                    : '/.netlify/functions/kells-data';
+                
+                const response = await fetch(apiUrl);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    updateLiveData(result.data);
+                } else {
+                    // Try direct RPC call as fallback
+                    await fetchDirectRPCData();
+                }
+            } catch (error) {
+                console.error('Failed to fetch live data:', error);
+                showDataStatus('limited');
+            } finally {
+                isLoadingData = false;
+                const statsContainer = document.getElementById('live-stats-container');
+                if (statsContainer) {
+                    statsContainer.classList.remove('loading');
+                }
+            }
+        }
+        
+        // Fallback: Try direct RPC calls
+        async function fetchDirectRPCData() {
+            try {
+                const rpcUrl = CONFIG.RPC_URL;
+                
+                // Try to get block number
+                const blockResponse = await fetch(rpcUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'eth_blockNumber',
+                        params: [],
+                        id: 1
+                    })
+                });
+                
+                if (blockResponse.ok) {
+                    const blockData = await blockResponse.json();
+                    if (blockData.result) {
+                        const blockNumber = parseInt(blockData.result, 16);
+                        updateLiveData({
+                            stats: {
+                                blockHeight: blockNumber.toLocaleString()
+                            }
+                        });
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Direct RPC failed:', error);
+            }
+            
+            showDataStatus('limited');
+        }
+        
+        // Update UI with live data
+        function updateLiveData(data) {
+            let statsContainer = document.getElementById('live-stats-container');
+            
+            // Create container if it doesn't exist
+            if (!statsContainer) {
+                statsContainer = document.createElement('div');
+                statsContainer.id = 'live-stats-container';
+                
+                const configSection = document.querySelector('.config-section');
+                configSection.parentNode.insertBefore(statsContainer, configSection.nextSibling);
+            }
+            
+            // Build stats HTML
+            let statsHTML = `
+                <div class="config-section">
+                    <h2 class="config-title">Live Network Stats <span class="live-indicator"></span></h2>
+                    <div class="config-grid">
+            `;
+            
+            // Process different data types
+            if (data.stats) {
+                if (data.stats.blockHeight) {
+                    statsHTML += createStatItem('Current Block Height', data.stats.blockHeight);
+                }
+                if (data.stats.totalTransactions) {
+                    statsHTML += createStatItem('Total Transactions', data.stats.totalTransactions);
+                }
+                if (data.stats.validators) {
+                    statsHTML += createStatItem('Active Validators', data.stats.validators);
+                }
+                if (data.stats.avgBlockTime) {
+                    statsHTML += createStatItem('Avg Block Time', data.stats.avgBlockTime);
+                }
+            }
+            
+            if (data.blocks) {
+                if (data.blocks.number) {
+                    statsHTML += createStatItem('Latest Block', data.blocks.number);
+                }
+                if (data.blocks.timestamp) {
+                    statsHTML += createStatItem('Block Time', formatTimestamp(data.blocks.timestamp));
+                }
+                if (data.blocks.gasUsed) {
+                    statsHTML += createStatItem('Gas Used', data.blocks.gasUsed);
+                }
+            }
+            
+            if (data.validators && Array.isArray(data.validators)) {
+                statsHTML += createStatItem('Validator Count', data.validators.length.toString());
+            }
+            
+            // Add timestamp
+            statsHTML += createStatItem('Last Updated', new Date().toLocaleTimeString());
+            
+            statsHTML += `
+                    </div>
+                </div>
+            `;
+            
+            statsContainer.innerHTML = statsHTML;
+            
+            // Update status badge to show live
+            updateStatusBadge('live');
+        }
+        
+        // Create individual stat item HTML
+        function createStatItem(label, value) {
+            return `
+                <div class="config-item">
+                    <div class="config-label">${label}</div>
+                    <div class="config-value large">${value || 'N/A'}</div>
+                </div>
+            `;
+        }
+        
+        // Update status badge
+        function updateStatusBadge(status) {
+            const statusText = document.querySelector('.status-text');
+            const statusDot = document.querySelector('.status-dot');
+            
+            if (status === 'live') {
+                statusText.textContent = 'Network Live';
+                statusDot.style.background = '#10B981';
+                statusDot.style.boxShadow = '0 0 6px rgba(16, 185, 129, 0.4)';
+            } else if (status === 'limited') {
+                statusText.textContent = 'Limited Data';
+                statusDot.style.background = '#F59E0B';
+                statusDot.style.boxShadow = '0 0 6px rgba(245, 158, 11, 0.4)';
+            } else if (status === 'offline') {
+                statusText.textContent = 'Data Unavailable';
+                statusDot.style.background = '#EF4444';
+                statusDot.style.boxShadow = '0 0 6px rgba(239, 68, 68, 0.4)';
+            }
+        }
+        
+        // Show data status
+        function showDataStatus(status) {
+            updateStatusBadge(status);
+            
+            // Show message if no data
+            let statsContainer = document.getElementById('live-stats-container');
+            if (!statsContainer) {
+                statsContainer = document.createElement('div');
+                statsContainer.id = 'live-stats-container';
+                const configSection = document.querySelector('.config-section');
+                configSection.parentNode.insertBefore(statsContainer, configSection.nextSibling);
+            }
+            
+            if (status === 'limited' || status === 'offline') {
+                statsContainer.innerHTML = `
+                    <div class="config-section">
+                        <h2 class="config-title">Live Network Stats</h2>
+                        <div style="text-align: center; padding: 20px; color: rgba(255, 255, 255, 0.5);">
+                            ${status === 'offline' ? 'Unable to fetch live data at this time' : 'Limited data available'}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Format timestamp
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString();
+        }
         
         // MetaMask Integration
         async function addToMetaMask() {
@@ -532,6 +838,27 @@
             document.body.appendChild(notification);
             setTimeout(() => notification.remove(), 3000);
         }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial fetch
+            fetchKellsData();
+            
+            // Refresh every 30 seconds
+            liveDataInterval = setInterval(fetchKellsData, 30000);
+            
+            // Add refresh button to actions
+            const refreshBtn = document.createElement('button');
+            refreshBtn.className = 'btn btn-secondary';
+            refreshBtn.innerHTML = '🔄 Refresh Data';
+            refreshBtn.onclick = fetchKellsData;
+            document.querySelector('.actions-section').appendChild(refreshBtn);
+        });
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (liveDataInterval) clearInterval(liveDataInterval);
+        });
     </script>
 </body>
 </html>
