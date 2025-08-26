@@ -184,8 +184,15 @@
         
         .config-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 24px;
+            width: 100%;
+        }
+        
+        @media (max-width: 900px) {
+            .config-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         
         .config-item {
@@ -194,6 +201,7 @@
             border-radius: 12px;
             padding: 20px;
             transition: all 0.2s ease;
+            min-width: 0;
         }
         
         .config-item:hover {
@@ -218,7 +226,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            word-break: break-all;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         
         .config-value.large {
@@ -254,6 +263,38 @@
         .copy-btn:hover {
             background: rgba(255, 255, 255, 0.07);
             color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Ensure both config sections have identical layout */
+        #live-stats-container .config-section {
+            background: linear-gradient(135deg, 
+                rgba(75, 70, 95, 0.15) 0%, 
+                rgba(115, 75, 95, 0.10) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+        
+        #live-stats-container .config-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            width: 100%;
+        }
+        
+        @media (max-width: 900px) {
+            #live-stats-container .config-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #live-stats-container .config-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         /* Loading animation */
@@ -436,7 +477,8 @@
             }
             
             .config-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
             }
             
             .actions-section {
@@ -460,6 +502,15 @@
             
             .page-title {
                 font-size: 20px;
+            }
+            
+            .config-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .config-item {
+                padding: 16px;
             }
         }
     </style>
@@ -730,7 +781,7 @@
                 configSection.parentNode.insertBefore(statsContainer, configSection.nextSibling);
             }
             
-            // Build stats HTML
+            // Build stats HTML - ensure it matches the exact structure of Network Configuration
             let statsHTML = `
                 <div class="config-section">
                     <h2 class="config-title">Live Network Stats <span class="live-indicator"></span></h2>
@@ -738,52 +789,72 @@
             `;
             
             // Process different data types - ALL DATA IS LIVE FROM RPC/EXPLORER
+            let itemCount = 0;
+            
             if (data.stats) {
                 if (data.stats.blockHeight) {
                     statsHTML += createStatItem('Current Block Height', data.stats.blockHeight);
+                    itemCount++;
                 }
                 if (data.stats.totalTransactions) {
                     statsHTML += createStatItem('Total Transactions', data.stats.totalTransactions);
+                    itemCount++;
                 }
                 if (data.stats.gasPrice) {
                     statsHTML += createStatItem('Gas Price', data.stats.gasPrice);
+                    itemCount++;
                 }
                 if (data.stats.gasUsed) {
                     statsHTML += createStatItem('Gas Used', data.stats.gasUsed);
+                    itemCount++;
                 }
                 if (data.stats.blockTime) {
                     statsHTML += createStatItem('Block Time', data.stats.blockTime);
+                    itemCount++;
                 }
                 if (data.stats.peerCount) {
                     statsHTML += createStatItem('Connected Peers', data.stats.peerCount);
+                    itemCount++;
                 }
                 if (data.stats.validators) {
                     statsHTML += createStatItem('Active Validators', data.stats.validators);
+                    itemCount++;
                 }
                 if (data.stats.avgBlockTime) {
                     statsHTML += createStatItem('Avg Block Time', data.stats.avgBlockTime);
+                    itemCount++;
                 }
             }
             
             if (data.blocks) {
                 if (data.blocks.number && !data.stats?.blockHeight) {
                     statsHTML += createStatItem('Latest Block', data.blocks.number.toLocaleString());
+                    itemCount++;
                 }
                 if (data.blocks.timestamp && !data.stats?.blockTime) {
                     statsHTML += createStatItem('Block Time', formatTimestamp(data.blocks.timestamp));
+                    itemCount++;
                 }
                 if (data.blocks.gasUsed && !data.stats?.gasUsed) {
                     statsHTML += createStatItem('Gas Used', data.blocks.gasUsed);
+                    itemCount++;
                 }
-                // Don't display transactions count - removed per requirements
             }
             
             if (data.validators && Array.isArray(data.validators) && !data.stats?.validators) {
                 statsHTML += createStatItem('Validator Count', data.validators.length.toString());
+                itemCount++;
             }
             
-            // Add timestamp
+            // Always add timestamp
             statsHTML += createStatItem('Last Updated', new Date().toLocaleTimeString());
+            itemCount++;
+            
+            // If we have less than 6 items, add empty placeholders to maintain grid layout
+            while (itemCount < 6 && itemCount % 3 !== 0) {
+                statsHTML += '<div class="config-item" style="visibility: hidden;"></div>';
+                itemCount++;
+            }
             
             statsHTML += `
                     </div>
