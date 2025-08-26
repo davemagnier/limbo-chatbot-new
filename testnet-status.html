@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TESTNET - Youmio</title>
+    <title>Youmio Chain Testnet - Youmio</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
@@ -428,7 +428,7 @@
             }
             
             .page-title {
-                font-size: 28px;
+                font-size: 24px;
             }
             
             .logo {
@@ -459,7 +459,7 @@
             }
             
             .page-title {
-                font-size: 24px;
+                font-size: 20px;
             }
         }
     </style>
@@ -584,6 +584,7 @@
         let isLoadingData = false;
         
         // Fetch live data from Netlify function
+        // ALL DATA IS REAL FROM RPC ENDPOINTS - NO FAKE/FALLBACK VALUES
         async function fetchKellsData() {
             if (isLoadingData) return;
             isLoadingData = true;
@@ -606,7 +607,7 @@
                 if (result.success && result.data) {
                     updateLiveData(result.data);
                 } else {
-                    // Try direct RPC call as fallback
+                    // Try direct RPC call as fallback - still real data
                     await fetchDirectRPCData();
                 }
             } catch (error) {
@@ -659,8 +660,7 @@
                         if (blockDetailsResponse.ok) {
                             const blockDetails = await blockDetailsResponse.json();
                             if (blockDetails.result) {
-                                results.transactionCount = blockDetails.result.transactions ? 
-                                    blockDetails.result.transactions.length.toString() : '0';
+                                // Don't include transactionCount - removed per requirements
                                 results.gasUsed = parseInt(blockDetails.result.gasUsed, 16).toLocaleString();
                                 results.blockTime = new Date(parseInt(blockDetails.result.timestamp, 16) * 1000).toLocaleTimeString();
                             }
@@ -685,43 +685,9 @@
                             }
                         }
                         
-                        // Get chain ID to verify
-                        const chainResponse = await fetch(rpcUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                jsonrpc: '2.0',
-                                method: 'eth_chainId',
-                                params: [],
-                                id: 4
-                            })
-                        });
+                        // Don't get chainId or syncStatus - removed per requirements
                         
-                        if (chainResponse.ok) {
-                            const chainData = await chainResponse.json();
-                            if (chainData.result) {
-                                results.chainId = parseInt(chainData.result, 16).toString();
-                            }
-                        }
-                        
-                        // Get syncing status
-                        const syncResponse = await fetch(rpcUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                jsonrpc: '2.0',
-                                method: 'eth_syncing',
-                                params: [],
-                                id: 5
-                            })
-                        });
-                        
-                        if (syncResponse.ok) {
-                            const syncData = await syncResponse.json();
-                            results.syncStatus = syncData.result === false ? 'Synced' : 'Syncing';
-                        }
-                        
-                        // Get peer count
+                        // Get peer count (network health indicator)
                         const peerResponse = await fetch(rpcUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -771,13 +737,10 @@
                     <div class="config-grid">
             `;
             
-            // Process different data types
+            // Process different data types - ALL DATA IS LIVE FROM RPC/EXPLORER
             if (data.stats) {
                 if (data.stats.blockHeight) {
                     statsHTML += createStatItem('Current Block Height', data.stats.blockHeight);
-                }
-                if (data.stats.transactionCount !== undefined) {
-                    statsHTML += createStatItem('Transactions in Block', data.stats.transactionCount);
                 }
                 if (data.stats.totalTransactions) {
                     statsHTML += createStatItem('Total Transactions', data.stats.totalTransactions);
@@ -790,12 +753,6 @@
                 }
                 if (data.stats.blockTime) {
                     statsHTML += createStatItem('Block Time', data.stats.blockTime);
-                }
-                if (data.stats.chainId) {
-                    statsHTML += createStatItem('Chain ID', data.stats.chainId);
-                }
-                if (data.stats.syncStatus) {
-                    statsHTML += createStatItem('Sync Status', data.stats.syncStatus);
                 }
                 if (data.stats.peerCount) {
                     statsHTML += createStatItem('Connected Peers', data.stats.peerCount);
@@ -818,9 +775,7 @@
                 if (data.blocks.gasUsed && !data.stats?.gasUsed) {
                     statsHTML += createStatItem('Gas Used', data.blocks.gasUsed);
                 }
-                if (data.blocks.transactions !== undefined && !data.stats?.transactionCount) {
-                    statsHTML += createStatItem('Transactions', data.blocks.transactions.toString());
-                }
+                // Don't display transactions count - removed per requirements
             }
             
             if (data.validators && Array.isArray(data.validators) && !data.stats?.validators) {
