@@ -14,7 +14,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const baseUrl = 'https://explorer-test.avax.network';
+    const baseUrl = 'https://explorer-test.avax.network/youtest';
     const rpcUrl = 'https://subnets.avax.network/ytest/testnet/rpc';
     
     const responses = {};
