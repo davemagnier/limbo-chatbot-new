@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
 
   try {
     const baseUrl = 'https://explorer-test.avax.network';
-    const rpcUrl = 'https://subnets.avax.network/kells/testnet/rpc';
+    const rpcUrl = 'https://subnets.avax.network/ytest/testnet/rpc';
     
     const responses = {};
     const errors = [];
@@ -23,19 +23,19 @@ exports.handler = async (event, context) => {
     // Try multiple API patterns
     const apiEndpoints = {
       // Standard API patterns
-      stats: `${baseUrl}/kells/api/v1/stats`,
-      blocks: `${baseUrl}/kells/api/v1/blocks/latest`,
-      validators: `${baseUrl}/kells/api/v1/validators`,
-      transactions: `${baseUrl}/kells/api/v1/transactions/recent`,
+      stats: `${baseUrl}/ytest/api/v1/stats`,
+      blocks: `${baseUrl}/ytest/api/v1/blocks/latest`,
+      validators: `${baseUrl}/ytest/api/v1/validators`,
+      transactions: `${baseUrl}/ytest/api/v1/transactions/recent`,
       // Alternative patterns
-      info: `${baseUrl}/kells/api/info`,
-      status: `${baseUrl}/kells/api/status`,
+      info: `${baseUrl}/ytest/api/info`,
+      status: `${baseUrl}/ytest/api/status`,
       // General API patterns
-      chainInfo: `${baseUrl}/api/chains/kells`,
-      subnetInfo: `${baseUrl}/api/subnets/kells`,
+      chainInfo: `${baseUrl}/api/chains/ytest`,
+      subnetInfo: `${baseUrl}/api/subnets/ytest`,
       // Root API patterns
-      apiStats: `${baseUrl}/api/stats/kells`,
-      apiBlocks: `${baseUrl}/api/blocks/kells`
+      apiStats: `${baseUrl}/api/stats/ytest`,
+      apiBlocks: `${baseUrl}/api/blocks/ytest`
     };
 
     // Try each endpoint
@@ -184,7 +184,7 @@ exports.handler = async (event, context) => {
     // Try HTML scraping as last resort
     if (Object.keys(responses).length === 0) {
       try {
-        const pageResponse = await fetch(`${baseUrl}/kells`, {
+        const pageResponse = await fetch(`${baseUrl}/ytest`, {
           headers: {
             'Accept': 'text/html,application/xhtml+xml',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
