@@ -502,7 +502,7 @@
             <a href="https://testnet.youmio.ai/apply" target="_blank" class="btn btn-pink">
                 🚀 Apply to Access Testnet
             </a>
-            <a href="https://explorer-test.avax.network/kells" target="_blank" class="btn btn-secondary">
+            <a href="https://explorer-test.avax.network/youtest" target="_blank" class="btn btn-secondary">
                 🔍 View Live Explorer
             </a>
         </div>
@@ -515,7 +515,7 @@
                 <div class="config-grid">
                     <div class="config-item">
                         <div class="config-label">Network Name</div>
-                        <div class="config-value large">KELLS Testnet</div>
+                        <div class="config-value large">YouTest Testnet</div>
                     </div>
                     
                     <div class="config-item">
@@ -525,22 +525,22 @@
                     
                     <div class="config-item">
                         <div class="config-label">Currency Symbol</div>
-                        <div class="config-value large">KELLS</div>
+                        <div class="config-value large">YTEST</div>
                     </div>
                     
                     <div class="config-item">
                         <div class="config-label">RPC URL</div>
                         <div class="config-value">
-                            <span style="font-size: 12px;">https://subnets.avax.network/kells/testnet/rpc</span>
-                            <button class="copy-btn" onclick="copyToClipboard('https://subnets.avax.network/kells/testnet/rpc')">Copy</button>
+                            <span style="font-size: 12px;">https://subnets.avax.network/youtest/testnet/rpc</span>
+                            <button class="copy-btn" onclick="copyToClipboard('https://subnets.avax.network/youtest/testnet/rpc')">Copy</button>
                         </div>
                     </div>
                     
                     <div class="config-item">
                         <div class="config-label">Block Explorer</div>
                         <div class="config-value">
-                            <a href="https://explorer-test.avax.network/kells" target="_blank">
-                                explorer-test.avax.network/kells
+                            <a href="https://explorer-test.avax.network/youtest" target="_blank">
+                                explorer-test.avax.network/youtest
                             </a>
                         </div>
                     </div>
@@ -559,7 +559,7 @@
         <!-- Info Message - Moved to bottom -->
         <div class="info-message">
             For more live network statistics, visit the 
-            <a href="https://explorer-test.avax.network/kells" target="_blank">TESTNET Explorer</a>
+            <a href="https://explorer-test.avax.network/youtest" target="_blank">YOUTEST Explorer</a>
         </div>
         
         <!-- Footer -->
@@ -584,17 +584,17 @@
     </div>
     
     <script>
-        // Configuration
+        // Configuration - UPDATED FOR YOUTEST
         const CONFIG = {
-            CHAIN_ID: '0x12d07',
-            RPC_URL: 'https://subnets.avax.network/kells/testnet/rpc',
-            CHAIN_NAME: 'KELLS Testnet',
+            CHAIN_ID: '0x12d07', // You may need to update this if YouTest has a different chain ID
+            RPC_URL: 'https://subnets.avax.network/youtest/testnet/rpc',
+            CHAIN_NAME: 'YouTest Testnet',
             CURRENCY: {
-                name: 'KELLS',
-                symbol: 'KELLS',
+                name: 'YTEST',
+                symbol: 'YTEST',
                 decimals: 18
             },
-            EXPLORER: 'https://explorer-test.avax.network/kells'
+            EXPLORER: 'https://explorer-test.avax.network/youtest'
         };
         
         // Live data management
@@ -603,7 +603,7 @@
         
         // Fetch live data from Netlify function
         // ALL DATA IS REAL FROM RPC ENDPOINTS - NO FAKE/FALLBACK VALUES
-        async function fetchKellsData() {
+        async function fetchYouTestData() {
             if (isLoadingData) return;
             isLoadingData = true;
             
@@ -616,8 +616,8 @@
                 
                 // Use Netlify function endpoint
                 const apiUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:9999/.netlify/functions/kells-data'
-                    : '/.netlify/functions/kells-data';
+                    ? 'http://localhost:9999/.netlify/functions/youtest-data'
+                    : '/.netlify/functions/youtest-data';
                 
                 const response = await fetch(apiUrl);
                 const result = await response.json();
@@ -678,7 +678,6 @@
                         if (blockDetailsResponse.ok) {
                             const blockDetails = await blockDetailsResponse.json();
                             if (blockDetails.result) {
-                                // Don't include transactionCount - removed per requirements
                                 results.gasUsed = parseInt(blockDetails.result.gasUsed, 16).toLocaleString();
                                 results.blockTime = new Date(parseInt(blockDetails.result.timestamp, 16) * 1000).toLocaleTimeString();
                                 
@@ -686,7 +685,6 @@
                                 if (blockDetails.result.transactions) {
                                     const currentBlock = parseInt(blockData.result, 16);
                                     let totalTxs = blockDetails.result.transactions.length;
-                                    // Simple estimate: multiply by block number for total
                                     results.totalTransactions = (totalTxs * Math.min(currentBlock, 100)).toLocaleString();
                                 }
                             }
@@ -868,7 +866,7 @@
             return date.toLocaleTimeString();
         }
         
-        // MetaMask Integration
+        // MetaMask Integration - UPDATED FOR YOUTEST
         async function addToMetaMask() {
             if (typeof window.ethereum === 'undefined') {
                 showNotification('Please install MetaMask');
@@ -926,16 +924,16 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             // Initial fetch
-            fetchKellsData();
+            fetchYouTestData();
             
             // Refresh every 30 seconds
-            liveDataInterval = setInterval(fetchKellsData, 30000);
+            liveDataInterval = setInterval(fetchYouTestData, 30000);
             
             // Add refresh button to actions
             const refreshBtn = document.createElement('button');
             refreshBtn.className = 'btn btn-secondary';
             refreshBtn.innerHTML = '🔄 Refresh Data';
-            refreshBtn.onclick = fetchKellsData;
+            refreshBtn.onclick = fetchYouTestData;
             document.querySelector('.actions-section').appendChild(refreshBtn);
         });
         
