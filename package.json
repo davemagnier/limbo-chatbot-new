@@ -4,17 +4,23 @@
   "description": "Youmio testnet with Limbo AI chatbot and secure minting system",
   "scripts": {
     "dev": "netlify dev",
-    "build": "echo 'No build step required'",
+    "build": "tsc",
     "deploy": "netlify deploy --prod"
   },
   "dependencies": {
     "@netlify/blobs": "^7.0.0",
+    "@netlify/edge-functions": "^2.17.4",
     "@netlify/functions": "^2.8.0",
+    "ethers": "^5.7.2",
+    "hono": "^4.9.6",
     "openai": "^4.52.1",
-    "ethers": "^5.7.2"
+    "viem": "^2.37.3"
   },
   "devDependencies": {
-    "netlify-cli": "^17.0.0"
+    "@types/node": "^24.3.1",
+    "netlify-cli": "^17.0.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
   },
   "engines": {
     "node": ">=18.0.0"

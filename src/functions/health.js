@@ -5,18 +5,18 @@ exports.handler = async (event, context) => {
     'Access-Control-Allow-Methods': 'GET, OPTIONS'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
-  }
+  // if (event.httpMethod === 'OPTIONS') {
+  //   return {
+  //     statusCode: 200,
+  //     headers,
+  //     body: ''
+  //   };
+  // }
 
   return {
     statusCode: 200,
     headers,
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       message: 'Limbo API is online'
