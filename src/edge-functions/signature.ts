@@ -5,6 +5,7 @@ import { signMintMessageSignature, signTakeSignature } from "../utils/signatures
 import { Address, Hex } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { bearerAuth } from 'hono/bearer-auth'
+import { hashChatMessage } from "../utils/hash.ts"
 
 const token = process.env.BEARER_TOKEN
 const chainId = parseInt(process.env.CHAIN_ID || '1')
@@ -39,6 +40,7 @@ app.get('/take/:walletAddress', async (c) => {
 app.get('/mint/:walletAddress', async (c) => {
   const { walletAddress } = c.req.param()
   const { tokenId, message } = c.req.query()
+  const messageHash = hashChatMessage(message, walletAddress as Address);
   const signaure = await signMintMessageSignature({
     privateKey: messageAuthPrivateKey,
     contractName: SbtContractName,
@@ -47,10 +49,10 @@ app.get('/mint/:walletAddress', async (c) => {
     contractAddress: SbtContractAddress,
     owner: walletAddress as Address,
     tokenId: BigInt(tokenId),
-    message: message as Hex,
+    message: messageHash,
   })
 
-  return c.json({ signaure, walletAddress, contract: SbtContractAddress, chainId, tokenId, message })
+  return c.json({ signaure, walletAddress, contract: SbtContractAddress, chainId, tokenId, message: messageHash })
 
 })
 

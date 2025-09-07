@@ -8,8 +8,8 @@ export const types = {
   ],
   MintMessage: [
     { name: 'owner', type: 'address' },
-    { name: 'tokenId', type: 'uint256' },
-    { name: 'message', type: 'string' },
+    { name: 'tokenIndex', type: 'uint256' },
+    { name: 'message', type: 'bytes32' },
   ],
 }
 
@@ -86,7 +86,7 @@ export async function signMintMessageSignature({
     primaryType: 'MintMessage',
     message: {
       owner,
-      tokenId,
+      tokenIndex: tokenId,
       message,
     },
   })
