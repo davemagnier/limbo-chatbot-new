@@ -1,9 +1,6 @@
 [build]
   command = "pnpm build"
   functions = "src/functions"
-  edge_functions = "src/edge-functions"
 
 [functions]
-  node_bundler = "esbuild"
-  deno_import_map = "./deno.json"
-
+   node_bundler = "esbuild"

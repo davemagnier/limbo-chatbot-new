@@ -1,5 +1,5 @@
 
-import { Context } from "@netlify/edge-functions"
+import { Config, Context } from "@netlify/functions";
 import { Hono } from "hono"
 import { signMintMessageSignature, signTakeSignature } from "../utils/signatures.ts"
 import { Address, Hex } from "viem"
@@ -7,18 +7,13 @@ import { privateKeyToAccount } from "viem/accounts"
 import { bearerAuth } from 'hono/bearer-auth'
 import { hashChatMessage } from "../utils/hash.ts"
 
-const token = process.env.BEARER_TOKEN
-const chainId = parseInt(process.env.CHAIN_ID || '1')
-const SbtContractAddress = process.env.SBT_CONTRACT as Address
-const SbtContractName = process.env.SBT_CONTRACT_NAME
-const SbtContractVersion = process.env.SBT_CONTRACT_VERSION
-const sbtAuthPrivateKey = process.env.SBT_AUTH_PRIVATE_KEY as Hex
-const messageAuthPrivateKey = process.env.MESSAGE_AUTH_PRIVATE_KEY as Hex
-
-
-if (!token || !SbtContractAddress || !sbtAuthPrivateKey || !messageAuthPrivateKey || !SbtContractName || !SbtContractVersion) {
-  throw new Error('Missing environment variables')
-}
+const token = Netlify.env.get("BEARER_TOKEN")
+const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "1")
+const SbtContractAddress = Netlify.env.get("SBT_CONTRACT") as Address
+const SbtContractName = Netlify.env.get("SBT_CONTRACT_NAME")
+const SbtContractVersion = Netlify.env.get("SBT_CONTRACT_VERSION")
+const sbtAuthPrivateKey = Netlify.env.get("SBT_AUTH_PRIVATE_KEY") as Hex
+const messageAuthPrivateKey = Netlify.env.get("MESSAGE_AUTH_PRIVATE_KEY") as Hex
 
 const app = new Hono().basePath('/api/v1/signature').use('*', bearerAuth({ token }))
 
@@ -61,6 +56,6 @@ export default async (request: Request, context: Context) => {
   return app.fetch(request, context);
 };
 
-export const config = {
+export const config: Config = {
   path: "/api/v1/signature/*",
 };

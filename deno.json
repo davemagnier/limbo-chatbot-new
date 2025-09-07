@@ -1,8 +1,0 @@
-{
-  "imports": {
-    "viem": "npm:viem",
-    "viem/accounts": "npm:viem/accounts",
-    "hono": "npm:hono",
-    "hono/bearer-auth": "npm:hono/bearer-auth"
-  }
-}
