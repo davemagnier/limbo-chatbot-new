@@ -98,21 +98,22 @@ export async function signMintMessageSignature({
   };
 }
 
-export async function verifyAuthSignature(message: string, signature: Hex, chainId: number, rpcUrl: string) {
+export async function verifyAuthSignature(walletAddress: Address, message: string, signature: Hex, chainId: number, rpcUrl: string) {
   const publicClient = getPublicClient(chainId, rpcUrl)
   return publicClient.verifySiweMessage({
+    address: walletAddress,
     message,
     signature,
   })
 }
 
-export const createAuthMessage = (address: Address, chainId: number, domain: string, uri: string) => {
+export const createAuthMessage = (address: Address, chainId: number, domain: string, uri: string, nonce: string) => {
   return createSiweMessage(
     {
       address,
       chainId,
       domain,
-      nonce: generateSiweNonce(),
+      nonce,
       uri,
       version: '1',
     }

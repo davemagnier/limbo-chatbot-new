@@ -4,8 +4,8 @@ import { Hono } from "hono"
 import { signMintMessageSignature, signTakeSignature } from "../utils/signature.ts"
 import { Address, Hex } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
-import { bearerAuth } from 'hono/bearer-auth'
 import { hashChatMessage } from "../utils/hash.ts"
+import { sessionAuth } from "../utils/middlewares.ts";
 
 const token = Netlify.env.get("BEARER_TOKEN")
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
@@ -15,7 +15,7 @@ const SbtContractVersion = Netlify.env.get("SBT_CONTRACT_VERSION")
 const sbtAuthPrivateKey = Netlify.env.get("SBT_AUTH_PRIVATE_KEY") as Hex
 const messageAuthPrivateKey = Netlify.env.get("MESSAGE_AUTH_PRIVATE_KEY") as Hex
 
-const app = new Hono().basePath('/api/v1/signature').use('*', bearerAuth({ token }))
+const app = new Hono().basePath('/api/v1/signature').use('*', sessionAuth)
 
 app.get('/', (c) => c.json({ message: 'Youmio signatures API v1' }))
 app.get('/take/:walletAddress', async (c) => {

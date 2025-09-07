@@ -18,7 +18,7 @@ export function getAuthStore() {
 export async function getSession(sessionId: string) {
   const authStore = getAuthStore()
 
-  await authStore.getWithMetadata(sessionId, { type: "json" });
+  return await authStore.getWithMetadata(sessionId, { type: "json" });
 }
 
 // Default expiry is 1 hour
