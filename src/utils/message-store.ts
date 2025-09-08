@@ -1,6 +1,5 @@
 import { getStore } from "@netlify/blobs";
 import { Address, Hex } from "viem";
-import { getCurrentEpoch } from "./time";
 import { getContractInstance } from "./chain";
 import { youmioSbtAbi } from "./contract/abis/youmioSbt";
 

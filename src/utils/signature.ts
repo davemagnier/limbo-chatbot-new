@@ -1,6 +1,6 @@
 import { Hex, LocalAccount } from 'viem'
 import { Address, privateKeyToAccount } from 'viem/accounts'
-import { createSiweMessage, generateSiweNonce, verifySiweMessage } from 'viem/siwe';
+import { createSiweMessage } from 'viem/siwe';
 import { getPublicClient } from './chain';
 
 export const types = {
