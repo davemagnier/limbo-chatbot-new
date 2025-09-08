@@ -11,6 +11,11 @@ const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const domain = Netlify.env.get("DOMAIN")
 const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youtest/testnet/rpc"
 
+if (domain === undefined) {
+  throw new Error("One or more required environment variables are not set");
+
+}
+
 const app = new Hono().basePath('/api/v1/auth')
 
 app.get('/', (c) => c.json({ message: 'Youmio auth API v1' }))
