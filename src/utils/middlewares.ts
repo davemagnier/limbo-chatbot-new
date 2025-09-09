@@ -13,8 +13,10 @@ export const sessionAuth = createMiddleware(async (c, next) => {
   }
 
   if (isSessionExpired(session.metadata as SessionMetadata)) {
-    return c.json({ error: 'Session expired' }, 401)
+    return c.json({ error: 'Session expired' }, 403)
   }
+
+  c.set('session', session.data);
 
   await next()
 })
