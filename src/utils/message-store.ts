@@ -28,35 +28,6 @@ export async function setMessageData(hash: string, data: MessageData) {
   return messageStore.setJSON(hash, data);
 }
 
-export async function encryptMessage(
-  key: string,
-  message: string
-): Promise<{ iv: string; ciphertext: string }> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-
-  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data);
-
-  return {
-    iv: btoa(String.fromCharCode(...iv)),
-    ciphertext: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
-  };
-}
-
-export async function decryptMessage(
-  key: string,
-  ivBase64: string,
-  ciphertextBase64: string
-): Promise<string> {
-  const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
-  const ciphertext = Uint8Array.from(atob(ciphertextBase64), c => c.charCodeAt(0));
-
-  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
-  return new TextDecoder().decode(decrypted);
-}
-
 export async function getDecryptedMessages(tokenIndex: bigint, encryptionKey: string, contractAddress: Address, rpcUrl: string, chainId: number) {
   const contract = getContractInstance(contractAddress, youmioSbtAbi, chainId, rpcUrl);
 
@@ -80,4 +51,67 @@ export async function getDecryptedMessages(tokenIndex: bigint, encryptionKey: st
   }))
 
   return messages
+}
+
+
+export async function encryptMessage(
+  key: string,
+  message: string
+): Promise<{ iv: string; ciphertext: string }> {
+  const cipher = await getKeyFromString(key);
+  const iv = crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV
+
+  const encoded = new TextEncoder().encode(message);
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    cipher,
+    encoded
+  );
+
+  return {
+    iv: btoa(String.fromCharCode(...iv)),
+    ciphertext: btoa(String.fromCharCode(...new Uint8Array(ciphertext))),
+  };
+}
+
+export async function decryptMessage(
+  key: string,
+  ivString: string,
+  ciphertextString: string
+): Promise<string> {
+  const cipher = await getKeyFromString(key);
+
+  const iv = Uint8Array.from(atob(ivString), (c) => c.charCodeAt(0));
+  const data = Uint8Array.from(atob(ciphertextString), (c) => c.charCodeAt(0));
+
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    cipher,
+    data
+  );
+
+  return new TextDecoder().decode(decrypted);
+}
+
+
+async function getKeyFromString(keyStr: string): Promise<CryptoKey> {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(keyStr),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
 }
