@@ -28,22 +28,22 @@ app.get('/claim', async (c) => {
   }
 
   const walletData: WalletData | undefined = await getWalletData(session.walletAddress)
-  if (walletData === undefined) {
+  if (!walletData) {
     return c.json({ error: 'Wallet not in allowlist' }, 401)
   }
 
   if (walletData.lastClaimed !== undefined) {
-    const remainingCooldown = getCurrentEpoch() - (walletData.lastClaimed + faucetCooldownSeconds)
+    const remainingCooldown = (walletData.lastClaimed + faucetCooldownSeconds) - getCurrentEpoch()
     if (remainingCooldown > 0) {
-      return c.json({ error: 'Cannot claim', nextClaimIn: remainingCooldown }, 401)
+      return c.json({ error: 'Cannot claim', nextClaimIn: remainingCooldown }, 400)
     }
   }
 
-  await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
+  const hash = await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
 
   await setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
 
-  return c.json({ nextClaimIn: faucetCooldownSeconds })
+  return c.json({ nextClaimIn: faucetCooldownSeconds, hash })
 })
 
 export default async (request: Request, context: Context) => {

@@ -1,4 +1,4 @@
-import { Address, Hex } from "viem";
+import { Address, encodeFunctionData, Hex } from "viem";
 import { getPublicClient, getWalletClient } from "./chain";
 import { faucetAbi } from "./contract/abis/faucet";
 
@@ -15,7 +15,7 @@ export async function mintNativeCoin({ walletAddress, amount, faucetPrivateKey, 
   const publicClient = getPublicClient(chainId, rpcUrl)
   const walletClient = getWalletClient(chainId, rpcUrl, faucetPrivateKey)
 
-  const { request } = await publicClient.simulateContract({
+  await publicClient.simulateContract({
     account: walletClient.account.address,
     address: faucetAddress,
     abi: faucetAbi,
@@ -23,5 +23,11 @@ export async function mintNativeCoin({ walletAddress, amount, faucetPrivateKey, 
     args: [walletAddress, amount]
   })
 
-  await walletClient.writeContract(request)
+  const data = encodeFunctionData({
+    abi: faucetAbi,
+    functionName: 'mintNativeCoin',
+    args: [walletAddress, amount]
+  })
+
+  return walletClient.sendTransaction({ account: walletClient.account, to: faucetAddress, data })
 }
