@@ -8,7 +8,7 @@ import { hashChatMessage } from "../utils/hash.ts"
 import { sessionAuth } from "../utils/middlewares.ts";
 import { SessionData } from "../utils/auth-store.ts";
 import { encryptMessage, setMessageData } from "../utils/message-store.ts";
-import { getTokenOwner } from "../utils/contract/sbt.ts";
+import { getBalance, getTokenOwner } from "../utils/contract/sbt.ts";
 
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const SbtContractAddress = Netlify.env.get("SBT_CONTRACT") as Address
@@ -34,6 +34,11 @@ app.get('/take', async (c) => {
   const session = c.get('session')
   if (!session) {
     return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const balance = await getBalance(session.walletAddress, SbtContractAddress, chainId, rpcUrl);
+  if (balance !== 0n) {
+    return c.json({ error: 'Already minted SBT' }, 400)
   }
 
   const signaure = await signTakeSignature({

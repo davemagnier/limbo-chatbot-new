@@ -21,7 +21,7 @@ type Variables = {
 
 const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/faucet').use('*', sessionAuth)
 
-app.get('/take', async (c) => {
+app.get('/claim', async (c) => {
   const session = c.get('session')
   if (!session) {
     return c.json({ error: 'Unauthorized' }, 401)
