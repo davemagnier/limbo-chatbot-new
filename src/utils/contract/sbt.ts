@@ -13,3 +13,9 @@ export async function getTokenOwner(tokenIndex: bigint, contractAddress: Address
     return zeroAddress
   }
 }
+
+export async function getBalance(walletAddress: Address, contractAddress: Address, chainId: number, rpcUrl: string) {
+  const contract = getContractInstance(contractAddress, youmioSbtAbi, chainId, rpcUrl);
+
+  return contract.read.balanceOf([walletAddress]);
+}

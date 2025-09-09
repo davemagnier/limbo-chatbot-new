@@ -13,7 +13,6 @@ const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youte
 
 if (domain === undefined) {
   throw new Error("One or more required environment variables are not set");
-
 }
 
 const app = new Hono().basePath('/api/v1/auth')
