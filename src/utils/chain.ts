@@ -4,8 +4,8 @@ import { sepolia } from "viem/chains";
 
 export const youmioTestnet = defineChain({
   id: 68854,
-  name: 'Youmio Testnet',
-  nativeCurrency: { name: 'Youmio', symbol: 'You', decimals: 18 },
+  name: 'YouTest Testnet',
+  nativeCurrency: { name: 'YTEST', symbol: 'YTEST', decimals: 18 },
   rpcUrls: {
     default: {
       http: ['https://subnets.avax.network/youtest/testnet/rpc'],
