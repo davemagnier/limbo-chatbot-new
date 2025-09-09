@@ -15,6 +15,10 @@ const faucetAmount = BigInt(Netlify.env.get("FAUCET_AMOUNT") || "100000000000000
 const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youtest/testnet/rpc"
 const faucetCooldownSeconds = parseInt(Netlify.env.get("FAUCET_COOLDOWN_SECONDS") || "86400")
 
+if (!faucetAddress || !faucetPrivateKey) {
+  throw new Error("One or more required environment variables are not set");
+}
+
 type Variables = {
   session: SessionData | undefined
 }
