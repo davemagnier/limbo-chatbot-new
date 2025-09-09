@@ -95,22 +95,11 @@ export async function decryptMessage(
 
 
 async function getKeyFromString(keyStr: string): Promise<CryptoKey> {
-  const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
+  const raw = Uint8Array.from(atob(keyStr), c => c.charCodeAt(0));
+  return crypto.subtle.importKey(
     "raw",
-    enc.encode(keyStr),
-    { name: "PBKDF2" },
-    false,
-    ["deriveKey"]
-  );
-
-  return crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      hash: "SHA-256",
-    },
-    keyMaterial,
-    { name: "AES-GCM", length: 256 },
+    raw,
+    { name: "AES-GCM" },
     false,
     ["encrypt", "decrypt"]
   );

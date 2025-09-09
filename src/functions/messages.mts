@@ -20,17 +20,18 @@ type Variables = {
   session: SessionData | undefined
 }
 
-const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/message').use('*', sessionAuth)
+const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/messages').use('*', sessionAuth)
 
-app.get('/', (c) => c.json({ message: 'Youmio auth API v1' }))
-
-app.get('/messages', async (c) => {
+app.get('/', async (c) => {
   const session = c.get('session')
   if (!session) {
     return c.json({ error: 'Unauthorized' }, 401)
   }
 
   const { tokenId } = c.req.query()
+  if (tokenId === undefined) {
+    return c.json({ error: 'tokenId is required' }, 400)
+  }
   const tokenOwner = await getTokenOwner(BigInt(tokenId), SbtContractAddress, chainId, rpcUrl)
   if (tokenOwner.toLowerCase() !== session.walletAddress.toLowerCase()) {
     return c.json({ error: 'Session does not own this token' }, 403)
@@ -46,5 +47,5 @@ export default async (request: Request, context: Context) => {
 };
 
 export const config: Config = {
-  path: "/api/v1/message/*",
+  path: "/api/v1/messages*",
 };

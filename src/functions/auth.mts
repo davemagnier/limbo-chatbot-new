@@ -23,6 +23,9 @@ app.get('/', (c) => c.json({ message: 'Youmio auth API v1' }))
 app.get('/message/:walletAddress', async (c) => {
   const { walletAddress } = c.req.param()
   const { uri } = c.req.query()
+  if (uri === undefined) {
+    return c.json({ error: 'uri is required' }, 400)
+  }
 
   return c.json({ authMessage: createAuthMessage(walletAddress as Address, chainId, domain, uri, generateSiweNonce()) })
 })
@@ -30,6 +33,9 @@ app.get('/message/:walletAddress', async (c) => {
 app.post('/session/:walletAddress', async (c) => {
   const { walletAddress } = c.req.param()
   const { message, signature } = await c.req.json();
+  if (!message || !signature) {
+    return c.json({ error: 'message and signature are required' }, 400)
+  }
 
   const valid = await verifyAuthSignature(walletAddress as Address, message, signature, chainId, rpcUrl)
   if (!valid) {

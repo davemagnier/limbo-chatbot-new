@@ -55,6 +55,10 @@ app.get('/mint', async (c) => {
   }
 
   const { tokenId, message } = c.req.query()
+  if (tokenId === undefined || message === undefined) {
+    return c.json({ error: 'tokenId and message are required' }, 400)
+  }
+
   const tokenOwner = await getTokenOwner(BigInt(tokenId), SbtContractAddress, chainId, rpcUrl)
   if (tokenOwner.toLowerCase() !== session.walletAddress.toLowerCase()) {
     return c.json({ error: 'Session does not own this token' }, 403)
