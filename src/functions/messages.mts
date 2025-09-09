@@ -34,7 +34,7 @@ app.get('/', async (c) => {
   }
   const tokenOwner = await getTokenOwner(BigInt(tokenId), SbtContractAddress, chainId, rpcUrl)
   if (tokenOwner.toLowerCase() !== session.walletAddress.toLowerCase()) {
-    return c.json({ error: 'Session does not own this token' }, 403)
+    return c.json({ error: 'Session does not own this token' }, 400)
   }
 
   const messages = await getDecryptedMessages(BigInt(tokenId), encryptionKey, SbtContractAddress, rpcUrl, chainId)
