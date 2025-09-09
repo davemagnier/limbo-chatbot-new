@@ -10,7 +10,7 @@ import { Address, Hex } from "viem";
 
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const faucetAddress = Netlify.env.get("FAUCET_CONTRACT") as Address
-const faucetPrivateKey = Netlify.env.get("SBT_AUTH_PRIVATE_KEY") as Hex
+const faucetPrivateKey = Netlify.env.get("FAUCET_PRIVATE_KEY") as Hex
 const faucetAmount = BigInt(Netlify.env.get("FAUCET_AMOUNT") || "10000000000000000000")
 const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youtest/testnet/rpc"
 const faucetCooldownSeconds = parseInt(Netlify.env.get("FAUCET_COOLDOWN_SECONDS") || "86400")
