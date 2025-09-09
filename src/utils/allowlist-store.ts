@@ -15,7 +15,7 @@ export async function getWalletData(walletAddress: Address) {
   return walletStore.get(walletAddress.toLowerCase(), { type: "json" });
 }
 
-export async function addWallet(walletAddress: Address, data: WalletData) {
+export async function setWalletData(walletAddress: Address, data: WalletData) {
   const walletStore = getWalletStore()
 
   return walletStore.setJSON(walletAddress.toLowerCase(), data);

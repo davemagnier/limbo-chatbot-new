@@ -1,4 +1,5 @@
-import { Abi, Address, Chain, createPublicClient, defineChain, getContract, GetContractReturnType, http } from "viem";
+import { Abi, Address, Chain, createPublicClient, createWalletClient, defineChain, getContract, GetContractReturnType, Hex, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 
 export const youmioTestnet = defineChain({
@@ -37,6 +38,19 @@ export function getPublicClient(chainId: number, rpcUrl: string, cache = true) {
     chain,
     transport: http(rpcUrl),
     cacheTime: cache ? 10_000 : undefined,
+  });
+}
+
+export function getWalletClient(chainId: number, rpcUrl: string, privateKey: Hex) {
+  const chain = findChain(chainId);
+  if (!chain) {
+    throw new Error(`Chain with ID ${chainId} not found`);
+  }
+
+  return createWalletClient({
+    chain,
+    transport: http(rpcUrl),
+    account: privateKeyToAccount(privateKey)
   });
 }
 

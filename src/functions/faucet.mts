@@ -1,0 +1,55 @@
+
+import { Config, Context } from "@netlify/functions";
+import { Hono } from "hono"
+import { sessionAuth } from "../utils/middlewares.ts";
+import { SessionData } from "../utils/auth-store.ts";
+import { getWalletData, setWalletData, WalletData } from "../utils/allowlist-store.ts";
+import { getCurrentEpoch } from "../utils/time.ts";
+import { mintNativeCoin } from "../utils/faucet.ts";
+import { Address, Hex } from "viem";
+
+const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
+const faucetAddress = Netlify.env.get("FAUCET_CONTRACT") as Address
+const faucetPrivateKey = Netlify.env.get("SBT_AUTH_PRIVATE_KEY") as Hex
+const faucetAmount = BigInt(Netlify.env.get("FAUCET_AMOUNT") || "10000000000000000000")
+const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youtest/testnet/rpc"
+const faucetCooldownSeconds = parseInt(Netlify.env.get("FAUCET_COOLDOWN_SECONDS") || "86400")
+
+type Variables = {
+  session: SessionData | undefined
+}
+
+const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/faucet').use('*', sessionAuth)
+
+app.get('/take', async (c) => {
+  const session = c.get('session')
+  if (!session) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const walletData: WalletData | undefined = await getWalletData(session.walletAddress)
+  if (walletData === undefined) {
+    return c.json({ error: 'Wallet not in allowlist' }, 401)
+  }
+
+  if (walletData.lastClaimed !== undefined) {
+    const remainingCooldown = getCurrentEpoch() - (walletData.lastClaimed + faucetCooldownSeconds)
+    if (remainingCooldown > 0) {
+      return c.json({ error: 'Cannot claim', nextClaimIn: remainingCooldown }, 401)
+    }
+  }
+
+  await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
+
+  await setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
+
+  return c.json({ nextClaimIn: faucetCooldownSeconds })
+})
+
+export default async (request: Request, context: Context) => {
+  return app.fetch(request, context);
+};
+
+export const config: Config = {
+  path: "/api/v1/faucet*",
+};
