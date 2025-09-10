@@ -1,5 +1,7 @@
 import { Hex, LocalAccount } from 'viem'
 import { Address, privateKeyToAccount } from 'viem/accounts'
+import { createSiweMessage } from 'viem/siwe';
+import { getPublicClient } from './chain';
 
 export const types = {
   Agreement: [
@@ -94,4 +96,26 @@ export async function signMintMessageSignature({
   return {
     signature,
   };
+}
+
+export async function verifyAuthSignature(walletAddress: Address, message: string, signature: Hex, chainId: number, rpcUrl: string) {
+  const publicClient = getPublicClient(chainId, rpcUrl)
+  return publicClient.verifySiweMessage({
+    address: walletAddress,
+    message,
+    signature,
+  })
+}
+
+export const createAuthMessage = (address: Address, chainId: number, domain: string, uri: string, nonce: string) => {
+  return createSiweMessage(
+    {
+      address,
+      chainId,
+      domain,
+      nonce,
+      uri,
+      version: '1',
+    }
+  )
 }

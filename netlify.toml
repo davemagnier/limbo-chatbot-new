@@ -3,4 +3,4 @@
   functions = "src/functions"
 
 [functions]
-   node_bundler = "esbuild"
+  node_bundler = "esbuild"
