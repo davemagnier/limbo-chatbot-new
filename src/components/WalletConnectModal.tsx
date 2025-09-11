@@ -14,20 +14,9 @@ const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
 	const { connectors, connect, isPending, error } = useConnect();
 	const { isConnected } = useAccount();
 
-	// Close modal when wallet is connected
-	useEffect(() => {
-		if (isConnected) {
-			onClose();
-		}
-	}, [isConnected, onClose]);
-
 	// Handle connection
 	const handleConnect = async (connector: Connector) => {
-		try {
-			connect({ connector });
-		} catch (err) {
-			console.error("Connection error:", err);
-		}
+		connect({ connector }, { onSuccess: () => onClose() });
 	};
 
 	// Close modal when clicking outside
@@ -99,4 +88,3 @@ const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
 };
 
 export default WalletConnectModal;
-
