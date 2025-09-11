@@ -151,7 +151,7 @@ export default function TestnetPage() {
               onClick={verifyAndAddNetwork}
               disabled
             >
-              Add KELLS Testnet
+              Add Youmio Testnet
             </button>
           </div>
         </div>
@@ -325,7 +325,7 @@ export default function TestnetPage() {
                   borderRadius: "50%",
                 }}
               ></span>
-              KELLS TESTNET
+              Youmio TESTNET
             </div>
           </div>
           <div className="network-status">
@@ -345,7 +345,7 @@ export default function TestnetPage() {
               onClick={handleNetworkClick}
             >
               <span className="network-led" id="networkLed"></span>
-              <span id="networkText">KELLS Testnet</span>
+              <span id="networkText">Youmio Testnet</span>
             </button>
             <div style={{ position: "relative" }}>
               <button
@@ -362,7 +362,7 @@ export default function TestnetPage() {
                     id="walletAddressFull"
                   ></div>
                   <div className="wallet-balance">
-                    Balance: <span id="dropdownBalance">0</span> KELLS
+                    Balance: <span id="dropdownBalance">0</span> YTEST
                   </div>
                 </div>
                 <button className="dropdown-button" onClick={switchWallet}>
@@ -397,7 +397,7 @@ export default function TestnetPage() {
                     <div className="token-amount" id="tokenBalance">
                       0
                     </div>
-                    <div className="token-label">$KELLS</div>
+                    <div className="token-label">$YTEST</div>
                   </div>
                   <div className="module-icon">🪙</div>
                 </div>
@@ -406,7 +406,7 @@ export default function TestnetPage() {
                   id="faucetButton"
                   onClick={claimTokens}
                 >
-                  <span>Claim KELLS Tokens</span>
+                  <span>Claim YTEST Tokens</span>
                 </button>
                 <div className="limit-text">
                   Daily limit: <span id="claimsLeft">100</span>/100
@@ -461,7 +461,7 @@ export default function TestnetPage() {
                   <div className="stat-item">
                     <span className="stat-label">Testnet Tokens</span>
                     <span className="stat-value" id="statTokens">
-                      0 $KELLS
+                      0 $YTEST
                     </span>
                   </div>
                   <div className="stat-item">
