@@ -1,17 +1,13 @@
-// Configuration for KELLS Testnet
+import { Address } from "viem";
+import { youtest } from "../../wagmi/chain";
+
+// Configuration for YOUMIO Testnet
 const CONFIG = {
-  API_PROXY_URL:
-    window.location.hostname === "localhost"
-      ? "http://localhost:8888/.netlify/functions"
-      : "/.netlify/functions",
-  TESTNET_CHAIN_ID: "0x12d07",
-  TESTNET_RPC_URL: "https://subnets.avax.network/kells/testnet/rpc",
-  TESTNET_CHAIN_NAME: "KELLS Testnet",
-  TESTNET_CURRENCY: {
-    name: "KELLS",
-    symbol: "KELLS",
-    decimals: 18,
-  },
+  API_PROXY_URL: "/api/v1",
+  TESTNET_CHAIN_ID: "0x10cf6",
+  TESTNET_RPC_URL: youtest.rpcUrls,
+  TESTNET_CHAIN_NAME: youtest.id,
+  TESTNET_CURRENCY: youtest.nativeCurrency,
   TESTNET_EXPLORER: null,
   KELLS_TOKEN_ADDRESS: "0x6ACaf9E9EF556E69466362DD8086F25281beD293",
 };
@@ -438,34 +434,31 @@ function displayUserMints(mints) {
     };
 
     html += `
-                    <div className="mint-item" data-ref="${
-                      mint.referenceNumber
-                    }">
+                    <div className="mint-item" data-ref="${mint.referenceNumber
+      }">
                         <div className="mint-item-header">
-                            <span className="mint-reference">${
-                              mint.referenceNumber
-                            }</span>
+                            <span className="mint-reference">${mint.referenceNumber
+      }</span>
                             <span className="mint-time">${new Date(
-                              mint.timestamp
-                            ).toLocaleString()}</span>
+        mint.timestamp
+      ).toLocaleString()}</span>
                         </div>
                         <div className="mint-conversation">
                             <div className="mint-user-msg">
                                 <strong>You:</strong> ${escapeHtml(
-                                  truncateText(mint.userMessage)
-                                )}
+        truncateText(mint.userMessage)
+      )}
                             </div>
                             <div className="mint-ai-msg">
                                 <strong>Limbo:</strong> ${escapeHtml(
-                                  truncateText(mint.aiResponse)
-                                )}
+        truncateText(mint.aiResponse)
+      )}
                             </div>
                         </div>
-                        ${
-                          mint.type === "image"
-                            ? '<span className="mint-type">Contains Image</span>'
-                            : ""
-                        }
+                        ${mint.type === "image"
+        ? '<span className="mint-type">Contains Image</span>'
+        : ""
+      }
                     </div>
                 `;
   });
@@ -606,13 +599,13 @@ async function checkNetworkStatus() {
       networkBtn.classList.add("connected");
       networkBtn.classList.remove("wrong-network");
       networkLed.classList.remove("wrong");
-      networkText.textContent = "KELLS Testnet";
+      networkText.textContent = "YOUMIO Testnet";
     } else {
       isCorrectNetwork = false;
       networkBtn.classList.remove("connected");
       networkBtn.classList.add("wrong-network");
       networkLed.classList.add("wrong");
-      networkText.textContent = "Wrong Network";
+      networkText.textContent = chainId;
     }
   } catch (error) {
     console.error("Network check error:", error);
@@ -635,17 +628,12 @@ export async function handleNetworkClick() {
   if (!isCorrectNetwork) {
     await addTestnetToWallet();
   } else {
-    showNotification("Already connected to KELLS Testnet", "success");
+    showNotification("Already connected to YOUMIO Testnet", "success");
   }
 }
 
 // Toggle wallet dropdown
 export function toggleWalletDropdown() {
-  if (!userAddress) {
-    connectWallet();
-    return;
-  }
-
   const dropdown = document.getElementById("walletDropdown");
   dropdown.classList.toggle("show");
 
@@ -728,8 +716,7 @@ export function connectSocial(platform) {
         : '<span className="social-icon">💬</span><span>Connected</span>';
 
     showNotification(
-      `${
-        platform === "x" ? "X" : "Discord"
+      `${platform === "x" ? "X" : "Discord"
       } account connected! +10 bonus tokens`,
       "success"
     );
@@ -821,7 +808,7 @@ async function addTestnetToWallet() {
         document.getElementById("step3").classList.add("completed");
       }
 
-      showNotification("Already connected to KELLS Testnet!", "success");
+      showNotification("Already connected to YOUMIO Testnet!", "success");
       checkNetworkStatus();
 
       if (
@@ -844,7 +831,7 @@ async function addTestnetToWallet() {
           document.getElementById("step3").classList.add("completed");
         }
 
-        showNotification("Switched to KELLS Testnet!", "success");
+        showNotification("Switched to YOUMIO Testnet!", "success");
         checkNetworkStatus();
 
         if (
@@ -875,7 +862,7 @@ async function addTestnetToWallet() {
               document.getElementById("step3").classList.add("completed");
             }
 
-            showNotification("KELLS Testnet added successfully!", "success");
+            showNotification("YOUMIO Testnet added successfully!", "success");
             checkNetworkStatus();
 
             if (
@@ -911,7 +898,7 @@ export function skipOnboarding() {
   completeOnboarding();
 }
 
-function completeOnboarding() {
+export function completeOnboarding() {
   const overlay = document.getElementById("onboardingOverlay");
   const mainContainer = document.getElementById("mainContainer");
 
@@ -1151,48 +1138,44 @@ function resetUI() {
   updateUI();
 }
 
-export async function claimTokens() {
-  if (!userAddress) {
-    showNotification("Please connect your wallet first", "error");
-    await connectWallet();
-    return;
-  }
-
-  if (!isCorrectNetwork) {
-    showNotification("Please switch to KELLS Testnet", "error");
-    await handleNetworkClick();
-    return;
-  }
-
-  if (claimsToday >= 100) {
-    showNotification("Daily limit reached. Come back tomorrow!", "error");
-    return;
-  }
-
-  const btns = document.querySelectorAll("#faucetButton");
-  btns.forEach((btn) => {
-    btn.innerHTML = '<span className="spinner"></span> Claiming...';
-    btn.disabled = true;
+export async function getSIWEMessage(walletAddress: Address, uri: string) {
+  const response = await fetch(`${CONFIG.API_PROXY_URL}/auth/message/${walletAddress}?` + new URLSearchParams({ uri }), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 
-  setTimeout(() => {
-    const claimAmount = Math.min(10, 100 - claimsToday);
-    tokenBalance += claimAmount;
-    claimsToday += claimAmount;
+  const { authMessage } = await response.json()
 
-    saveUserData();
-    updateUI();
+  return authMessage as string
+}
 
-    btns.forEach((btn) => {
-      btn.innerHTML = "<span>Claim KELLS Tokens</span>";
-      btn.disabled = claimsToday >= 100;
-    });
+export async function getSession(walletAddress: Address, signature: string, message: string) {
+  const response = await fetch(`${CONFIG.API_PROXY_URL}/auth/session/${walletAddress}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      signature,
+      message
+    })
+  });
 
-    showNotification(
-      `Successfully claimed ${claimAmount} $KELLS tokens!`,
-      "success"
-    );
-  }, 2000);
+  const { sessionId } = await response.json()
+
+  return sessionId as string
+}
+
+export async function claimTokens(sessionId: string) {
+  await fetch(`${CONFIG.API_PROXY_URL}/faucet/claim`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-session": sessionId
+    },
+  });
 }
 
 export async function mintBadge() {
@@ -1203,7 +1186,7 @@ export async function mintBadge() {
   }
 
   if (!isCorrectNetwork) {
-    showNotification("Please switch to KELLS Testnet", "error");
+    showNotification("Please switch to YOUMIO Testnet", "error");
     await handleNetworkClick();
     return;
   }
@@ -1239,7 +1222,7 @@ async function mintChatToChain(messageData, button) {
   }
 
   if (!isCorrectNetwork) {
-    showNotification("Please switch to KELLS Testnet", "error");
+    showNotification("Please switch to YOUMIO Testnet", "error");
     await handleNetworkClick();
     return;
   }
@@ -1578,7 +1561,7 @@ window.addEventListener("load", () => {
           connectWallet();
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }
 });
 

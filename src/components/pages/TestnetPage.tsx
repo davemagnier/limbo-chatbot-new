@@ -1,14 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState,  } from "react";
 import {
   authenticateWallet,
   claimTokens,
   closeExtensionModal,
   closeMyMints,
+  completeOnboarding,
   connectSocial,
   copyToClipboard,
   disconnectWallet,
   downloadExtension,
   filterMints,
+  getSession,
+  getSIWEMessage,
   handleNetworkClick,
   mintBadge,
   onMount,
@@ -18,16 +21,47 @@ import {
   startOnboarding,
   switchMobileTab,
   switchWallet,
-  toggleCheckbox,
-  toggleWalletDropdown,
-  verifyAndAddNetwork,
 } from "./testnet.ts";
 import "./testnet.css";
+import { injected, useAccount, useConnect, useSwitchChain, useChainId, useBalance, useSignMessage } from 'wagmi'
+import { config } from "../../wagmi/config.ts";
+import { youtest } from "../../wagmi/chain.ts";
 
 export default function TestnetPage() {
+  const [termsAccepted, setAccepted] = useState(false);
+  const [walletDropdown, toggleWalletDropdown] = useState(false);
+  const [session, setSession] = useState("");
+  const { signMessageAsync } = useSignMessage()
+
+  const { isConnected, address } = useAccount();
+  const { data: balanceData } = useBalance({address});
+  const chainId = useChainId();
+  
+  const { switchChain } =
+    useSwitchChain()
+
+  const { connect } = useConnect({config})
   useEffect(() => {
     onMount();
   }, []);
+
+
+  const handleSignIn = async () => {
+    if (!isConnected || !address) {
+      connect({connector: injected()})
+    }
+
+    // Assume you've obtained the SIWE message from your backend
+    const message = await getSIWEMessage(address, window.location.origin)
+
+    const signature = await signMessageAsync({
+        message,
+    })
+
+    const sessionId = await getSession(address, signature, message)
+
+    setSession(sessionId)
+  };
 
   return (
     <>
@@ -112,17 +146,17 @@ export default function TestnetPage() {
           </div>
 
           <div className="onboarding-steps">
-            <div className="onboarding-step" id="step1">
+            <div className={"onboarding-step " + (isConnected ? "completed" : "active")} id="step1">
               <div className="step-number">1</div>
               <div className="step-title">Connect</div>
               <div className="step-desc">MetaMask</div>
             </div>
-            <div className="onboarding-step" id="step2">
+            <div className={"onboarding-step " + (isConnected ? chainId === youtest.id ? "completed" : "active" : "")} id="step2">
               <div className="step-number">2</div>
               <div className="step-title">Add Network</div>
               <div className="step-desc">Youmio</div>
             </div>
-            <div className="onboarding-step" id="step3">
+            <div className={"onboarding-step " + (isConnected && chainId === youtest.id && "active")} id="step3">
               <div className="step-number">3</div>
               <div className="step-title">Get Tokens</div>
               <div className="step-desc">Faucet</div>
@@ -130,11 +164,13 @@ export default function TestnetPage() {
           </div>
 
           <div className="checkbox-container">
-            <div
+            <input
+              type="checkbox"
               className="checkbox"
               id="termsCheckbox"
-              onClick={toggleCheckbox}
-            ></div>
+              checked={termsAccepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+            ></input>
             <div className="checkbox-label">
               I acknowledge that I have read and agree to the{" "}
               <a href="#" target="_blank">
@@ -148,12 +184,13 @@ export default function TestnetPage() {
             <button
               className="action-button primary"
               id="addNetworkBtn"
-              onClick={verifyAndAddNetwork}
-              disabled
+              onClick={() => isConnected ? chainId === youtest.id ? completeOnboarding() : switchChain({chainId: youtest.id})  : connect({ connector: injected() })}
+              disabled={!termsAccepted}
             >
-              Add Youmio Testnet
+              {isConnected ? chainId === youtest.id ? "Claim Tokens" :"Add Youmio Testnet": "Connect Wallet"}
             </button>
           </div>
+              
         </div>
       </div>
 
@@ -325,7 +362,7 @@ export default function TestnetPage() {
                   borderRadius: "50%",
                 }}
               ></span>
-              Youmio TESTNET
+              YOUMIO TESTNET
             </div>
           </div>
           <div className="network-status">
@@ -345,24 +382,25 @@ export default function TestnetPage() {
               onClick={handleNetworkClick}
             >
               <span className="network-led" id="networkLed"></span>
-              <span id="networkText">Youmio Testnet</span>
+              <span id="networkText">YOUMIO Testnet</span>
             </button>
             <div style={{ position: "relative" }}>
               <button
                 className="wallet-button"
                 id="walletButton"
-                onClick={toggleWalletDropdown}
+                onClick={() =>toggleWalletDropdown(!walletDropdown)}
+                disabled={isConnected}
               >
-                Connect Wallet
+                {isConnected? address : "Connect Wallet"}
               </button>
-              <div className="wallet-dropdown" id="walletDropdown">
+              <div className={"wallet-dropdown " + (walletDropdown ? "show" : "")} id="walletDropdown">
                 <div className="wallet-info">
                   <div
                     className="wallet-address-full"
                     id="walletAddressFull"
                   ></div>
                   <div className="wallet-balance">
-                    Balance: <span id="dropdownBalance">0</span> YTEST
+                    Balance: <span id="dropdownBalance">{balanceData?.value}</span> YTEST
                   </div>
                 </div>
                 <button className="dropdown-button" onClick={switchWallet}>
@@ -404,9 +442,9 @@ export default function TestnetPage() {
                 <button
                   className="faucet-button"
                   id="faucetButton"
-                  onClick={claimTokens}
+                  onClick={() => session ? claimTokens(session): handleSignIn()}
                 >
-                  <span>Claim YTEST Tokens</span>
+                  <span>{session ? "Claim YTEST Tokens" : "Sign In"}</span>
                 </button>
                 <div className="limit-text">
                   Daily limit: <span id="claimsLeft">100</span>/100
