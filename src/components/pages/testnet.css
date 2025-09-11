@@ -7,7 +7,11 @@
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   background: #0a0a0f;
   color: white;
   height: 100vh;
@@ -252,7 +256,7 @@ body {
 
 .extension-modal-content {
   width: 100%;
-  max-width: 600px;
+  max-width: 400px;
   max-height: 90vh;
   background: #1a1a2e;
   border-radius: 24px;
@@ -462,6 +466,13 @@ body {
   margin-bottom: 12px;
 }
 
+.connector-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-direction: column;
+}
+
 /* Onboarding Overlay */
 .onboarding-overlay {
   position: fixed;
@@ -471,7 +482,7 @@ body {
   bottom: 0;
   background: rgba(10, 10, 15, 0.98);
   backdrop-filter: blur(20px);
-  z-index: 10000;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -652,6 +663,7 @@ body {
   border-radius: 12px;
   text-align: center;
   transition: all 0.3s;
+  color: white;
 }
 
 .onboarding-step.active {
@@ -781,7 +793,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at 20% 50%,
       rgba(198, 104, 168, 0.12) 0%,
       transparent 50%
