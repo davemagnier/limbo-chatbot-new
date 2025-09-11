@@ -23,24 +23,29 @@ import {
 	useSignMessage,
 	useWriteContract,
 	useReadContract,
-	useSwitchAccount,
 } from "wagmi";
 import { youtest } from "../../wagmi/chain.ts";
 import WalletConnectModal from "../WalletConnectModal.tsx";
 import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
 import { formatEther } from "viem";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "../../hooks/use-session.ts";
+import { FaucetCooldown, fetchCooldown } from "../faucet-cooldown.tsx";
 
 export default function TestnetPage() {
 	const [termsAccepted, setAccepted] = useState(false);
 	const [walletDropdown, toggleWalletDropdown] = useState(false);
+	const { session, saveSession } = useSession();
 	const [onboardingStep, setOnboardingStep] = useState<
 		"init" | "in_progress" | "complete"
-	>("init");
-	const [claimCooldown, setClaimCooldown] = useState(false); // NOTE: Need to integrate this
-	const [session, setSession] = useState("");
+	>(session ? "complete" : "init");
 	const { disconnect } = useDisconnect();
 	const { isConnected, address } = useAccount();
+	const queryClient = useQueryClient();
+	const { data: cooldownInSeconds } = useQuery({
+		queryFn: () => fetchCooldown(session),
+		queryKey: [session, "cooldown"],
+	});
 
 	const { signMessageAsync } = useSignMessage();
 	const { writeContract } = useWriteContract();
@@ -61,6 +66,7 @@ export default function TestnetPage() {
 	const { switchChain } = useSwitchChain();
 
 	const handleMintSBT = async () => {
+		if (!session) return;
 		const { signature, contract, from } = await getTakeSignature(session);
 
 		writeContract({
@@ -72,13 +78,14 @@ export default function TestnetPage() {
 	};
 
 	const handleFaucetClaim = async () => {
-		const nextClaimSeconds = await claimTokens(session);
+		if (!session) return;
+		await claimTokens(session);
 
-		setClaimCooldown(nextClaimSeconds);
+		queryClient.invalidateQueries({ queryKey: [session, "cooldown"] });
 	};
 
 	const { data: messages, isLoading } = useQuery({
-		queryFn: async () => getMintedMessages(session),
+		queryFn: async () => getMintedMessages(session!),
 		queryKey: [session, "messages"],
 		enabled: Boolean(session),
 		initialData: [],
@@ -102,7 +109,8 @@ export default function TestnetPage() {
 			return sessionId;
 		},
 		onSuccess(session) {
-			if (session) setSession(session);
+			if (session) saveSession(session);
+			else saveSession(null);
 		},
 	});
 
@@ -141,135 +149,137 @@ export default function TestnetPage() {
 				onClose={() => setIsWalletConnectModalOpen(false)}
 			/>
 			{/* Onboarding Flow */}
-			<div className="onboarding-overlay" id="onboardingOverlay">
-				{onboardingStep === "init" && (
-					<div className="onboarding-container" id="onboardingStep1">
-						<div className="onboarding-header">
-							<h1 className="onboarding-title">Youmio Testnet</h1>
-							<p className="onboarding-subtitle">
-								Experience the future of decentralized interactions. Test our
-								chain, collect badges, and explore with Limbo.
-							</p>
-						</div>
-
-						<div className="youmio-icon-preview">
-							<img
-								src="/assets/images/youmio-icon.png"
-								alt="Youmio"
-								id="youmioLogo"
-							/>
-						</div>
-						<div className="onboarding-actions">
-							<button
-								className="action-button primary"
-								onClick={() => setOnboardingStep("in_progress")}
-							>
-								Enter Testnet
-							</button>
-							<button
-								className="action-button secondary"
-								onClick={() => {
-									setOnboardingStep("complete");
-									completeOnboarding();
-								}}
-							>
-								I'm already set up
-							</button>
-						</div>
-					</div>
-				)}
-
-				{onboardingStep === "in_progress" && (
-					<div className="onboarding-container compact" id="onboardingStep2">
-						<div className="onboarding-header">
-							<h1 className="onboarding-title">Connect & Get Started</h1>
-							<p className="onboarding-subtitle">
-								Set up your wallet and connect your accounts
-							</p>
-						</div>
-
-						<div className="onboarding-steps">
-							<button
-								className={
-									"onboarding-step " + (isConnected ? "completed" : "active")
-								}
-								id="step1"
-							>
-								<div className="step-number">1</div>
-								<div className="step-title">Connect</div>
-								<div className="step-desc">Wallet</div>
-							</button>
-							<div
-								className={
-									"onboarding-step " +
-									(isConnected
-										? chainId === youtest.id
-											? "completed"
-											: "active"
-										: "")
-								}
-								id="step2"
-							>
-								<div className="step-number">2</div>
-								<div className="step-title">Add Network</div>
-								<div className="step-desc">Youmio</div>
+			{onboardingStep !== "complete" && (
+				<div className="onboarding-overlay" id="onboardingOverlay">
+					{onboardingStep === "init" && (
+						<div className="onboarding-container" id="onboardingStep1">
+							<div className="onboarding-header">
+								<h1 className="onboarding-title">Youmio Testnet</h1>
+								<p className="onboarding-subtitle">
+									Experience the future of decentralized interactions. Test our
+									chain, collect badges, and explore with Limbo.
+								</p>
 							</div>
-							<div
-								className={
-									"onboarding-step " +
-									(isConnected && chainId === youtest.id && "active")
-								}
-								id="step3"
-							>
-								<div className="step-number">3</div>
-								<div className="step-title">Get Tokens</div>
-								<div className="step-desc">Faucet</div>
-							</div>
-						</div>
 
-						<div className="checkbox-container">
-							<input
-								type="checkbox"
-								className="checkbox"
-								id="termsCheckbox"
-								checked={termsAccepted}
-								onChange={(e) => setAccepted(e.target.checked)}
-							></input>
-							<div className="checkbox-label">
-								I acknowledge that I have read and agree to the{" "}
-								<a href="#" target="_blank">
-									Terms of Service
-								</a>{" "}
-								and understand that testnet tokens have no real value.
+							<div className="youmio-icon-preview">
+								<img
+									src="/assets/images/youmio-icon.png"
+									alt="Youmio"
+									id="youmioLogo"
+								/>
 							</div>
-						</div>
-
-						<div className="onboarding-actions">
-							<button
-								className="action-button primary"
-								id="connect-wallet"
-								onClick={handleSignIn}
-								disabled={!termsAccepted}
-							>
-								{isConnected
-									? chainId === youtest.id
-										? "Claim Tokens"
-										: "Add Youmio Testnet"
-									: "Connect Wallet"}
-							</button>
-							{isConnected && (
+							<div className="onboarding-actions">
+								<button
+									className="action-button primary"
+									onClick={() => setOnboardingStep("in_progress")}
+								>
+									Enter Testnet
+								</button>
 								<button
 									className="action-button secondary"
-									id="connect-wallet"
-									onClick={() => disconnect()}
+									onClick={() => {
+										setOnboardingStep("complete");
+										completeOnboarding();
+									}}
 								>
-									{"Disconnect"}
+									I'm already set up
 								</button>
-							)}
+							</div>
 						</div>
-					</div>
-				)}
-			</div>
+					)}
+
+					{onboardingStep === "in_progress" && (
+						<div className="onboarding-container compact" id="onboardingStep2">
+							<div className="onboarding-header">
+								<h1 className="onboarding-title">Connect & Get Started</h1>
+								<p className="onboarding-subtitle">
+									Set up your wallet and connect your accounts
+								</p>
+							</div>
+
+							<div className="onboarding-steps">
+								<button
+									className={
+										"onboarding-step " + (isConnected ? "completed" : "active")
+									}
+									id="step1"
+								>
+									<div className="step-number">1</div>
+									<div className="step-title">Connect</div>
+									<div className="step-desc">Wallet</div>
+								</button>
+								<div
+									className={
+										"onboarding-step " +
+										(isConnected
+											? chainId === youtest.id
+												? "completed"
+												: "active"
+											: "")
+									}
+									id="step2"
+								>
+									<div className="step-number">2</div>
+									<div className="step-title">Add Network</div>
+									<div className="step-desc">Youmio</div>
+								</div>
+								<div
+									className={
+										"onboarding-step " +
+										(isConnected && chainId === youtest.id && "active")
+									}
+									id="step3"
+								>
+									<div className="step-number">3</div>
+									<div className="step-title">Get Tokens</div>
+									<div className="step-desc">Faucet</div>
+								</div>
+							</div>
+
+							<div className="checkbox-container">
+								<input
+									type="checkbox"
+									className="checkbox"
+									id="termsCheckbox"
+									checked={termsAccepted}
+									onChange={(e) => setAccepted(e.target.checked)}
+								></input>
+								<div className="checkbox-label">
+									I acknowledge that I have read and agree to the{" "}
+									<a href="#" target="_blank">
+										Terms of Service
+									</a>{" "}
+									and understand that testnet tokens have no real value.
+								</div>
+							</div>
+
+							<div className="onboarding-actions">
+								<button
+									className="action-button primary"
+									id="connect-wallet"
+									onClick={handleSignIn}
+									disabled={!termsAccepted}
+								>
+									{isConnected
+										? chainId === youtest.id
+											? "Claim Tokens"
+											: "Add Youmio Testnet"
+										: "Connect Wallet"}
+								</button>
+								{isConnected && (
+									<button
+										className="action-button secondary"
+										id="connect-wallet"
+										onClick={() => disconnect()}
+									>
+										{"Disconnect"}
+									</button>
+								)}
+							</div>
+						</div>
+					)}
+				</div>
+			)}
 
 			{/* Mints Modal */}
 			<div className="mints-modal" id="mintsModal">
@@ -315,7 +325,10 @@ export default function TestnetPage() {
 
 			<div className="background-gradient"></div>
 
-			<div className="main-container" id="mainContainer">
+			<div
+				className={`main-container ${onboardingStep === "complete" ? "visible" : ""}`}
+				id="mainContainer"
+			>
 				{/* Header */}
 				<div className="header">
 					<div className="logo-section">
@@ -417,7 +430,7 @@ export default function TestnetPage() {
 								<button
 									className="faucet-button"
 									id="faucetButton"
-									disabled={isPending}
+									disabled={isPending || (cooldownInSeconds ?? 0) > 0}
 									onClick={() =>
 										session ? handleFaucetClaim() : handleSignIn()
 									}
@@ -427,7 +440,11 @@ export default function TestnetPage() {
 									</span>
 								</button>
 								<div className="limit-text">
-									Daily limit: <span id="claimsLeft">100</span>/100
+									<FaucetCooldown>
+										<>
+											Daily limit: <span id="claimsLeft">1</span>/1
+										</>
+									</FaucetCooldown>
 								</div>
 							</div>
 						</div>
