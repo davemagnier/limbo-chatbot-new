@@ -1,0 +1,4152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+    default-src 'self';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com data:;
+    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+    connect-src 'self'
+      http://localhost:3001
+      https://*.netlify.app
+      https://generativelanguage.googleapis.com
+      https://api.openai.com
+      https://subnets.avax.network/youtest/testnet/rpc
+      https://subnets.avax.network;"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Youmio L1 Testnet - Youmio Chain</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: #0a0a0f;
+        color: white;
+        height: 100vh;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Wallet Dropdown Menu */
+      .wallet-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 8px;
+        background: #1a1a2e;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 8px;
+        min-width: 200px;
+        display: none;
+        z-index: 1000;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      .wallet-dropdown.show {
+        display: block;
+      }
+
+      .wallet-info {
+        padding: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 8px;
+      }
+
+      .wallet-address-full {
+        font-size: 11px;
+        color: #94969c;
+        word-break: break-all;
+        margin-bottom: 8px;
+      }
+
+      .wallet-balance {
+        font-size: 14px;
+        font-weight: 600;
+        color: #4bbfeb;
+      }
+
+      .dropdown-button {
+        width: 100%;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .dropdown-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      .dropdown-button.danger {
+        background: rgba(255, 100, 100, 0.1);
+        border-color: rgba(255, 100, 100, 0.2);
+        color: #ff6464;
+      }
+
+      .dropdown-button.danger:hover {
+        background: rgba(255, 100, 100, 0.2);
+        border-color: rgba(255, 100, 100, 0.3);
+      }
+
+      /* Fixed Network Button Styling */
+      .network-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        color: white;
+      }
+
+      .network-button.connected {
+        background: rgba(0, 255, 136, 0.1);
+        border-color: rgba(0, 255, 136, 0.2);
+        color: #00ff88;
+      }
+
+      .network-button.wrong-network {
+        background: rgba(255, 100, 100, 0.1);
+        border-color: rgba(255, 100, 100, 0.2);
+        color: #ff6464;
+        animation: pulse-error 2s infinite;
+      }
+
+      @keyframes pulse-error {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .network-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .network-led {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #00ff88;
+        box-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+        animation: pulse 2s infinite;
+      }
+
+      .network-led.wrong {
+        background: #ff6464;
+        box-shadow: 0 0 6px rgba(255, 100, 100, 0.5);
+      }
+
+      /* Updated Chrome Extension Button to match other buttons */
+      .extension-button {
+        background: linear-gradient(
+          135deg,
+          rgba(198, 104, 168, 0.2) 0%,
+          rgba(166, 104, 196, 0.2) 100%
+        );
+        border: 2px solid rgba(198, 104, 168, 0.4);
+        border-radius: 24px;
+        padding: 10px 18px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        margin-right: 12px;
+        box-shadow: 0 2px 8px rgba(198, 104, 168, 0.2);
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Add shimmer effect to make it pop */
+      .extension-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(198, 104, 168, 0.2),
+          transparent
+        );
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+
+      .extension-button:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(198, 104, 168, 0.3) 0%,
+          rgba(166, 104, 196, 0.3) 100%
+        );
+        border-color: rgba(198, 104, 168, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(198, 104, 168, 0.3);
+      }
+
+      .extension-button-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .extension-main-text {
+        color: #d988c9;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .extension-sub-text {
+        color: #b094c0;
+        font-size: 10px;
+        font-weight: 500;
+      }
+
+      /* Updated Extension Modal for compact design */
+      .extension-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(10, 10, 15, 0.95);
+        backdrop-filter: blur(20px);
+        z-index: 10000;
+        animation: fadeIn 0.3s;
+      }
+
+      .extension-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .extension-modal-content {
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        background: #1a1a2e;
+        border-radius: 24px;
+        border: 2px solid rgba(198, 104, 168, 0.3);
+        overflow-y: auto;
+        animation: slideUp 0.3s;
+      }
+
+      .extension-modal-header {
+        padding: 20px 24px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+      }
+
+      .extension-modal-icon {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        padding: 8px;
+      }
+
+      .extension-modal-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .extension-modal-header h2 {
+        flex: 1;
+        font-size: 22px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+      }
+
+      .extension-modal-header .modal-close {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+      }
+
+      .extension-modal-body {
+        padding: 20px 24px 24px;
+      }
+
+      .extension-description {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .extension-description p {
+        color: #e0e0e0;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      .browser-note {
+        color: #94969c;
+        font-size: 12px;
+        font-style: italic;
+        margin-bottom: 12px;
+      }
+
+      .extension-features {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .feature-badge {
+        background: rgba(75, 191, 235, 0.1);
+        border: 1px solid rgba(75, 191, 235, 0.3);
+        color: #4bbfeb;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .installation-steps h3 {
+        font-size: 16px;
+        margin-bottom: 16px;
+        color: #e0e0e0;
+      }
+
+      /* Compact step cards */
+      .step-card {
+        display: flex;
+        gap: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+        transition: all 0.3s;
+      }
+
+      .step-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(198, 104, 168, 0.2);
+        transform: translateX(4px);
+      }
+
+      .step-number {
+        width: 28px;
+        height: 28px;
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+
+      .step-content {
+        flex: 1;
+      }
+
+      .step-content h4 {
+        font-size: 13px;
+        margin-bottom: 4px;
+        color: #e0e0e0;
+      }
+
+      .step-content p {
+        font-size: 11px;
+        color: #94969c;
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+
+      .download-btn {
+        background: linear-gradient(135deg, #4bbfeb 0%, #5b8dee 100%);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(75, 191, 235, 0.3);
+      }
+
+      .url-copy-box {
+        display: flex;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 6px 10px;
+        align-items: center;
+      }
+
+      .url-copy-box code {
+        flex: 1;
+        color: #4bbfeb;
+        font-size: 11px;
+      }
+
+      .copy-btn {
+        background: rgba(75, 191, 235, 0.2);
+        border: 1px solid rgba(75, 191, 235, 0.3);
+        color: #4bbfeb;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .copy-btn:hover {
+        background: rgba(75, 191, 235, 0.3);
+      }
+
+      .extension-footer {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 2px solid rgba(255, 255, 255, 0.05);
+        text-align: center;
+      }
+
+      .help-text {
+        color: #94969c;
+        font-size: 11px;
+        margin-bottom: 12px;
+      }
+
+      /* Onboarding Overlay */
+      .onboarding-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(10, 10, 15, 0.98);
+        backdrop-filter: blur(20px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease;
+        padding: 20px;
+      }
+
+      .onboarding-container {
+        max-width: 480px;
+        width: 100%;
+        background: #1a1a2e;
+        border-radius: 24px;
+        padding: 32px;
+        border: 2px solid rgba(198, 104, 168, 0.3);
+        box-shadow: 0 20px 60px rgba(198, 104, 168, 0.2);
+        animation: slideUp 0.5s ease;
+      }
+
+      .onboarding-container.compact {
+        padding: 24px;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .onboarding-header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .onboarding-title {
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 8px;
+      }
+
+      .onboarding-subtitle {
+        font-size: 14px;
+        color: #94969c;
+        line-height: 1.4;
+      }
+
+      .youmio-icon-preview {
+        width: 140px;
+        height: 140px;
+        margin: 20px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .youmio-icon-preview img {
+        width: 100%;
+        height: auto;
+      }
+
+      .wallet-requirements {
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 12px;
+        margin: 16px 0;
+      }
+
+      .requirement-title {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #e0e0e0;
+      }
+
+      .requirement-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .requirement-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        color: #94969c;
+      }
+
+      .requirement-check {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        border-radius: 50%;
+        background: rgba(75, 191, 235, 0.1);
+        border: 2px solid rgba(75, 191, 235, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: #4bbfeb;
+      }
+
+      .social-connect-section {
+        margin: 16px 0;
+      }
+
+      .social-connect-title {
+        text-align: center;
+        font-size: 12px;
+        color: #94969c;
+        margin-bottom: 10px;
+      }
+
+      .social-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .social-button {
+        padding: 10px;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-family: "Inter", sans-serif;
+      }
+
+      .social-button:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: translateY(-1px);
+      }
+
+      .social-button.connected {
+        background: rgba(75, 191, 235, 0.1);
+        border-color: rgba(75, 191, 235, 0.3);
+        color: #4bbfeb;
+      }
+
+      .social-icon {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+
+      .onboarding-steps {
+        display: flex;
+        gap: 8px;
+        margin: 16px 0;
+      }
+
+      .onboarding-step {
+        flex: 1;
+        padding: 10px 4px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        text-align: center;
+        transition: all 0.3s;
+      }
+
+      .onboarding-step.active {
+        background: rgba(198, 104, 168, 0.1);
+        border-color: rgba(198, 104, 168, 0.3);
+      }
+
+      .onboarding-step.completed {
+        background: rgba(75, 191, 235, 0.1);
+        border-color: rgba(75, 191, 235, 0.3);
+      }
+
+      .step-title {
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+
+      .step-desc {
+        font-size: 10px;
+        color: #94969c;
+      }
+
+      .onboarding-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .action-button {
+        width: 100%;
+        padding: 12px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: "Inter", sans-serif;
+      }
+
+      .action-button.primary {
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        color: white;
+      }
+
+      .action-button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(198, 104, 168, 0.3);
+      }
+
+      .action-button.secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .action-button.secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      .action-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+
+      .checkbox-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        margin: 12px 0;
+      }
+
+      .checkbox {
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        border: 2px solid rgba(198, 104, 168, 0.5);
+        border-radius: 4px;
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+
+      .checkbox.checked {
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        position: relative;
+      }
+
+      .checkbox.checked::after {
+        content: "✔";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .checkbox-label {
+        font-size: 11px;
+        line-height: 1.4;
+        color: #e0e0e0;
+      }
+
+      .checkbox-label a {
+        color: #c668a8;
+        text-decoration: none;
+      }
+
+      .checkbox-label a:hover {
+        text-decoration: underline;
+      }
+
+      /* Animated background */
+      .background-gradient {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+            circle at 20% 50%,
+            rgba(198, 104, 168, 0.12) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(166, 104, 196, 0.08) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 50% 20%,
+            rgba(75, 191, 235, 0.06) 0%,
+            transparent 50%
+          );
+        z-index: 0;
+        animation: floatGradient 20s ease infinite;
+      }
+
+      @keyframes floatGradient {
+        0%,
+        100% {
+          transform: scale(1) rotate(0deg);
+        }
+        50% {
+          transform: scale(1.1) rotate(5deg);
+        }
+      }
+
+      .main-container {
+        position: relative;
+        z-index: 1;
+        height: 100vh;
+        display: none;
+        flex-direction: column;
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      .main-container.visible {
+        display: flex;
+      }
+
+      /* Header */
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .youmio-logo {
+        height: 48px;
+        width: auto;
+      }
+
+      .testnet-badge {
+        background: linear-gradient(
+          135deg,
+          rgba(75, 191, 235, 0.2) 0%,
+          rgba(91, 141, 238, 0.2) 100%
+        );
+        border: 2px solid rgba(75, 191, 235, 0.3);
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #4bbfeb;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .network-status {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+
+      .wallet-button {
+        padding: 10px 20px;
+        border-radius: 24px;
+        font-size: 13px;
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        color: white;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+        position: relative;
+      }
+
+      .wallet-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(198, 104, 168, 0.3);
+      }
+
+      .wallet-button.connected {
+        background: rgba(75, 191, 235, 0.1);
+        color: #4bbfeb;
+        border: 2px solid rgba(75, 191, 235, 0.2);
+      }
+
+      /* IMPROVED LAYOUT - Fixed Module Cutting */
+      .content-wrapper {
+        display: grid;
+        grid-template-columns: 440px 1fr;
+        gap: 20px;
+        flex: 1;
+        min-height: 0;
+        height: calc(100vh - 100px);
+      }
+
+      /* Sidebar Modules with Better Spacing */
+      .sidebar-modules {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow-y: auto;
+        padding-right: 8px;
+      }
+
+      .sidebar-modules::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .sidebar-modules::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .sidebar-modules::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+      }
+
+      .module-card {
+        background: rgba(26, 26, 46, 0.6);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 20px;
+        position: relative;
+        overflow: visible;
+        transition: all 0.3s;
+      }
+
+      .module-card.compact {
+        padding: 18px;
+      }
+
+      .module-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #c668a8, #a668c4, #4bbfeb);
+        opacity: 0.5;
+      }
+
+      .module-card:hover {
+        transform: translateX(2px);
+        border-color: rgba(198, 104, 168, 0.2);
+      }
+
+      .module-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .module-title {
+        font-size: 15px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .module-icon {
+        width: 26px;
+        height: 26px;
+        background: linear-gradient(
+          135deg,
+          rgba(198, 104, 168, 0.2) 0%,
+          rgba(166, 104, 196, 0.2) 100%
+        );
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+
+      .module-content {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      /* Enhanced Badge Display with Proper Spacing */
+      .badge-display-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+      }
+
+      .badge-display {
+        width: 180px;
+        height: 180px;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 3px solid rgba(198, 104, 168, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(198, 104, 168, 0.05);
+        box-shadow: 0 12px 32px rgba(198, 104, 168, 0.2);
+        transition: all 0.3s;
+      }
+
+      .badge-display:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba(198, 104, 168, 0.25);
+      }
+
+      .badge-display img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .badge-display.not-minted {
+        background: rgba(26, 26, 46, 0.8);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .token-display {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .token-amount {
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .token-label {
+        font-size: 12px;
+        color: #94969c;
+        margin-top: 2px;
+      }
+
+      .faucet-button,
+      .mint-badge-button {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .button-icon {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .faucet-button:hover,
+      .mint-badge-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(198, 104, 168, 0.3);
+      }
+
+      .faucet-button:disabled,
+      .mint-badge-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .limit-text {
+        font-size: 11px;
+        color: #94969c;
+        text-align: center;
+      }
+
+      .stats-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #94969c;
+      }
+
+      .stat-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #4bbfeb;
+      }
+
+      /* View Mints Button */
+      .view-mints-button {
+        width: 100%;
+        margin-top: 12px;
+        padding: 12px;
+        background: linear-gradient(
+          135deg,
+          rgba(75, 191, 235, 0.1) 0%,
+          rgba(91, 141, 238, 0.1) 100%
+        );
+        border: 2px solid rgba(75, 191, 235, 0.2);
+        border-radius: 12px;
+        color: #4bbfeb;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .view-mints-button:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(75, 191, 235, 0.2) 0%,
+          rgba(91, 141, 238, 0.2) 100%
+        );
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(75, 191, 235, 0.2);
+      }
+
+      /* Mints Modal */
+      .mints-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(10, 10, 15, 0.95);
+        backdrop-filter: blur(20px);
+        z-index: 10000;
+        animation: fadeIn 0.3s;
+      }
+
+      .mints-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .mints-modal-content {
+        width: 100%;
+        max-width: 800px;
+        max-height: 85vh;
+        background: #1a1a2e;
+        border-radius: 24px;
+        border: 2px solid rgba(75, 191, 235, 0.3);
+        display: flex;
+        flex-direction: column;
+        animation: slideUp 0.3s;
+      }
+
+      .mints-modal-header {
+        padding: 24px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .mints-modal-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #4bbfeb 0%, #5b8dee 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .modal-close {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-size: 24px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .modal-close:hover {
+        background: rgba(255, 100, 100, 0.1);
+        border-color: rgba(255, 100, 100, 0.2);
+        transform: rotate(90deg);
+      }
+
+      .mints-modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+      }
+
+      /* Authentication Container */
+      .auth-container {
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .auth-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+      }
+
+      .auth-container h3 {
+        font-size: 20px;
+        margin-bottom: 12px;
+        color: #e0e0e0;
+      }
+
+      .auth-container p {
+        color: #94969c;
+        margin-bottom: 24px;
+        font-size: 14px;
+      }
+
+      .auth-button {
+        padding: 14px 32px;
+        background: linear-gradient(135deg, #4bbfeb 0%, #5b8dee 100%);
+        border: none;
+        border-radius: 14px;
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .auth-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(75, 191, 235, 0.3);
+      }
+
+      .auth-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Mints List */
+      .mints-search {
+        margin-bottom: 20px;
+      }
+
+      .mints-search input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        color: white;
+        font-size: 14px;
+      }
+
+      .mints-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .mint-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.3s;
+      }
+
+      .mint-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(75, 191, 235, 0.2);
+        transform: translateX(4px);
+      }
+
+      .mint-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .mint-reference {
+        font-size: 11px;
+        font-weight: 600;
+        color: #4bbfeb;
+        background: rgba(75, 191, 235, 0.1);
+        padding: 4px 10px;
+        border-radius: 10px;
+      }
+
+      .mint-time {
+        font-size: 11px;
+        color: #94969c;
+      }
+
+      .mint-conversation {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .mint-user-msg {
+        color: #c668a8;
+        margin-bottom: 8px;
+      }
+
+      .mint-ai-msg {
+        color: #e0e0e0;
+      }
+
+      .mint-type {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 4px 8px;
+        background: rgba(198, 104, 168, 0.1);
+        border: 1px solid rgba(198, 104, 168, 0.2);
+        border-radius: 6px;
+        font-size: 11px;
+        color: #c668a8;
+      }
+
+      .export-button {
+        margin-top: 16px;
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .export-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      /* Loading State */
+      .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(75, 191, 235, 0.3);
+        border-top-color: #4bbfeb;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      /* Chatbot Container */
+      .chatbot-wrapper {
+        background: rgba(26, 26, 46, 0.6);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        height: 100%;
+      }
+
+      .chat-header {
+        background: linear-gradient(
+          180deg,
+          rgba(42, 42, 62, 0.8) 0%,
+          rgba(26, 26, 46, 0.8) 100%
+        );
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+        flex-shrink: 0;
+      }
+
+      .limbo-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid rgba(198, 104, 168, 0.3);
+        background: linear-gradient(
+          135deg,
+          rgba(198, 104, 168, 0.2) 0%,
+          rgba(166, 104, 196, 0.2) 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: bold;
+        flex-shrink: 0;
+      }
+
+      .limbo-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .chat-header-info {
+        flex: 1;
+      }
+
+      .chat-header-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+
+      .chat-header-subtitle {
+        font-size: 11px;
+        color: #94969c;
+      }
+
+      .api-indicator {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #94969c;
+      }
+
+      .api-led {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4bbfeb;
+        box-shadow: 0 0 4px rgba(75, 191, 235, 0.5);
+        animation: pulse 2s infinite;
+      }
+
+      .api-led.error {
+        background: #ff6464;
+        box-shadow: 0 0 4px rgba(255, 100, 100, 0.5);
+        animation: none;
+      }
+
+      /* Chat Messages Area */
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: rgba(15, 15, 26, 0.5);
+        min-height: 0;
+      }
+
+      .chat-messages::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .chat-messages::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .chat-messages::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+      }
+
+      .message {
+        animation: slideIn 0.3s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message.user {
+        align-self: flex-end;
+        max-width: 60%;
+      }
+
+      .message.assistant {
+        align-self: flex-start;
+        max-width: 70%;
+      }
+
+      .message-content {
+        padding: 10px 14px;
+        border-radius: 16px;
+        line-height: 1.4;
+        font-size: 13px;
+      }
+
+      .message.user .message-content {
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+      }
+
+      .message.assistant .message-content {
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        color: #e0e0e0;
+        border-bottom-left-radius: 4px;
+      }
+
+      .message-label {
+        font-size: 10px;
+        color: #94969c;
+        margin-bottom: 4px;
+        padding: 0 8px;
+      }
+
+      .message-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+        padding-left: 8px;
+      }
+
+      .mint-button {
+        background: linear-gradient(
+          135deg,
+          rgba(198, 104, 168, 0.2) 0%,
+          rgba(166, 104, 196, 0.2) 100%
+        );
+        color: #c668a8;
+        border: 2px solid rgba(198, 104, 168, 0.3);
+        padding: 4px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 10px;
+        transition: all 0.3s;
+      }
+
+      .mint-button:hover {
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      .mint-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .mint-button.success {
+        background: linear-gradient(135deg, #4bbfeb 0%, #5b8dee 100%);
+        color: white;
+      }
+
+      .typing-dots {
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        border-bottom-left-radius: 4px;
+        color: #94969c;
+        font-size: 13px;
+      }
+
+      .chat-input-container {
+        padding: 16px;
+        background: rgba(26, 26, 46, 0.8);
+        border-top: 2px solid rgba(255, 255, 255, 0.05);
+        flex-shrink: 0;
+      }
+
+      .chat-input-wrapper {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .chat-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        color: white;
+        padding: 10px 16px;
+        border-radius: 22px;
+        font-size: 13px;
+        font-family: "Inter", sans-serif;
+      }
+
+      .chat-input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(198, 104, 168, 0.2);
+      }
+
+      .send-button {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #c668a8 0%, #a668c4 100%);
+        border: 2px solid transparent;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        flex-shrink: 0;
+      }
+
+      .send-button:hover:not(:disabled) {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(198, 104, 168, 0.3);
+      }
+
+      .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Notification */
+      .notification {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        background: #1a1a2e;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 100000;
+        max-width: 360px;
+        animation: slideInNotification 0.4s;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+      }
+
+      @keyframes slideInNotification {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .notification.success {
+        border-color: rgba(75, 191, 235, 0.3);
+      }
+
+      .notification.error {
+        border-color: rgba(255, 100, 100, 0.3);
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      /* MOBILE RESPONSIVE DESIGN */
+
+      /* Hide desktop-only elements on mobile */
+      .mobile-only {
+        display: none;
+      }
+
+      /* Mobile Tab Navigation (hidden on desktop) */
+      .mobile-tabs {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(26, 26, 46, 0.98);
+        backdrop-filter: blur(10px);
+        border-top: 2px solid rgba(255, 255, 255, 0.05);
+        z-index: 100;
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      .mobile-tab-button {
+        flex: 1;
+        padding: 12px;
+        background: transparent;
+        border: none;
+        color: #94969c;
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .mobile-tab-button.active {
+        color: #c668a8;
+      }
+
+      .mobile-tab-icon {
+        font-size: 20px;
+      }
+
+      /* Tablet Adjustments */
+      @media (max-width: 1200px) {
+        .content-wrapper {
+          grid-template-columns: 380px 1fr;
+          gap: 16px;
+        }
+
+        .module-card {
+          padding: 16px;
+        }
+      }
+
+      /* Desktop-specific styles to ensure proper layout */
+      @media (min-width: 769px) {
+        .mobile-tabs {
+          display: none !important;
+        }
+
+        .mobile-content {
+          display: none !important;
+        }
+
+        .sidebar-modules {
+          display: flex !important;
+          flex-direction: column;
+        }
+
+        .chatbot-wrapper {
+          display: flex !important;
+          position: relative !important;
+          top: auto !important;
+          left: auto !important;
+          right: auto !important;
+          bottom: auto !important;
+        }
+      }
+
+      /* Mobile Layout */
+      @media (max-width: 768px) {
+        .main-container {
+          padding: 0;
+          height: 100vh;
+          overflow: hidden;
+        }
+
+        .header {
+          padding: 12px 16px;
+          margin-bottom: 0;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          background: rgba(26, 26, 46, 0.98);
+          backdrop-filter: blur(10px);
+          z-index: 50;
+          border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .youmio-logo {
+          height: 32px;
+        }
+
+        .testnet-badge {
+          display: none;
+        }
+
+        .network-button {
+          padding: 8px 12px;
+          font-size: 11px;
+        }
+
+        .wallet-button {
+          padding: 8px 14px;
+          font-size: 12px;
+        }
+
+        .extension-button {
+          padding: 8px 12px;
+          margin-right: 8px;
+        }
+
+        .extension-main-text {
+          font-size: 11px;
+        }
+
+        .extension-sub-text {
+          font-size: 9px;
+        }
+
+        .extension-modal-content {
+          margin: 10px;
+          max-height: 95vh;
+        }
+
+        .extension-features {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .content-wrapper {
+          display: block;
+          padding-top: 60px;
+          padding-bottom: 60px;
+          height: 100vh;
+          overflow: hidden;
+        }
+
+        /* Mobile Tab Content */
+        .mobile-content {
+          height: 100%;
+          overflow-y: auto;
+          padding: 16px;
+          display: none;
+        }
+
+        .mobile-content.active {
+          display: block;
+        }
+
+        /* Show mobile tabs */
+        .mobile-tabs {
+          display: flex;
+        }
+
+        /* Hide desktop sidebar on mobile */
+        #desktopModules {
+          display: none;
+        }
+
+        /* Sidebar becomes tab content on mobile */
+        .sidebar-modules {
+          display: block;
+          padding: 0;
+          overflow-y: visible;
+          height: 100%;
+        }
+
+        .module-card {
+          margin-bottom: 12px;
+        }
+
+        /* Chat takes full screen on mobile */
+        .chatbot-wrapper {
+          position: fixed;
+          top: 60px;
+          left: 0;
+          right: 0;
+          bottom: 60px;
+          border-radius: 0;
+          display: none;
+        }
+
+        .chatbot-wrapper.active {
+          display: flex;
+        }
+
+        .badge-display {
+          width: 160px;
+          height: 160px;
+        }
+
+        .token-amount {
+          font-size: 24px;
+        }
+
+        .mints-modal-content {
+          max-height: 100vh;
+          border-radius: 0;
+        }
+
+        .mint-item {
+          padding: 12px;
+        }
+      }
+
+      /* Small Mobile */
+      @media (max-width: 480px) {
+        .network-status {
+          gap: 8px;
+        }
+
+        .wallet-dropdown {
+          right: -16px;
+          left: 16px;
+          width: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Onboarding Flow -->
+    <div class="onboarding-overlay" id="onboardingOverlay">
+      <div class="onboarding-container" id="onboardingStep1">
+        <div class="onboarding-header">
+          <h1 class="onboarding-title">Youmio Testnet</h1>
+          <p class="onboarding-subtitle">
+            Experience the future of decentralized interactions. Test our chain,
+            collect badges, and explore with Limbo.
+          </p>
+        </div>
+
+        <div class="youmio-icon-preview">
+          <img src="youmio-icon.png" alt="Youmio" id="youmioLogo" />
+        </div>
+
+        <div class="onboarding-actions">
+          <button class="action-button primary" onclick="startOnboarding()">
+            Enter Testnet
+          </button>
+          <button class="action-button secondary" onclick="skipOnboarding()">
+            I'm already set up
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="onboarding-container compact"
+        id="onboardingStep2"
+        style="display: none"
+      >
+        <div class="onboarding-header">
+          <h1 class="onboarding-title">Connect & Get Started</h1>
+          <p class="onboarding-subtitle">
+            Set up your wallet and connect your accounts
+          </p>
+        </div>
+
+        <div class="wallet-requirements">
+          <div class="requirement-title">Wallet Requirements</div>
+          <ul class="requirement-list">
+            <li class="requirement-item">
+              <span class="requirement-check">✔</span>
+              <span>Minimum 0.03 ETH balance on mainnet</span>
+            </li>
+            <li class="requirement-item">
+              <span class="requirement-check">✔</span>
+              <span>At least 3 transactions on mainnet</span>
+            </li>
+            <li class="requirement-item">
+              <span class="requirement-check">✔</span>
+              <span>Maximum 1 request every 6 hours</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="social-connect-section">
+          <div class="social-connect-title">Connect for bonus tokens</div>
+          <div class="social-buttons">
+            <button
+              class="social-button"
+              id="connectX"
+              onclick="connectSocial('x')"
+            >
+              <span class="social-icon">𝕏</span>
+              <span>Connect X</span>
+            </button>
+            <button
+              class="social-button"
+              id="connectDiscord"
+              onclick="connectSocial('discord')"
+            >
+              <span class="social-icon">💬</span>
+              <span>Discord</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="onboarding-steps">
+          <div class="onboarding-step" id="step1">
+            <div class="step-number">1</div>
+            <div class="step-title">Connect</div>
+            <div class="step-desc">MetaMask</div>
+          </div>
+          <div class="onboarding-step" id="step2">
+            <div class="step-number">2</div>
+            <div class="step-title">Add Network</div>
+            <div class="step-desc">Youmio</div>
+          </div>
+          <div class="onboarding-step" id="step3">
+            <div class="step-number">3</div>
+            <div class="step-title">Get Tokens</div>
+            <div class="step-desc">Faucet</div>
+          </div>
+        </div>
+
+        <div class="checkbox-container">
+          <div
+            class="checkbox"
+            id="termsCheckbox"
+            onclick="toggleCheckbox()"
+          ></div>
+          <div class="checkbox-label">
+            I acknowledge that I have read and agree to the
+            <a href="#" target="_blank">Terms of Service</a> and understand that
+            testnet tokens have no real value.
+          </div>
+        </div>
+
+        <div class="onboarding-actions">
+          <button
+            class="action-button primary"
+            id="addNetworkBtn"
+            onclick="verifyAndAddNetwork()"
+            disabled
+          >
+            Add YOUMIO Testnet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chrome Extension Modal -->
+    <div class="extension-modal" id="extensionModal">
+      <div class="extension-modal-content">
+        <div class="extension-modal-header">
+          <div class="extension-modal-icon">
+            <img src="youmio-icon.png" alt="Youmio" />
+          </div>
+          <h2>Youmio Verify Extension</h2>
+          <button class="modal-close" onclick="closeExtensionModal()">×</button>
+        </div>
+
+        <div class="extension-modal-body">
+          <div class="extension-description">
+            <p>
+              Mint AI chat conversations directly to blockchain from any AI chat
+              interface!
+            </p>
+            <p class="browser-note">
+              Works with browser-based AI chats only (ChatGPT, Claude, etc.)
+            </p>
+            <div class="extension-features">
+              <div class="feature-badge">
+                ✓ Works with Claude, ChatGPT & more
+              </div>
+              <div class="feature-badge">✓ One-click minting</div>
+              <div class="feature-badge">✓ Testnet Demo</div>
+            </div>
+          </div>
+
+          <div class="installation-steps">
+            <h3>Quick Installation</h3>
+
+            <div class="step-card">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h4>Download Extension</h4>
+                <p>Click below to download the extension files</p>
+                <button class="download-btn" onclick="downloadExtension()">
+                  <span>⬇</span> Download Extension.zip
+                </button>
+              </div>
+            </div>
+
+            <div class="step-card">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h4>Open Chrome Extensions</h4>
+                <p>Go to Chrome settings or type in address bar:</p>
+                <div class="url-copy-box">
+                  <code>chrome://extensions/</code>
+                  <button
+                    onclick="copyToClipboard('chrome://extensions/')"
+                    class="copy-btn"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="step-card">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h4>Enable Developer Mode</h4>
+                <p>Toggle the "Developer mode" switch in the top right</p>
+              </div>
+            </div>
+
+            <div class="step-card">
+              <div class="step-number">4</div>
+              <div class="step-content">
+                <h4>Load Extension</h4>
+                <p>Click "Load unpacked" and select the unzipped folder</p>
+              </div>
+            </div>
+
+            <div class="step-card">
+              <div class="step-number">5</div>
+              <div class="step-content">
+                <h4>Start Minting!</h4>
+                <p>
+                  Visit any browser-based AI chat (ChatGPT, Claude, etc.) and
+                  you'll see "Mint to Chain" buttons on AI responses
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="extension-footer">
+            <p class="help-text">
+              Need help? The extension adds "Mint to Chain" buttons to AI chat
+              messages
+            </p>
+            <button class="action-button primary" onclick="downloadExtension()">
+              Get Started - Download Extension
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mints Modal -->
+    <div class="mints-modal" id="mintsModal">
+      <div class="mints-modal-content">
+        <div class="mints-modal-header">
+          <h2>My Minted Conversations</h2>
+          <button class="modal-close" onclick="closeMyMints()">×</button>
+        </div>
+        <div class="mints-modal-body" id="mintsModalBody">
+          <div class="auth-container" id="authContainer">
+            <div class="auth-icon">🔐</div>
+            <h3>Authenticate to View Your Mints</h3>
+            <p>
+              Sign a message with your wallet to securely access your minted
+              conversations.
+            </p>
+            <button class="auth-button" onclick="authenticateWallet()">
+              Sign & Authenticate
+            </button>
+          </div>
+          <div
+            class="mints-list-container"
+            id="mintsListContainer"
+            style="display: none"
+          >
+            <div class="mints-search">
+              <input
+                type="text"
+                id="mintSearch"
+                placeholder="Search your mints..."
+                onkeyup="filterMints()"
+              />
+            </div>
+            <div class="mints-list" id="mintsList">
+              <!-- Mints will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="background-gradient"></div>
+
+    <div class="main-container" id="mainContainer">
+      <!-- Header -->
+      <div class="header">
+        <div class="logo-section">
+          <img src="youmio-logo.png" alt="Youmio" class="youmio-logo" />
+          <div class="testnet-badge">
+            <span
+              style="
+                width: 6px;
+                height: 6px;
+                background: #4bbfeb;
+                border-radius: 50%;
+              "
+            ></span>
+            YOUMIO TESTNET
+          </div>
+        </div>
+        <div class="network-status">
+          <!-- Chrome Extension Button -->
+          <button class="extension-button" onclick="openExtensionModal()">
+            <div class="extension-button-content">
+              <span class="extension-main-text">
+                <span>🔗</span> Try our Chrome Extension
+              </span>
+              <span class="extension-sub-text">Demo Only</span>
+            </div>
+          </button>
+
+          <button
+            class="network-button"
+            id="networkButton"
+            onclick="handleNetworkClick()"
+          >
+            <span class="network-led" id="networkLed"></span>
+            <span id="networkText">YOUMIO Testnet</span>
+          </button>
+          <div style="position: relative">
+            <button
+              class="wallet-button"
+              id="walletButton"
+              onclick="toggleWalletDropdown()"
+            >
+              Connect Wallet
+            </button>
+            <div class="wallet-dropdown" id="walletDropdown">
+              <div class="wallet-info">
+                <div class="wallet-address-full" id="walletAddressFull"></div>
+                <div class="wallet-balance">
+                  Balance: <span id="dropdownBalance">0</span> KELLS
+                </div>
+              </div>
+              <button class="dropdown-button" onclick="switchWallet()">
+                <span>🔄</span> Switch Wallet
+              </button>
+              <button
+                class="dropdown-button danger"
+                onclick="disconnectWallet()"
+              >
+                <span>🔌</span> Disconnect
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="content-wrapper">
+        <!-- Desktop: Sidebar Modules -->
+        <div class="sidebar-modules" id="desktopModules">
+          <!-- Faucet Module -->
+          <div class="module-card compact">
+            <div class="module-header">
+              <div class="module-title">
+                <div class="module-icon">💧</div>
+                <span>Test Faucet</span>
+              </div>
+            </div>
+            <div class="module-content">
+              <div class="token-display">
+                <div>
+                  <div class="token-amount" id="tokenBalance">0</div>
+                  <div class="token-label">$KELLS</div>
+                </div>
+                <div class="module-icon">🪙</div>
+              </div>
+              <button
+                class="faucet-button"
+                id="faucetButton"
+                onclick="claimTokens()"
+              >
+                <span>Claim KELLS Tokens</span>
+              </button>
+              <div class="limit-text">
+                Daily limit: <span id="claimsLeft">100</span>/100
+              </div>
+            </div>
+          </div>
+
+          <!-- Badge Module -->
+          <div class="module-card">
+            <div class="module-header">
+              <div class="module-title">
+                <div class="module-icon">🏆</div>
+                <span>Soulbound Badge</span>
+              </div>
+            </div>
+            <div class="module-content">
+              <div class="badge-display-container">
+                <div
+                  class="badge-display not-minted"
+                  id="badgeDisplayContainer"
+                >
+                  <img src="badge-not-minted.png" alt="Badge" id="badgeImage" />
+                </div>
+              </div>
+              <button
+                class="mint-badge-button"
+                id="badgeButton"
+                onclick="mintBadge()"
+              >
+                <span>Mint Soulbound Badge</span>
+              </button>
+              <div class="limit-text">Prove your testnet participation</div>
+            </div>
+          </div>
+
+          <!-- Stats Module -->
+          <div class="module-card compact">
+            <div class="module-header">
+              <div class="module-title">
+                <div class="module-icon">📊</div>
+                <span>Your Stats</span>
+              </div>
+            </div>
+            <div class="module-content">
+              <div class="stats-list">
+                <div class="stat-item">
+                  <span class="stat-label">Testnet Tokens</span>
+                  <span class="stat-value" id="statTokens">0 $KELLS</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Badge Status</span>
+                  <span class="stat-value" id="statBadge">Not Minted</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Chats Minted</span>
+                  <span class="stat-value" id="statChats">0</span>
+                </div>
+              </div>
+              <!-- NEW: My Mints Button -->
+              <button
+                class="view-mints-button"
+                id="viewMintsButton"
+                onclick="openMyMints()"
+              >
+                <span>📜</span> View My Minted Chats
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile: Tab Content for Modules -->
+        <div class="mobile-content" id="mobileModules">
+          <!-- Same modules will be cloned here for mobile -->
+        </div>
+
+        <!-- Desktop & Mobile: Chat Area -->
+        <div class="chatbot-wrapper" id="chatbotWrapper">
+          <div class="chat-header">
+            <div class="limbo-avatar">
+              <img
+                src="limbo-selfie.jpg"
+                alt="Limbo"
+                onerror="this.style.display='none'; this.parentElement.innerHTML='L';"
+              />
+            </div>
+            <div class="chat-header-info">
+              <div class="chat-header-title">Chat with Limbo</div>
+              <div class="chat-header-subtitle">
+                Test the chain by minting conversations
+              </div>
+            </div>
+            <div class="api-indicator">
+              <span class="api-led" id="apiLed"></span>
+              <span id="apiText">API</span>
+            </div>
+          </div>
+
+          <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+              <div class="message-label">Limbo</div>
+              <div class="message-content">
+                yo, welcome to the testnet. mint some tokens and let's test this
+                chain
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+              <input
+                type="text"
+                class="chat-input"
+                id="chatInput"
+                placeholder="type something..."
+                autocomplete="off"
+              />
+              <button class="send-button" id="sendButton" type="button">
+                →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Tab Navigation -->
+      <div class="mobile-tabs" id="mobileTabs">
+        <button
+          class="mobile-tab-button active"
+          onclick="switchMobileTab('modules')"
+        >
+          <span class="mobile-tab-icon">💎</span>
+          <span>Modules</span>
+        </button>
+        <button class="mobile-tab-button" onclick="switchMobileTab('chat')">
+          <span class="mobile-tab-icon">💬</span>
+          <span>Chat</span>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Configuration for YOUMIO Testnet
+      const CONFIG = {
+        API_PROXY_URL:
+          window.location.hostname === "localhost"
+            ? "http://localhost:8888/.netlify/functions"
+            : "/.netlify/functions",
+        TESTNET_CHAIN_ID: "0x10cf6",
+        TESTNET_RPC_URL: "https://subnets.avax.network/youtest/testnet/rpc",
+        TESTNET_CHAIN_NAME: "YOUMIO Testnet",
+        TESTNET_CURRENCY: {
+          name: "YOUMIO",
+          symbol: "YTEST",
+          decimals: 18,
+        },
+        TESTNET_EXPLORER: null,
+        KELLS_TOKEN_ADDRESS: "0x6ACaf9E9EF556E69466362DD8086F25281beD293",
+      };
+
+      // State variables
+      let provider = null;
+      let signer = null;
+      let userAddress = null;
+      let tokenBalance = 0;
+      let claimsToday = 0;
+      let hasBadge = false;
+      let chatsMinted = 0;
+      let messageIdCounter = 0;
+      let conversationHistory = [];
+      const MAX_HISTORY = 20;
+      let isCorrectNetwork = false;
+      let currentMobileTab = "modules";
+      let authToken = null;
+      let userMints = [];
+
+      let termsAccepted = false;
+      let socialConnections = {
+        x: false,
+        discord: false,
+      };
+
+      // Chrome Extension Functions
+      function openExtensionModal() {
+        const modal = document.getElementById("extensionModal");
+        modal.classList.add("show");
+      }
+
+      function closeExtensionModal() {
+        const modal = document.getElementById("extensionModal");
+        modal.classList.remove("show");
+      }
+
+      // Close modal on escape key or background click
+      document
+        .getElementById("extensionModal")
+        .addEventListener("click", (e) => {
+          if (e.target === document.getElementById("extensionModal")) {
+            closeExtensionModal();
+          }
+        });
+
+      function copyToClipboard(text) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            showNotification("Copied to clipboard!", "success");
+          })
+          .catch(() => {
+            // Fallback for older browsers
+            const input = document.createElement("input");
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand("copy");
+            document.body.removeChild(input);
+            showNotification("Copied to clipboard!", "success");
+          });
+      }
+
+      function downloadExtension() {
+        // Create a link to download your extension
+        // You'll need to host the extension.zip file somewhere
+        // For now, this shows an alert with instructions
+
+        showNotification("Extension download starting...", "success");
+
+        // Replace this URL with your actual hosted extension.zip file
+        const extensionUrl =
+          "https://your-domain.com/youmio-verify-extension.zip";
+
+        // For demo purposes, show instructions
+        alert(
+          `Demo Mode: In production, this would download the extension.\n\nTo install manually:\n1. Get the extension files from the developer\n2. Unzip the files\n3. Go to chrome://extensions/\n4. Enable Developer mode\n5. Click "Load unpacked"\n6. Select the extension folder`
+        );
+
+        // In production, uncomment this:
+        // window.open(extensionUrl, '_blank');
+      }
+
+      // FIXED: Load admin settings helper functions
+      async function loadAdminSettings() {
+        return {
+          personality: JSON.parse(
+            localStorage.getItem("limboPersonality") || "{}"
+          ),
+          knowledge: JSON.parse(localStorage.getItem("limboKnowledge") || "{}"),
+          behavior: JSON.parse(localStorage.getItem("limboBehavior") || "{}"),
+          documents: JSON.parse(localStorage.getItem("limboDocuments") || "[]"),
+        };
+      }
+
+      function extractKnowledge(settings) {
+        let knowledge = "";
+
+        // PRIORITY 1: Quick Reference Text Dump (HIGHEST PRIORITY)
+        if (
+          settings.knowledge?.textDump &&
+          settings.knowledge.textDump.trim()
+        ) {
+          knowledge += "=== CRITICAL KNOWLEDGE (ALWAYS CHECK THIS FIRST) ===\n";
+          knowledge += settings.knowledge.textDump.trim();
+          knowledge += "\n=== END CRITICAL KNOWLEDGE ===\n\n";
+        }
+
+        // PRIORITY 2: Additional structured knowledge
+        if (
+          settings.knowledge?.ecosystemFacts &&
+          settings.knowledge.ecosystemFacts.trim()
+        ) {
+          knowledge += "=== ECOSYSTEM FACTS ===\n";
+          knowledge += settings.knowledge.ecosystemFacts.trim();
+          knowledge += "\n\n";
+        }
+
+        if (
+          settings.knowledge?.importantLinks &&
+          settings.knowledge.importantLinks.trim()
+        ) {
+          knowledge += "=== IMPORTANT LINKS ===\n";
+          knowledge += settings.knowledge.importantLinks.trim();
+          knowledge += "\n\n";
+        }
+
+        // PRIORITY 3: Document content
+        if (settings.documents && settings.documents.length > 0) {
+          knowledge += "=== UPLOADED DOCUMENTS ===\n";
+          settings.documents.forEach((doc) => {
+            knowledge += `--- ${doc.name} ---\n`;
+            knowledge += doc.content;
+            knowledge += "\n\n";
+          });
+        }
+
+        return knowledge || "";
+      }
+
+      // Generate unique reference number
+      function generateReferenceNumber() {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        const sessionId = window.crypto
+          .getRandomValues(new Uint32Array(1))[0]
+          .toString(36);
+        const prefix = "LIMBO";
+        return `${prefix}-${timestamp}-${random}-${sessionId}`.toUpperCase();
+      }
+
+      // Escape HTML for security
+      function escapeHtml(text) {
+        const map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        };
+        return text.replace(/[&<>"']/g, (m) => map[m]);
+      }
+
+      // Check if message is asking for image generation
+      function isImageRequest(message) {
+        const imageKeywords = [
+          "draw",
+          "create",
+          "generate",
+          "make",
+          "design",
+          "paint",
+          "imagine",
+          "visualize",
+          "picture",
+          "image",
+          "illustration",
+          "sketch",
+          "render",
+          "show me",
+          "can you draw",
+          "make me",
+          "create an image",
+          "generate a picture",
+          "art",
+        ];
+
+        const msgLower = message.toLowerCase();
+
+        if (/chart|price|dex|trading/i.test(msgLower)) {
+          return false;
+        }
+
+        return imageKeywords.some((keyword) => msgLower.includes(keyword));
+      }
+
+      // Extract image prompt from user message
+      function extractImagePrompt(message) {
+        const prefixes = [
+          "draw me",
+          "draw a",
+          "draw an",
+          "draw",
+          "create me",
+          "create a",
+          "create an",
+          "create",
+          "generate me",
+          "generate a",
+          "generate an",
+          "generate",
+          "make me",
+          "make a",
+          "make an",
+          "make",
+          "imagine",
+          "visualize",
+          "paint",
+          "design",
+          "show me",
+          "can you draw",
+          "please draw",
+          "i want an image of",
+          "picture of",
+          "image of",
+          "create an image of",
+          "generate a picture of",
+        ];
+
+        let prompt = message.toLowerCase();
+        for (const prefix of prefixes) {
+          if (prompt.startsWith(prefix)) {
+            prompt = message.substring(prefix.length).trim();
+            break;
+          }
+        }
+
+        if (prompt === message.toLowerCase()) {
+          prompt = message;
+        }
+
+        return prompt;
+      }
+
+      // Generate image through Netlify Function
+      async function generateImage(prompt) {
+        try {
+          console.log("Generating image for prompt:", prompt);
+
+          const response = await fetch(`${CONFIG.API_PROXY_URL}/image`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ prompt }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Image API error:", errorData);
+            throw new Error(errorData.error || "Image API error");
+          }
+
+          const data = await response.json();
+          console.log("Image data received:", data);
+
+          if (!data.url) {
+            console.error("No URL in response:", data);
+            return null;
+          }
+
+          return data;
+        } catch (error) {
+          console.error("Image generation error:", error);
+          return null;
+        }
+      }
+
+      // MY MINTS FUNCTIONS
+
+      // Open My Mints Modal
+      function openMyMints() {
+        if (!userAddress) {
+          showNotification("Please connect your wallet first", "error");
+          return;
+        }
+
+        const modal = document.getElementById("mintsModal");
+        modal.classList.add("show");
+
+        // Check if already authenticated
+        const storedAuth = sessionStorage.getItem(`auth_${userAddress}`);
+        if (storedAuth) {
+          const auth = JSON.parse(storedAuth);
+          if (auth.expires > Date.now()) {
+            authToken = auth.token;
+            loadUserMints();
+            return;
+          }
+        }
+
+        // Show authentication screen
+        document.getElementById("authContainer").style.display = "block";
+        document.getElementById("mintsListContainer").style.display = "none";
+      }
+
+      // Close My Mints Modal
+      function closeMyMints() {
+        const modal = document.getElementById("mintsModal");
+        modal.classList.remove("show");
+      }
+
+      // Authenticate Wallet
+      async function authenticateWallet() {
+        if (!userAddress || !signer) {
+          showNotification("Wallet not connected", "error");
+          return;
+        }
+
+        const authBtn = document.querySelector(".auth-button");
+        authBtn.innerHTML = '<span class="loading-spinner"></span> Signing...';
+        authBtn.disabled = true;
+
+        try {
+          // Create message to sign
+          const message = `Authenticate to view your minted conversations\n\nWallet: ${userAddress}\nTimestamp: ${Date.now()}\nNonce: ${Math.random()
+            .toString(36)
+            .substring(2)}`;
+
+          // Request signature from wallet
+          const signature = await signer.signMessage(message);
+
+          // Send authentication request
+          const response = await fetch(`${CONFIG.API_PROXY_URL}/mint-store`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              action: "authenticate",
+              walletAddress: userAddress,
+              signature: signature,
+              message: message,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Authentication failed");
+          }
+
+          const data = await response.json();
+          authToken = data.token;
+
+          // Store auth in session
+          sessionStorage.setItem(
+            `auth_${userAddress}`,
+            JSON.stringify({
+              token: authToken,
+              expires: Date.now() + 3600000, // 1 hour
+            })
+          );
+
+          // Load user mints
+          loadUserMints();
+        } catch (error) {
+          console.error("Authentication error:", error);
+          showNotification("Authentication failed. Please try again.", "error");
+          authBtn.innerHTML = "Sign & Authenticate";
+          authBtn.disabled = false;
+        }
+      }
+
+      // Load User Mints
+      async function loadUserMints() {
+        if (!authToken || !userAddress) {
+          showNotification("Not authenticated", "error");
+          return;
+        }
+
+        // Show loading state
+        document.getElementById("authContainer").style.display = "none";
+        document.getElementById("mintsListContainer").style.display = "block";
+        document.getElementById("mintsList").innerHTML =
+          '<div style="text-align: center;"><span class="loading-spinner"></span> Loading your mints...</div>';
+
+        try {
+          const response = await fetch(
+            `${CONFIG.API_PROXY_URL}/mint-store?wallet=${userAddress}&token=${authToken}`
+          );
+
+          if (response.status === 401) {
+            // Token expired, re-authenticate
+            sessionStorage.removeItem(`auth_${userAddress}`);
+            document.getElementById("authContainer").style.display = "block";
+            document.getElementById("mintsListContainer").style.display =
+              "none";
+            showNotification(
+              "Session expired. Please authenticate again.",
+              "error"
+            );
+            return;
+          }
+
+          if (!response.ok) {
+            throw new Error("Failed to load mints");
+          }
+
+          userMints = await response.json();
+          displayUserMints(userMints);
+        } catch (error) {
+          console.error("Error loading mints:", error);
+          document.getElementById("mintsList").innerHTML =
+            '<div style="text-align: center; color: #ff6464;">Failed to load mints. Please try again.</div>';
+        }
+      }
+
+      // Display User Mints
+      function displayUserMints(mints) {
+        const mintsList = document.getElementById("mintsList");
+
+        if (!mints || mints.length === 0) {
+          mintsList.innerHTML =
+            '<div style="text-align: center; color: #94969C; padding: 40px;">You haven\'t minted any conversations yet.</div>';
+          return;
+        }
+
+        // Sort by timestamp (newest first)
+        mints.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        let html = `
+                <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94969C; font-size: 13px;">Total Mints: ${mints.length}</span>
+                    <button class="export-button" onclick="exportUserMints()">Export My Mints</button>
+                </div>
+            `;
+
+        mints.forEach((mint) => {
+          const truncateText = (text, maxLength = 200) => {
+            return text.length > maxLength
+              ? text.substring(0, maxLength) + "..."
+              : text;
+          };
+
+          html += `
+                    <div class="mint-item" data-ref="${mint.referenceNumber}">
+                        <div class="mint-item-header">
+                            <span class="mint-reference">${
+                              mint.referenceNumber
+                            }</span>
+                            <span class="mint-time">${new Date(
+                              mint.timestamp
+                            ).toLocaleString()}</span>
+                        </div>
+                        <div class="mint-conversation">
+                            <div class="mint-user-msg">
+                                <strong>You:</strong> ${escapeHtml(
+                                  truncateText(mint.userMessage)
+                                )}
+                            </div>
+                            <div class="mint-ai-msg">
+                                <strong>Limbo:</strong> ${escapeHtml(
+                                  truncateText(mint.aiResponse)
+                                )}
+                            </div>
+                        </div>
+                        ${
+                          mint.type === "image"
+                            ? '<span class="mint-type">Contains Image</span>'
+                            : ""
+                        }
+                    </div>
+                `;
+        });
+
+        mintsList.innerHTML = html;
+      }
+
+      // Filter Mints
+      function filterMints() {
+        const searchTerm = document
+          .getElementById("mintSearch")
+          .value.toLowerCase();
+        const filteredMints = userMints.filter(
+          (mint) =>
+            mint.referenceNumber.toLowerCase().includes(searchTerm) ||
+            mint.userMessage.toLowerCase().includes(searchTerm) ||
+            mint.aiResponse.toLowerCase().includes(searchTerm)
+        );
+        displayUserMints(filteredMints);
+      }
+
+      // Export User Mints
+      function exportUserMints() {
+        if (!userMints || userMints.length === 0) {
+          showNotification("No mints to export", "error");
+          return;
+        }
+
+        const exportData = {
+          wallet: userAddress,
+          exportDate: new Date().toISOString(),
+          totalMints: userMints.length,
+          mints: userMints,
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `my-mints-${userAddress.slice(0, 8)}-${Date.now()}.json`;
+        a.click();
+
+        showNotification("Mints exported successfully!", "success");
+      }
+
+      // FIXED: Mobile tab switching
+      function switchMobileTab(tab) {
+        currentMobileTab = tab;
+
+        // Update tab buttons
+        document.querySelectorAll(".mobile-tab-button").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        event.target.closest(".mobile-tab-button").classList.add("active");
+
+        // Show/hide content - FIXED VISIBILITY
+        const modulesContent = document.getElementById("mobileModules");
+        const chatWrapper = document.getElementById("chatbotWrapper");
+
+        if (tab === "modules") {
+          if (modulesContent) {
+            modulesContent.classList.add("active");
+            modulesContent.style.display = "block";
+          }
+          if (chatWrapper) {
+            chatWrapper.classList.remove("active");
+            chatWrapper.style.display = "none";
+          }
+        } else {
+          if (modulesContent) {
+            modulesContent.classList.remove("active");
+            modulesContent.style.display = "none";
+          }
+          if (chatWrapper) {
+            chatWrapper.classList.add("active");
+            chatWrapper.style.display = "flex";
+          }
+        }
+      }
+
+      // FIXED: Setup mobile content properly
+      function setupMobileContent() {
+        const isMobile = window.innerWidth <= 768;
+        const mobileModules = document.getElementById("mobileModules");
+        const desktopModules = document.getElementById("desktopModules");
+        const chatWrapper = document.getElementById("chatbotWrapper");
+        const mobileTabs = document.getElementById("mobileTabs");
+
+        if (isMobile) {
+          // Clone modules to mobile container if not already done
+          if (
+            mobileModules &&
+            desktopModules &&
+            mobileModules.children.length === 0
+          ) {
+            mobileModules.innerHTML = desktopModules.innerHTML;
+          }
+
+          // Show mobile tabs
+          if (mobileTabs) mobileTabs.style.display = "flex";
+
+          // Setup initial mobile view
+          if (mobileModules) {
+            mobileModules.classList.add("active");
+            mobileModules.style.display = "block";
+          }
+          if (chatWrapper) {
+            chatWrapper.classList.remove("active");
+            chatWrapper.style.display = "none";
+          }
+
+          // Hide desktop modules
+          if (desktopModules) desktopModules.style.display = "none";
+        } else {
+          // Desktop view - ensure proper display
+          if (desktopModules) desktopModules.style.display = "flex";
+          if (chatWrapper) {
+            chatWrapper.style.display = "flex";
+            chatWrapper.classList.remove("active");
+          }
+          if (mobileModules) mobileModules.style.display = "none";
+          if (mobileTabs) mobileTabs.style.display = "none";
+        }
+      }
+
+      // Check network status periodically
+      async function checkNetworkStatus() {
+        if (!window.ethereum || !userAddress) return;
+
+        try {
+          const chainId = await window.ethereum.request({
+            method: "eth_chainId",
+          });
+          const networkBtn = document.getElementById("networkButton");
+          const networkLed = document.getElementById("networkLed");
+          const networkText = document.getElementById("networkText");
+
+          if (chainId === CONFIG.TESTNET_CHAIN_ID) {
+            console.log({ chainId });
+            isCorrectNetwork = true;
+            networkBtn.classList.add("connected");
+            networkBtn.classList.remove("wrong-network");
+            networkLed.classList.remove("wrong");
+            networkText.textContent = "YOUMIO Testnet";
+          } else {
+            console.log({ chainId });
+
+            isCorrectNetwork = false;
+            networkBtn.classList.remove("connected");
+            networkBtn.classList.add("wrong-network");
+            networkLed.classList.add("wrong");
+            networkText.textContent = "Wrong Network";
+          }
+        } catch (error) {
+          console.error("Network check error:", error);
+        }
+      }
+
+      // Handle network button click
+      async function handleNetworkClick() {
+        if (!window.ethereum) {
+          showNotification("Please install MetaMask first", "error");
+          return;
+        }
+
+        if (!userAddress) {
+          showNotification("Please connect your wallet first", "error");
+          await connectWallet();
+          return;
+        }
+
+        if (!isCorrectNetwork) {
+          await addTestnetToWallet();
+        } else {
+          showNotification("Already connected to YOUMIO Testnet", "success");
+        }
+      }
+
+      // Toggle wallet dropdown
+      function toggleWalletDropdown() {
+        if (!userAddress) {
+          connectWallet();
+          return;
+        }
+
+        const dropdown = document.getElementById("walletDropdown");
+        dropdown.classList.toggle("show");
+
+        // Update dropdown info
+        document.getElementById("walletAddressFull").textContent = userAddress;
+        document.getElementById("dropdownBalance").textContent = tokenBalance;
+      }
+
+      // Switch wallet function
+      async function switchWallet() {
+        const dropdown = document.getElementById("walletDropdown");
+        dropdown.classList.remove("show");
+
+        try {
+          await window.ethereum.request({
+            method: "wallet_requestPermissions",
+            params: [
+              {
+                eth_accounts: {},
+              },
+            ],
+          });
+
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+
+          if (accounts && accounts.length > 0) {
+            userAddress = accounts[0];
+            const walletBtn = document.getElementById("walletButton");
+            const shortAddress =
+              userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+            walletBtn.textContent = shortAddress;
+
+            loadUserData();
+            checkNetworkStatus();
+            showNotification(`Switched to wallet: ${shortAddress}`, "success");
+          }
+        } catch (error) {
+          console.error("Switch wallet error:", error);
+          showNotification("Failed to switch wallet", "error");
+        }
+      }
+
+      // Click outside to close dropdown
+      document.addEventListener("click", function (event) {
+        const walletBtn = document.getElementById("walletButton");
+        const dropdown = document.getElementById("walletDropdown");
+
+        if (
+          !walletBtn.contains(event.target) &&
+          !dropdown.contains(event.target)
+        ) {
+          dropdown.classList.remove("show");
+        }
+      });
+
+      function startOnboarding() {
+        document.getElementById("onboardingStep1").style.display = "none";
+        document.getElementById("onboardingStep2").style.display = "block";
+        document.getElementById("step1").classList.add("active");
+      }
+
+      function toggleCheckbox() {
+        const checkbox = document.getElementById("termsCheckbox");
+        const addBtn = document.getElementById("addNetworkBtn");
+
+        termsAccepted = !termsAccepted;
+
+        if (termsAccepted) {
+          checkbox.classList.add("checked");
+          addBtn.disabled = false;
+        } else {
+          checkbox.classList.remove("checked");
+          addBtn.disabled = true;
+        }
+      }
+
+      function connectSocial(platform) {
+        const button = document.getElementById(
+          platform === "x" ? "connectX" : "connectDiscord"
+        );
+
+        button.innerHTML = '<span class="spinner"></span> Connecting...';
+        button.disabled = true;
+
+        setTimeout(() => {
+          socialConnections[platform] = true;
+          button.classList.add("connected");
+          button.innerHTML =
+            platform === "x"
+              ? '<span class="social-icon">𝕏</span><span>Connected</span>'
+              : '<span class="social-icon">💬</span><span>Connected</span>';
+
+          showNotification(
+            `${
+              platform === "x" ? "X" : "Discord"
+            } account connected! +10 bonus tokens`,
+            "success"
+          );
+
+          tokenBalance += 10;
+          updateUI();
+        }, 1500);
+      }
+
+      async function checkActualChainId() {
+        try {
+          const response = await fetch(CONFIG.TESTNET_RPC_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              method: "eth_chainId",
+              params: [],
+              id: 1,
+            }),
+          });
+
+          const data = await response.json();
+          return data.result;
+        } catch (error) {
+          console.error("Failed to fetch chain ID:", error);
+          return null;
+        }
+      }
+
+      async function verifyAndAddNetwork() {
+        const actualChainId = await checkActualChainId();
+        if (actualChainId && actualChainId !== CONFIG.TESTNET_CHAIN_ID) {
+          CONFIG.TESTNET_CHAIN_ID = actualChainId;
+        }
+
+        await addTestnetToWallet();
+      }
+
+      let isAddingNetwork = false;
+
+      async function addTestnetToWallet() {
+        if (isAddingNetwork) {
+          showNotification(
+            "Network addition already in progress. Please approve in MetaMask.",
+            "error"
+          );
+          return;
+        }
+
+        if (!window.ethereum) {
+          showNotification("Please install MetaMask to continue", "error");
+          return;
+        }
+
+        isAddingNetwork = true;
+        const addBtn = document.getElementById("addNetworkBtn");
+        const originalText = addBtn ? addBtn.innerHTML : "";
+        if (addBtn) {
+          addBtn.innerHTML =
+            '<span class="spinner"></span> Waiting for MetaMask...';
+        }
+
+        try {
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+
+          if (accounts.length === 0) {
+            throw new Error("No accounts found");
+          }
+
+          if (document.getElementById("step1")) {
+            document.getElementById("step1").classList.remove("active");
+            document.getElementById("step1").classList.add("completed");
+            document.getElementById("step2").classList.add("active");
+          }
+
+          const currentChainId = await window.ethereum.request({
+            method: "eth_chainId",
+          });
+
+          if (currentChainId === CONFIG.TESTNET_CHAIN_ID) {
+            if (document.getElementById("step2")) {
+              document.getElementById("step2").classList.remove("active");
+              document.getElementById("step2").classList.add("completed");
+              document.getElementById("step3").classList.add("completed");
+            }
+
+            showNotification("Already connected to KELLS Testnet!", "success");
+            checkNetworkStatus();
+
+            if (
+              document.getElementById("onboardingOverlay").style.display !==
+              "none"
+            ) {
+              setTimeout(() => {
+                completeOnboarding();
+              }, 1500);
+            }
+          } else {
+            try {
+              await window.ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: CONFIG.TESTNET_CHAIN_ID }],
+              });
+
+              if (document.getElementById("step2")) {
+                document.getElementById("step2").classList.remove("active");
+                document.getElementById("step2").classList.add("completed");
+                document.getElementById("step3").classList.add("completed");
+              }
+
+              showNotification("Switched to KELLS Testnet!", "success");
+              checkNetworkStatus();
+
+              if (
+                document.getElementById("onboardingOverlay").style.display !==
+                "none"
+              ) {
+                setTimeout(() => {
+                  completeOnboarding();
+                }, 1500);
+              }
+            } catch (switchError) {
+              if (switchError.code === 4902) {
+                try {
+                  await window.ethereum.request({
+                    method: "wallet_addEthereumChain",
+                    params: [
+                      {
+                        chainId: CONFIG.TESTNET_CHAIN_ID,
+                        chainName: CONFIG.TESTNET_CHAIN_NAME,
+                        nativeCurrency: CONFIG.TESTNET_CURRENCY,
+                        rpcUrls: [CONFIG.TESTNET_RPC_URL],
+                      },
+                    ],
+                  });
+
+                  if (document.getElementById("step2")) {
+                    document.getElementById("step2").classList.remove("active");
+                    document.getElementById("step2").classList.add("completed");
+                    document.getElementById("step3").classList.add("completed");
+                  }
+
+                  showNotification(
+                    "KELLS Testnet added successfully!",
+                    "success"
+                  );
+                  checkNetworkStatus();
+
+                  if (
+                    document.getElementById("onboardingOverlay").style
+                      .display !== "none"
+                  ) {
+                    setTimeout(() => {
+                      completeOnboarding();
+                    }, 1500);
+                  }
+                } catch (addError) {
+                  throw addError;
+                }
+              } else {
+                throw switchError;
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Network addition error:", error);
+          showNotification(
+            `Failed to add network: ${error.message || "Unknown error"}`,
+            "error"
+          );
+          if (addBtn) addBtn.innerHTML = originalText;
+        } finally {
+          isAddingNetwork = false;
+          if (addBtn) addBtn.innerHTML = originalText;
+        }
+      }
+
+      function skipOnboarding() {
+        completeOnboarding();
+      }
+
+      function completeOnboarding() {
+        const overlay = document.getElementById("onboardingOverlay");
+        const mainContainer = document.getElementById("mainContainer");
+
+        overlay.style.opacity = "0";
+        setTimeout(() => {
+          overlay.style.display = "none";
+          mainContainer.classList.add("visible");
+          localStorage.setItem("onboardingCompleted", "true");
+
+          // Ensure proper desktop/mobile setup
+          setupMobileContent();
+        }, 500);
+      }
+
+      function showNotification(message, type = "success") {
+        const notification = document.createElement("div");
+        notification.className = `notification ${type}`;
+
+        const content = document.createElement("div");
+        content.style.display = "flex";
+        content.style.alignItems = "flex-start";
+        content.style.gap = "12px";
+
+        const textDiv = document.createElement("div");
+        textDiv.style.flex = "1";
+
+        const title = document.createElement("div");
+        title.style.fontWeight = "600";
+        title.style.marginBottom = "4px";
+        title.textContent = type === "success" ? "Success" : "Notice";
+
+        const msg = document.createElement("div");
+        msg.style.fontSize = "14px";
+        msg.style.color = "#94969C";
+        msg.textContent = message;
+
+        const closeBtn = document.createElement("button");
+        closeBtn.style.background = "transparent";
+        closeBtn.style.border = "none";
+        closeBtn.style.color = "#94969C";
+        closeBtn.style.cursor = "pointer";
+        closeBtn.style.fontSize = "20px";
+        closeBtn.textContent = "×";
+        closeBtn.onclick = () => notification.remove();
+
+        textDiv.appendChild(title);
+        textDiv.appendChild(msg);
+        content.appendChild(textDiv);
+        content.appendChild(closeBtn);
+        notification.appendChild(content);
+
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 5000);
+      }
+
+      // FIXED: Connect wallet for mobile
+      async function connectWallet() {
+        const walletBtn = document.getElementById("walletButton");
+
+        // Check if we're on mobile and if MetaMask app is available
+        const isMobile =
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          );
+
+        if (typeof window.ethereum === "undefined") {
+          if (isMobile) {
+            // On mobile, try to open MetaMask app
+            const metamaskAppUrl = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+            showNotification("Opening MetaMask app...", "success");
+            window.location.href = metamaskAppUrl;
+            return;
+          } else {
+            showNotification(
+              "MetaMask not detected. Please install MetaMask extension.",
+              "error"
+            );
+            return;
+          }
+        }
+
+        try {
+          walletBtn.innerHTML = '<span class="spinner"></span> Connecting...';
+          walletBtn.disabled = true;
+
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+
+          if (accounts && accounts.length > 0) {
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+            userAddress = accounts[0];
+
+            const shortAddress =
+              userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+            walletBtn.textContent = shortAddress;
+            walletBtn.classList.add("connected");
+            walletBtn.disabled = false;
+
+            showNotification(`Wallet connected: ${shortAddress}`, "success");
+            loadUserData();
+            checkNetworkStatus();
+
+            // Set up event listeners
+            window.ethereum.on("accountsChanged", (accounts) => {
+              if (accounts.length === 0) {
+                disconnectWallet();
+              } else {
+                userAddress = accounts[0];
+                const shortAddr =
+                  userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+                walletBtn.textContent = shortAddr;
+                loadUserData();
+              }
+            });
+
+            window.ethereum.on("chainChanged", () => {
+              checkNetworkStatus();
+            });
+          }
+        } catch (error) {
+          walletBtn.textContent = "Connect Wallet";
+          walletBtn.disabled = false;
+
+          if (error.code === 4001) {
+            showNotification("Connection request rejected.", "error");
+          } else {
+            showNotification(
+              `Connection failed: ${error.message || "Unknown error"}`,
+              "error"
+            );
+          }
+        }
+      }
+
+      // Modified disconnectWallet to clear auth
+      function disconnectWallet() {
+        // Clear authentication
+        if (userAddress) {
+          sessionStorage.removeItem(`auth_${userAddress}`);
+        }
+        authToken = null;
+        userMints = [];
+
+        // Close modal if open
+        closeMyMints();
+
+        provider = null;
+        signer = null;
+        userAddress = null;
+        const walletBtn = document.getElementById("walletButton");
+        walletBtn.textContent = "Connect Wallet";
+        walletBtn.classList.remove("connected");
+
+        const dropdown = document.getElementById("walletDropdown");
+        dropdown.classList.remove("show");
+
+        resetUI();
+        showNotification("Wallet disconnected", "success");
+      }
+
+      function loadUserData() {
+        const userData = JSON.parse(
+          localStorage.getItem(`testnet_${userAddress}`) || "{}"
+        );
+
+        tokenBalance = userData.tokenBalance || 0;
+        claimsToday = userData.claimsToday || 0;
+        hasBadge = userData.hasBadge || false;
+        chatsMinted = userData.chatsMinted || 0;
+
+        const lastClaim = userData.lastClaimDate || "";
+        const today = new Date().toDateString();
+        if (lastClaim !== today) {
+          claimsToday = 0;
+        }
+
+        updateUI();
+      }
+
+      function saveUserData() {
+        const userData = {
+          tokenBalance,
+          claimsToday,
+          hasBadge,
+          chatsMinted,
+          lastClaimDate: new Date().toDateString(),
+        };
+        localStorage.setItem(
+          `testnet_${userAddress}`,
+          JSON.stringify(userData)
+        );
+      }
+
+      function updateUI() {
+        // Update all instances (desktop and mobile)
+        document.querySelectorAll("#tokenBalance").forEach((el) => {
+          el.textContent = tokenBalance;
+        });
+        document.querySelectorAll("#statTokens").forEach((el) => {
+          el.textContent = `${tokenBalance} $KELLS`;
+        });
+        document.querySelectorAll("#claimsLeft").forEach((el) => {
+          el.textContent = Math.max(0, 100 - claimsToday);
+        });
+        document.querySelectorAll("#statChats").forEach((el) => {
+          el.textContent = chatsMinted;
+        });
+
+        document.querySelectorAll("#faucetButton").forEach((btn) => {
+          if (claimsToday >= 100) {
+            btn.disabled = true;
+            btn.innerHTML = "<span>Daily Limit Reached</span>";
+          }
+        });
+
+        if (hasBadge) {
+          document.querySelectorAll("#badgeDisplayContainer").forEach((el) => {
+            el.classList.remove("not-minted");
+          });
+          document.querySelectorAll("#badgeImage").forEach((img) => {
+            img.src = "badge-minted.png";
+          });
+          document.querySelectorAll("#statBadge").forEach((el) => {
+            el.textContent = "Minted ✅";
+          });
+          document.querySelectorAll("#badgeButton").forEach((btn) => {
+            btn.disabled = true;
+            btn.innerHTML = "<span>Badge Already Minted</span>";
+          });
+        }
+      }
+
+      function resetUI() {
+        tokenBalance = 0;
+        claimsToday = 0;
+        hasBadge = false;
+        chatsMinted = 0;
+        updateUI();
+      }
+
+      async function claimTokens() {
+        if (!userAddress) {
+          showNotification("Please connect your wallet first", "error");
+          await connectWallet();
+          return;
+        }
+
+        if (!isCorrectNetwork) {
+          showNotification("Please switch to KELLS Testnet", "error");
+          await handleNetworkClick();
+          return;
+        }
+
+        if (claimsToday >= 100) {
+          showNotification("Daily limit reached. Come back tomorrow!", "error");
+          return;
+        }
+
+        const btns = document.querySelectorAll("#faucetButton");
+        btns.forEach((btn) => {
+          btn.innerHTML = '<span class="spinner"></span> Claiming...';
+          btn.disabled = true;
+        });
+
+        setTimeout(() => {
+          const claimAmount = Math.min(10, 100 - claimsToday);
+          tokenBalance += claimAmount;
+          claimsToday += claimAmount;
+
+          saveUserData();
+          updateUI();
+
+          btns.forEach((btn) => {
+            btn.innerHTML = "<span>Claim KELLS Tokens</span>";
+            btn.disabled = claimsToday >= 100;
+          });
+
+          showNotification(
+            `Successfully claimed ${claimAmount} $KELLS tokens!`,
+            "success"
+          );
+        }, 2000);
+      }
+
+      async function mintBadge() {
+        if (!userAddress) {
+          showNotification("Please connect your wallet first", "error");
+          await connectWallet();
+          return;
+        }
+
+        if (!isCorrectNetwork) {
+          showNotification("Please switch to KELLS Testnet", "error");
+          await handleNetworkClick();
+          return;
+        }
+
+        if (hasBadge) {
+          showNotification("You already have a testnet badge!", "error");
+          return;
+        }
+
+        const btns = document.querySelectorAll("#badgeButton");
+        btns.forEach((btn) => {
+          btn.innerHTML = '<span class="spinner"></span> Minting...';
+          btn.disabled = true;
+        });
+
+        setTimeout(() => {
+          hasBadge = true;
+          saveUserData();
+          updateUI();
+
+          showNotification(
+            "Testnet participation badge minted successfully!",
+            "success"
+          );
+        }, 3000);
+      }
+
+      async function mintChatToChain(messageData, button) {
+        if (!userAddress) {
+          showNotification("Please connect your wallet first", "error");
+          await connectWallet();
+          return;
+        }
+
+        if (!isCorrectNetwork) {
+          showNotification("Please switch to KELLS Testnet", "error");
+          await handleNetworkClick();
+          return;
+        }
+
+        button.innerHTML = '<span class="spinner"></span> Minting...';
+        button.disabled = true;
+
+        try {
+          // Save to database
+          const response = await fetch(`${CONFIG.API_PROXY_URL}/mint-store`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...messageData,
+              walletAddress: userAddress,
+              tokenBalance: tokenBalance,
+              networkChainId: CONFIG.TESTNET_CHAIN_ID,
+              transactionHash: null,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to store mint record");
+          }
+
+          const result = await response.json();
+          console.log("Mint stored with reference:", result.referenceNumber);
+
+          setTimeout(() => {
+            chatsMinted++;
+            saveUserData();
+            updateUI();
+
+            button.textContent = "Minted!";
+            button.classList.add("success");
+
+            console.log(
+              "✅ Minted successfully! Reference:",
+              messageData.referenceNumber
+            );
+
+            showNotification(
+              `Chat minted! Ref: ${messageData.referenceNumber.slice(-8)}`,
+              "success"
+            );
+          }, 2000);
+        } catch (error) {
+          console.error("Minting error:", error);
+          button.textContent = "Mint Failed";
+          button.disabled = false;
+          showNotification("Minting failed. Please try again.", "error");
+        }
+      }
+
+      // FIXED: Updated callAI function with knowledge extraction
+      async function callAI(userMessage) {
+        const settings = await loadAdminSettings();
+        const knowledge = extractKnowledge(settings);
+
+        try {
+          const response = await fetch(`${CONFIG.API_PROXY_URL}/chat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              prompt: userMessage,
+              knowledge: knowledge,
+              personality: settings.personality,
+              behavior: settings.behavior,
+              conversationHistory: conversationHistory.slice(-10), // Last 10 messages for context
+            }),
+          });
+
+          if (!response.ok) {
+            console.error("API response not ok:", response.status);
+            throw new Error("API error");
+          }
+
+          const data = await response.json();
+
+          if (data.reply) {
+            return data.reply;
+          } else {
+            console.error("No reply in response:", data);
+            return "something's broken with the api";
+          }
+        } catch (error) {
+          console.error("Chat error:", error);
+          // Return Limbo-style error, not generic
+          return "connection's being weird, try again";
+        }
+      }
+
+      function addMessage(
+        content,
+        isUser = false,
+        userPrompt = null,
+        imageData = null
+      ) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${isUser ? "user" : "assistant"}`;
+        const messageId = `msg-${++messageIdCounter}`;
+        messageDiv.id = messageId;
+
+        // Generate and store reference number for assistant messages
+        let referenceNumber = null;
+        if (!isUser) {
+          referenceNumber = generateReferenceNumber();
+          messageDiv.setAttribute("data-ref", referenceNumber);
+          console.log("Message reference:", referenceNumber);
+        }
+
+        const labelDiv = document.createElement("div");
+        labelDiv.className = "message-label";
+        labelDiv.textContent = isUser ? "You" : "Limbo";
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "message-content";
+        contentDiv.textContent = content;
+
+        messageDiv.appendChild(labelDiv);
+        messageDiv.appendChild(contentDiv);
+
+        // Add image if provided
+        if (imageData && imageData.url && !isUser) {
+          console.log("Adding image to message:", imageData.url);
+
+          const imageContainer = document.createElement("div");
+          imageContainer.className = "message-image";
+          imageContainer.style.marginTop = "12px";
+          imageContainer.style.borderRadius = "12px";
+          imageContainer.style.overflow = "hidden";
+          imageContainer.style.maxWidth = "400px";
+
+          const img = document.createElement("img");
+          img.src = imageData.url;
+          img.alt = "Generated image";
+          img.style.width = "100%";
+          img.style.height = "auto";
+          img.style.display = "block";
+          img.style.cursor = "pointer";
+          img.onclick = () => window.open(imageData.url, "_blank");
+
+          // Add error handling for image loading
+          img.onerror = () => {
+            console.error("Failed to load image:", imageData.url);
+            img.alt = "Failed to load image";
+          };
+
+          imageContainer.appendChild(img);
+          messageDiv.appendChild(imageContainer);
+        }
+
+        // Add mint button with reference number
+        if (!isUser && (content.length > 10 || imageData)) {
+          const actionsDiv = document.createElement("div");
+          actionsDiv.className = "message-actions";
+
+          const mintBtn = document.createElement("button");
+          mintBtn.className = "mint-button";
+          mintBtn.textContent = imageData
+            ? "Mint Image to Chain"
+            : "Mint to Chain";
+
+          mintBtn.onclick = function () {
+            const mintData = {
+              userMessage: userPrompt || "Direct interaction",
+              aiResponse: content,
+              messageId: messageId,
+              referenceNumber: referenceNumber,
+              imageUrl: imageData ? imageData.url : null,
+              type: imageData ? "image" : "text",
+            };
+
+            mintChatToChain(mintData, mintBtn);
+          };
+
+          actionsDiv.appendChild(mintBtn);
+          messageDiv.appendChild(actionsDiv);
+        }
+
+        document.getElementById("chatMessages").appendChild(messageDiv);
+        document.getElementById("chatMessages").scrollTop =
+          document.getElementById("chatMessages").scrollHeight;
+      }
+
+      function showTyping() {
+        const typingDiv = document.createElement("div");
+        typingDiv.className = "message typing";
+        typingDiv.id = "typingIndicator";
+
+        const dotsDiv = document.createElement("div");
+        dotsDiv.className = "typing-dots";
+        dotsDiv.textContent = "...";
+
+        typingDiv.appendChild(dotsDiv);
+        document.getElementById("chatMessages").appendChild(typingDiv);
+        document.getElementById("chatMessages").scrollTop =
+          document.getElementById("chatMessages").scrollHeight;
+      }
+
+      function hideTyping() {
+        const typing = document.getElementById("typingIndicator");
+        if (typing) typing.remove();
+      }
+
+      async function sendMessage() {
+        const input = document.getElementById("chatInput");
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        conversationHistory.push({ role: "user", content: message });
+        if (conversationHistory.length > MAX_HISTORY) {
+          conversationHistory = conversationHistory.slice(-MAX_HISTORY);
+        }
+
+        addMessage(message, true);
+        const userMessageText = message;
+        input.value = "";
+        document.getElementById("sendButton").disabled = true;
+
+        // Check if this is an image request
+        const isImage =
+          isImageRequest(message) &&
+          !/chart|price|dex/i.test(message.toLowerCase());
+
+        showTyping();
+
+        try {
+          if (isImage) {
+            const imagePrompt = extractImagePrompt(message);
+            console.log("Image request detected. Prompt:", imagePrompt);
+
+            hideTyping();
+            addMessage(
+              "aight, generating that for you...",
+              false,
+              userMessageText
+            );
+            conversationHistory.push({
+              role: "assistant",
+              content: "aight, generating that for you...",
+            });
+
+            showTyping();
+            const imageData = await generateImage(imagePrompt);
+            hideTyping();
+
+            if (imageData && imageData.url) {
+              console.log("Image generated successfully:", imageData.url);
+              addMessage(
+                "there you go, fresh from my digital brain",
+                false,
+                userMessageText,
+                imageData
+              );
+              conversationHistory.push({
+                role: "assistant",
+                content:
+                  "there you go, fresh from my digital brain [generated image]",
+              });
+            } else {
+              console.error("Image generation failed - no data returned");
+              addMessage(
+                "image generation broke, api might be having issues",
+                false,
+                userMessageText
+              );
+              conversationHistory.push({
+                role: "assistant",
+                content: "image generation broke",
+              });
+            }
+          } else {
+            const reply = await callAI(message);
+            hideTyping();
+
+            conversationHistory.push({ role: "assistant", content: reply });
+            if (conversationHistory.length > MAX_HISTORY) {
+              conversationHistory = conversationHistory.slice(-MAX_HISTORY);
+            }
+
+            addMessage(reply, false, userMessageText);
+          }
+        } catch (error) {
+          console.error("Message send error:", error);
+          hideTyping();
+          addMessage("something broke", false, userMessageText);
+        } finally {
+          document.getElementById("sendButton").disabled = false;
+          document.getElementById("chatInput").focus();
+        }
+      }
+
+      // Event listeners
+      document
+        .getElementById("sendButton")
+        .addEventListener("click", sendMessage);
+      document.getElementById("chatInput").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      // Close modal on escape key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeMyMints();
+          closeExtensionModal();
+        }
+      });
+
+      // Close modal on background click
+      document.getElementById("mintsModal").addEventListener("click", (e) => {
+        if (e.target === document.getElementById("mintsModal")) {
+          closeMyMints();
+        }
+      });
+
+      // Set up periodic network check
+      setInterval(checkNetworkStatus, 3000);
+
+      // Handle window resize
+      window.addEventListener("resize", () => {
+        setupMobileContent();
+      });
+
+      window.addEventListener("load", () => {
+        const onboardingCompleted = localStorage.getItem("onboardingCompleted");
+        if (onboardingCompleted === "true") {
+          const mainContainer = document.getElementById("mainContainer");
+          const overlay = document.getElementById("onboardingOverlay");
+          overlay.style.display = "none";
+          mainContainer.classList.add("visible");
+
+          // Setup correct view based on screen size
+          setupMobileContent();
+        }
+
+        // Check API status
+        const apiLed = document.getElementById("apiLed");
+        const apiText = document.getElementById("apiText");
+
+        fetch(`${CONFIG.API_PROXY_URL}/health`)
+          .then((response) => {
+            if (response.ok) {
+              apiLed.classList.remove("error");
+              apiText.textContent = "API";
+            } else {
+              throw new Error("API offline");
+            }
+          })
+          .catch(() => {
+            apiLed.classList.add("error");
+            apiText.textContent = "Offline";
+          });
+
+        // Auto-connect wallet if previously connected (for mobile)
+        if (window.ethereum) {
+          window.ethereum
+            .request({ method: "eth_accounts" })
+            .then((accounts) => {
+              if (accounts && accounts.length > 0) {
+                connectWallet();
+              }
+            })
+            .catch(() => {});
+        }
+      });
+    </script>
+  </body>
+</html>

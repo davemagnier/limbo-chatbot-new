@@ -25,7 +25,7 @@ type Variables = {
 
 const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/faucet').use('*', sessionAuth)
 
-app.get('/claim', async (c) => {
+app.post('/claim', async (c) => {
   const session = c.get('session')
   if (!session) {
     return c.json({ error: 'Unauthorized' }, 401)
@@ -48,6 +48,22 @@ app.get('/claim', async (c) => {
   await setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
 
   return c.json({ nextClaimIn: faucetCooldownSeconds, hash })
+})
+
+app.get('/cooldown', async (c) => {
+  const session = c.get('session')
+  if (!session) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const walletData: WalletData | undefined = await getWalletData(session.walletAddress)
+  if (!walletData) {
+    return c.json({ error: 'Wallet not in allowlist' }, 401)
+  }
+
+  const remainingCooldown = walletData.lastClaimed ? (walletData.lastClaimed + faucetCooldownSeconds) - getCurrentEpoch() : 0
+
+  return c.json({ nextClaimIn: remainingCooldown })
 })
 
 export default async (request: Request, context: Context) => {
