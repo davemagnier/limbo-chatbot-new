@@ -275,29 +275,11 @@ async function generateImage(prompt) {
 // MY MINTS FUNCTIONS
 
 // Open My Mints Modal
-export function openMyMints() {
-  if (!userAddress) {
-    showNotification("Please connect your wallet first", "error");
-    return;
-  }
-
+export function openMyMints(mints: Array<string>) {
   const modal = document.getElementById("mintsModal");
   modal.classList.add("show");
 
-  // Check if already authenticated
-  const storedAuth = sessionStorage.getItem(`auth_${userAddress}`);
-  if (storedAuth) {
-    const auth = JSON.parse(storedAuth);
-    if (auth.expires > Date.now()) {
-      authToken = auth.token;
-      loadUserMints();
-      return;
-    }
-  }
-
-  // Show authentication screen
-  document.getElementById("authContainer").style.display = "block";
-  document.getElementById("mintsListContainer").style.display = "none";
+  loadUserMints(mints);
 }
 
 // Close My Mints Modal
@@ -367,47 +349,19 @@ export async function authenticateWallet() {
 }
 
 // Load User Mints
-async function loadUserMints() {
-  if (!authToken || !userAddress) {
-    showNotification("Not authenticated", "error");
-    return;
-  }
-
+async function loadUserMints(userMints: Array<string>) {
   // Show loading state
   document.getElementById("authContainer").style.display = "none";
   document.getElementById("mintsListContainer").style.display = "block";
   document.getElementById("mintsList").innerHTML =
     '<div style="text-align: center;"><span className="loading-spinner"></span> Loading your mints...</div>';
 
-  try {
-    const response = await fetch(
-      `${CONFIG.API_PROXY_URL}/mint-store?wallet=${userAddress}&token=${authToken}`
-    );
+  displayUserMints(userMints);
 
-    if (response.status === 401) {
-      // Token expired, re-authenticate
-      sessionStorage.removeItem(`auth_${userAddress}`);
-      document.getElementById("authContainer").style.display = "block";
-      document.getElementById("mintsListContainer").style.display = "none";
-      showNotification("Session expired. Please authenticate again.", "error");
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error("Failed to load mints");
-    }
-
-    userMints = await response.json();
-    displayUserMints(userMints);
-  } catch (error) {
-    console.error("Error loading mints:", error);
-    document.getElementById("mintsList").innerHTML =
-      '<div style="text-align: center; color: #ff6464;">Failed to load mints. Please try again.</div>';
-  }
 }
 
 // Display User Mints
-function displayUserMints(mints) {
+export function displayUserMints(mints: Array<string>) {
   const mintsList = document.getElementById("mintsList");
 
   if (!mints || mints.length === 0) {
@@ -415,9 +369,6 @@ function displayUserMints(mints) {
       '<div style="text-align: center; color: #94969C; padding: 40px;">You haven\'t minted any conversations yet.</div>';
     return;
   }
-
-  // Sort by timestamp (newest first)
-  mints.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   let html = `
                 <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -433,34 +384,11 @@ function displayUserMints(mints) {
         : text;
     };
 
-    html += `
-                    <div className="mint-item" data-ref="${mint.referenceNumber
-      }">
-                        <div className="mint-item-header">
-                            <span className="mint-reference">${mint.referenceNumber
-      }</span>
-                            <span className="mint-time">${new Date(
-        mint.timestamp
-      ).toLocaleString()}</span>
-                        </div>
-                        <div className="mint-conversation">
-                            <div className="mint-user-msg">
-                                <strong>You:</strong> ${escapeHtml(
-        truncateText(mint.userMessage)
-      )}
-                            </div>
-                            <div className="mint-ai-msg">
-                                <strong>Limbo:</strong> ${escapeHtml(
-        truncateText(mint.aiResponse)
-      )}
-                            </div>
-                        </div>
-                        ${mint.type === "image"
-        ? '<span className="mint-type">Contains Image</span>'
-        : ""
-      }
-                    </div>
-                `;
+    html += `</span>
+        </div>
+            <div className="mint-conversation">
+              <div className="mint-user-msg">
+                <strong>You:</strong> ${escapeHtml(truncateText(mint))}`;
   });
 
   mintsList.innerHTML = html;
@@ -1182,14 +1110,32 @@ export async function getTakeSignature(sessionId: string) {
   return { signature, contract, from }
 }
 
+export async function getMintedMessages(sessionId: string) {
+  const response = await fetch(`${CONFIG.API_PROXY_URL}/messages`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "x-session": sessionId
+    },
+  });
+
+  const { messages } = await response.json()
+
+  return messages
+}
+
 export async function claimTokens(sessionId: string) {
-  await fetch(`${CONFIG.API_PROXY_URL}/faucet/claim`, {
+  const response = await fetch(`${CONFIG.API_PROXY_URL}/faucet/claim`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-session": sessionId
     },
   });
+
+  const { nextClaimIn } = await response.json()
+
+  return nextClaimIn
 }
 
 export async function mintBadge(session: string) {

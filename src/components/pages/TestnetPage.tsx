@@ -1,4 +1,4 @@
-import { useEffect, useState,  } from "react";
+import { useEffect, useState } from "react";
 import {
   authenticateWallet,
   claimTokens,
@@ -10,6 +10,7 @@ import {
   disconnectWallet,
   downloadExtension,
   filterMints,
+  getMintedMessages,
   getSession,
   getSIWEMessage,
   getTakeSignature,
@@ -23,7 +24,18 @@ import {
   switchWallet,
 } from "./testnet.ts";
 import "./testnet.css";
-import { injected, useAccount, useConnect, useSwitchChain, useChainId, useBalance, useSignMessage, useWriteContract, useReadContract } from 'wagmi'
+import {
+  injected,
+  useAccount,
+  useConnect,
+  useSwitchChain,
+  useChainId,
+  useBalance,
+  useSignMessage,
+  useWriteContract,
+  useReadContract,
+} from "wagmi";
+import { readContract } from "@wagmi/core";
 import { config } from "../../wagmi/config.ts";
 import { youtest } from "../../wagmi/chain.ts";
 import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
@@ -31,62 +43,77 @@ import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
 export default function TestnetPage() {
   const [termsAccepted, setAccepted] = useState(false);
   const [walletDropdown, toggleWalletDropdown] = useState(false);
-
+  const [claimCooldown, setClaimCooldown] = useState(false); // NOTE: Need to integrate this
+  const [sbtBalance, setsbtBalance] = useState(0); // NOTE: Need to integrate this
   const [session, setSession] = useState("");
-  const { signMessageAsync } = useSignMessage()
-  const { writeContract } = useWriteContract()
+  const [messages, setMessages] = useState([]);
+
+  const { signMessageAsync } = useSignMessage();
+  const { writeContract } = useWriteContract();
   const { isConnected, address } = useAccount();
-  const {data: balanceData} = useBalance({chainId: youtest.id, address})
+  const { data: balanceData } = useBalance({ chainId: youtest.id, address });
   const chainId = useChainId();
-  const { data: sbtBalance, error, isFetched } = useReadContract({
-    chainId: youtest.id,
-    address: "0x7A0A90E71834417ca3be405f1a81685368d516F6",
-    abi: youmioSbtAbi,
-    functionName: 'balanceOf',
-    args: ["0x263bFD6CC2A50638532FAF8CDB20b131803496c1"],
-    query: {
-      enabled: !!address,
-    },
-  })
 
-  console.log({error, sbtBalance, isFetched})
-  
-  const { switchChain } =
-    useSwitchChain()
+  const { switchChain } = useSwitchChain();
 
-  const { connect } = useConnect({config})
+  const { connect } = useConnect({ config });
   useEffect(() => {
     onMount();
   }, []);
 
+  useEffect(() => {
+    if (session) {
+      getMintedMessages(session).then((messages) => setMessages(messages));
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (address) {
+      readContract(config, {
+        chainId: youtest.id,
+        address: "0x7A0A90E71834417ca3be405f1a81685368d516F6",
+        abi: youmioSbtAbi,
+        functionName: "balanceOf",
+        args: ["0x263bFD6CC2A50638532FAF8CDB20b131803496c1"],
+      }).then((balance) => setsbtBalance(Number(balance)));
+    }
+  }, [address]);
 
   const handleSignIn = async () => {
     if (!isConnected || !address) {
-      connect({connector: injected()})
+      connect({ connector: injected() });
+      return;
     }
 
     // Assume you've obtained the SIWE message from your backend
-    const message = await getSIWEMessage(address, window.location.origin)
+    const message = await getSIWEMessage(address, window.location.origin);
 
     const signature = await signMessageAsync({
-        message,
-    })
+      account: address,
+      message,
+    });
 
-    const sessionId = await getSession(address, signature, message)
+    const sessionId = await getSession(address, signature, message);
 
-    setSession(sessionId)
+    setSession(sessionId);
   };
 
   const handleMintSBT = async () => {
-    const {signature, contract, from} = await getTakeSignature(session)
+    const { signature, contract, from } = await getTakeSignature(session);
 
-      writeContract({
+    writeContract({
       address: contract,
       abi: youmioSbtAbi,
-      functionName: 'take',
+      functionName: "take",
       args: [from, signature],
-    })
-  }
+    });
+  };
+
+  const handleFaucetClaim = async () => {
+    const nextClaimSeconds = await claimTokens(session);
+
+    setClaimCooldown(nextClaimSeconds);
+  };
 
   return (
     <>
@@ -102,7 +129,11 @@ export default function TestnetPage() {
           </div>
 
           <div className="youmio-icon-preview">
-            <img src="/assets/images/youmio-icon.png" alt="Youmio" id="youmioLogo" />
+            <img
+              src="/assets/images/youmio-icon.png"
+              alt="Youmio"
+              id="youmioLogo"
+            />
           </div>
 
           <div className="onboarding-actions">
@@ -171,17 +202,38 @@ export default function TestnetPage() {
           </div>
 
           <div className="onboarding-steps">
-            <div className={"onboarding-step " + (isConnected ? "completed" : "active")} id="step1">
+            <div
+              className={
+                "onboarding-step " + (isConnected ? "completed" : "active")
+              }
+              id="step1"
+            >
               <div className="step-number">1</div>
               <div className="step-title">Connect</div>
               <div className="step-desc">MetaMask</div>
             </div>
-            <div className={"onboarding-step " + (isConnected ? chainId === youtest.id ? "completed" : "active" : "")} id="step2">
+            <div
+              className={
+                "onboarding-step " +
+                (isConnected
+                  ? chainId === youtest.id
+                    ? "completed"
+                    : "active"
+                  : "")
+              }
+              id="step2"
+            >
               <div className="step-number">2</div>
               <div className="step-title">Add Network</div>
               <div className="step-desc">Youmio</div>
             </div>
-            <div className={"onboarding-step " + (isConnected && chainId === youtest.id && "active")} id="step3">
+            <div
+              className={
+                "onboarding-step " +
+                (isConnected && chainId === youtest.id && "active")
+              }
+              id="step3"
+            >
               <div className="step-number">3</div>
               <div className="step-title">Get Tokens</div>
               <div className="step-desc">Faucet</div>
@@ -209,13 +261,22 @@ export default function TestnetPage() {
             <button
               className="action-button primary"
               id="addNetworkBtn"
-              onClick={() => isConnected ? chainId === youtest.id ? completeOnboarding() : switchChain({chainId: youtest.id})  : connect({ connector: injected() })}
+              onClick={() =>
+                isConnected
+                  ? chainId === youtest.id
+                    ? completeOnboarding()
+                    : switchChain({ chainId: youtest.id })
+                  : connect({ connector: injected() })
+              }
               disabled={!termsAccepted}
             >
-              {isConnected ? chainId === youtest.id ? "Claim Tokens" :"Add Youmio Testnet": "Connect Wallet"}
+              {isConnected
+                ? chainId === youtest.id
+                  ? "Claim Tokens"
+                  : "Add Youmio Testnet"
+                : "Connect Wallet"}
             </button>
           </div>
-              
         </div>
       </div>
 
@@ -377,7 +438,11 @@ export default function TestnetPage() {
         {/* Header */}
         <div className="header">
           <div className="logo-section">
-            <img src="/assets/images/youmio-logo.png" alt="Youmio" className="youmio-logo" />
+            <img
+              src="/assets/images/youmio-logo.png"
+              alt="Youmio"
+              className="youmio-logo"
+            />
             <div className="testnet-badge">
               <span
                 style={{
@@ -413,19 +478,23 @@ export default function TestnetPage() {
               <button
                 className="wallet-button"
                 id="walletButton"
-                onClick={() =>toggleWalletDropdown(!walletDropdown)}
+                onClick={() => toggleWalletDropdown(!walletDropdown)}
                 disabled={isConnected}
               >
-                {isConnected? address : "Connect Wallet"}
+                {isConnected ? address : "Connect Wallet"}
               </button>
-              <div className={"wallet-dropdown " + (walletDropdown ? "show" : "")} id="walletDropdown">
+              <div
+                className={"wallet-dropdown " + (walletDropdown ? "show" : "")}
+                id="walletDropdown"
+              >
                 <div className="wallet-info">
                   <div
                     className="wallet-address-full"
                     id="walletAddressFull"
                   ></div>
                   <div className="wallet-balance">
-                    Balance: <span id="dropdownBalance">{balanceData?.value}</span> YTEST
+                    Balance:{" "}
+                    <span id="dropdownBalance">{balanceData?.value}</span> YTEST
                   </div>
                 </div>
                 <button className="dropdown-button" onClick={switchWallet}>
@@ -467,7 +536,9 @@ export default function TestnetPage() {
                 <button
                   className="faucet-button"
                   id="faucetButton"
-                  onClick={() => session ? claimTokens(session): handleSignIn()}
+                  onClick={() =>
+                    session ? handleFaucetClaim() : handleSignIn()
+                  }
                 >
                   <span>{session ? "Claim YTEST Tokens" : "Sign In"}</span>
                 </button>
@@ -492,7 +563,11 @@ export default function TestnetPage() {
                     id="badgeDisplayContainer"
                   >
                     <img
-                      src={sbtBalance > 0 ? "https://testnet-main.netlify.app/youmio-sbt.jpg" : "badge-not-minted.png"}
+                      src={
+                        sbtBalance > 0
+                          ? "https://testnet-main.netlify.app/youmio-sbt.jpg"
+                          : "badge-not-minted.png"
+                      }
                       alt="Badge"
                       id="badgeImage"
                     />
@@ -537,7 +612,7 @@ export default function TestnetPage() {
                   <div className="stat-item">
                     <span className="stat-label">Chats Minted</span>
                     <span className="stat-value" id="statChats">
-                      0
+                      {messages.length}
                     </span>
                   </div>
                 </div>
@@ -545,7 +620,7 @@ export default function TestnetPage() {
                 <button
                   className="view-mints-button"
                   id="viewMintsButton"
-                  onClick={openMyMints}
+                  onClick={() => openMyMints(messages)}
                 >
                   <span>📜</span> View My Minted Chats
                 </button>
