@@ -1168,6 +1168,20 @@ export async function getSession(walletAddress: Address, signature: string, mess
   return sessionId as string
 }
 
+export async function getTakeSignature(sessionId: string) {
+  const response = await fetch(`${CONFIG.API_PROXY_URL}/signature/take`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "x-session": sessionId
+    },
+  });
+
+  const { signature, contract, from } = await response.json()
+
+  return { signature, contract, from }
+}
+
 export async function claimTokens(sessionId: string) {
   await fetch(`${CONFIG.API_PROXY_URL}/faucet/claim`, {
     method: "POST",
@@ -1178,40 +1192,9 @@ export async function claimTokens(sessionId: string) {
   });
 }
 
-export async function mintBadge() {
-  if (!userAddress) {
-    showNotification("Please connect your wallet first", "error");
-    await connectWallet();
-    return;
-  }
+export async function mintBadge(session: string) {
+  const signature = await getTakeSignature(session)
 
-  if (!isCorrectNetwork) {
-    showNotification("Please switch to YOUMIO Testnet", "error");
-    await handleNetworkClick();
-    return;
-  }
-
-  if (hasBadge) {
-    showNotification("You already have a testnet badge!", "error");
-    return;
-  }
-
-  const btns = document.querySelectorAll("#badgeButton");
-  btns.forEach((btn) => {
-    btn.innerHTML = '<span className="spinner"></span> Minting...';
-    btn.disabled = true;
-  });
-
-  setTimeout(() => {
-    hasBadge = true;
-    saveUserData();
-    updateUI();
-
-    showNotification(
-      "Testnet participation badge minted successfully!",
-      "success"
-    );
-  }, 3000);
 }
 
 async function mintChatToChain(messageData, button) {

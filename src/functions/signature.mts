@@ -41,16 +41,18 @@ app.get('/take', async (c) => {
     return c.json({ error: 'Already minted SBT' }, 400)
   }
 
-  const signaure = await signTakeSignature({
+  const from = privateKeyToAccount(sbtAuthPrivateKey)
+
+  const data = await signTakeSignature({
     contractName: SbtContractName,
     contractVersion: SbtContractVersion,
     chainId: chainId,
     contractAddress: SbtContractAddress,
-    from: privateKeyToAccount(sbtAuthPrivateKey),
+    from,
     to: session.walletAddress,
   })
 
-  return c.json({ signaure, walletAddress: session.walletAddress, contract: SbtContractAddress, chainId })
+  return c.json({ from: from.address, signature: data.signature, walletAddress: session.walletAddress, contract: SbtContractAddress, chainId })
 })
 
 app.get('/mint', async (c) => {

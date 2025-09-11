@@ -12,8 +12,8 @@ import {
   filterMints,
   getSession,
   getSIWEMessage,
+  getTakeSignature,
   handleNetworkClick,
-  mintBadge,
   onMount,
   openExtensionModal,
   openMyMints,
@@ -23,19 +23,33 @@ import {
   switchWallet,
 } from "./testnet.ts";
 import "./testnet.css";
-import { injected, useAccount, useConnect, useSwitchChain, useChainId, useBalance, useSignMessage } from 'wagmi'
+import { injected, useAccount, useConnect, useSwitchChain, useChainId, useBalance, useSignMessage, useWriteContract, useReadContract } from 'wagmi'
 import { config } from "../../wagmi/config.ts";
 import { youtest } from "../../wagmi/chain.ts";
+import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
 
 export default function TestnetPage() {
   const [termsAccepted, setAccepted] = useState(false);
   const [walletDropdown, toggleWalletDropdown] = useState(false);
+
   const [session, setSession] = useState("");
   const { signMessageAsync } = useSignMessage()
-
+  const { writeContract } = useWriteContract()
   const { isConnected, address } = useAccount();
-  const { data: balanceData } = useBalance({address});
+  const {data: balanceData} = useBalance({chainId: youtest.id, address})
   const chainId = useChainId();
+  const { data: sbtBalance, error, isFetched } = useReadContract({
+    chainId: youtest.id,
+    address: "0x7A0A90E71834417ca3be405f1a81685368d516F6",
+    abi: youmioSbtAbi,
+    functionName: 'balanceOf',
+    args: ["0x263bFD6CC2A50638532FAF8CDB20b131803496c1"],
+    query: {
+      enabled: !!address,
+    },
+  })
+
+  console.log({error, sbtBalance, isFetched})
   
   const { switchChain } =
     useSwitchChain()
@@ -62,6 +76,17 @@ export default function TestnetPage() {
 
     setSession(sessionId)
   };
+
+  const handleMintSBT = async () => {
+    const {signature, contract, from} = await getTakeSignature(session)
+
+      writeContract({
+      address: contract,
+      abi: youmioSbtAbi,
+      functionName: 'take',
+      args: [from, signature],
+    })
+  }
 
   return (
     <>
@@ -433,7 +458,7 @@ export default function TestnetPage() {
                 <div className="token-display">
                   <div>
                     <div className="token-amount" id="tokenBalance">
-                      0
+                      {balanceData?.value || 0}
                     </div>
                     <div className="token-label">$YTEST</div>
                   </div>
@@ -467,7 +492,7 @@ export default function TestnetPage() {
                     id="badgeDisplayContainer"
                   >
                     <img
-                      src="badge-not-minted.png"
+                      src={sbtBalance > 0 ? "https://testnet-main.netlify.app/youmio-sbt.jpg" : "badge-not-minted.png"}
                       alt="Badge"
                       id="badgeImage"
                     />
@@ -476,7 +501,8 @@ export default function TestnetPage() {
                 <button
                   className="mint-badge-button"
                   id="badgeButton"
-                  onClick={mintBadge}
+                  onClick={handleMintSBT}
+                  disabled={sbtBalance > 0}
                 >
                   <span>Mint Soulbound Badge</span>
                 </button>
@@ -499,13 +525,13 @@ export default function TestnetPage() {
                   <div className="stat-item">
                     <span className="stat-label">Testnet Tokens</span>
                     <span className="stat-value" id="statTokens">
-                      0 $YTEST
+                      {balanceData?.value} $YTEST
                     </span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Badge Status</span>
                     <span className="stat-value" id="statBadge">
-                      Not Minted
+                      {sbtBalance > 0 ? "Minted" : "Not Minted"}
                     </span>
                   </div>
                   <div className="stat-item">
