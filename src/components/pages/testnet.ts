@@ -1117,11 +1117,13 @@ export async function getTakeSignature(sessionId: string) {
 
 	const { signature, contract, from } = await response.json();
 
-	return { signature, contract, from };
+	return { signature, contract, from, response };
 }
 
-export async function getMintedMessages(sessionId: string) {
-	const response = await fetch('/api/v1/messages', {
+export async function getMintedMessages(sessionId: string, tokenId: string) {
+	const response = await fetch('/api/v1/messages?' + new URLSearchParams({
+		tokenId,
+	}).toString(), {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
@@ -1131,11 +1133,11 @@ export async function getMintedMessages(sessionId: string) {
 
 	const { messages } = await response.json();
 
-	return (messages ?? []) as string[];
+	return { messages: (messages ?? []) as string[], response };
 }
 
 export async function claimTokens(sessionId: string) {
-	await fetch('/api/v1/faucet/claim', {
+	return await fetch('/api/v1/faucet/claim', {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

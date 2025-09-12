@@ -45,19 +45,35 @@ export default function TestnetPage() {
   const { isConnected, address } = useAccount();
   const queryClient = useQueryClient();
   const { data: cooldownInSeconds } = useQuery({
-    queryFn: () => fetchCooldown(session),
+    queryFn: async () => {
+      const { nextClaimIn, response } = await fetchCooldown(session);
+      if (response && response.status === 403) {
+        saveSession(null);
+      }
+      return nextClaimIn;
+    },
     queryKey: [session, "cooldown"],
   });
 
   const { signMessageAsync } = useSignMessage();
   const { writeContract } = useWriteContract();
-  const { data: sbtBalance } = useReadContract({
+  const { data: sbtBalance, refetch: refetchSBTBalance } = useReadContract({
     chainId: youtest.id,
-    address: "0x7A0A90E71834417ca3be405f1a81685368d516F6",
+    address: import.meta.env.VITE_SBT_CONTRACT_ADDRESS,
     abi: youmioSbtAbi,
     functionName: "balanceOf",
     args: [address!],
   });
+
+  const { data: tokenId } = useReadContract({
+    chainId: youtest.id,
+    address: import.meta.env.VITE_SBT_CONTRACT_ADDRESS,
+    abi: youmioSbtAbi,
+    functionName: "walletStore",
+
+    args: [address!],
+  });
+
   const { data: balanceData } = useBalance({ chainId: youtest.id, address });
   const [isWalletConnectModalOpen, setIsWalletConnectModalOpen] =
     useState(false);
@@ -75,40 +91,89 @@ export default function TestnetPage() {
 
   const { switchChain } = useSwitchChain();
 
-  const handleMintSBT = async () => {
-    if (!session) return;
-    const { signature, contract, from } = await getTakeSignature(session);
+  const { mutate: mintSBT, isPending: isTakePending } = useMutation({
+    mutationFn: async () => {
+      if (!session) return;
+      const { signature, contract, from, response } = await getTakeSignature(
+        session
+      );
 
-    writeContract({
-      address: contract,
-      abi: youmioSbtAbi,
-      functionName: "take",
-      args: [from, signature],
-    });
+      writeContract({
+        address: contract,
+        abi: youmioSbtAbi,
+        functionName: "take",
+        args: [from, signature],
+      });
+
+      return response;
+    },
+    onSettled(response) {
+      refetchSBTBalance();
+      if (response && response.status === 403) {
+        saveSession(null);
+      }
+    },
+  });
+
+  const handleMintSBT = () => {
+    if (!session) {
+      console.error("Missing Session");
+      return;
+    }
+
+    mintSBT();
   };
+
+  const { mutate: faucetClaim, isPending: isFaucetClaimPending } = useMutation({
+    mutationFn: async () => {
+      if (!session) return;
+      const response = await claimTokens(session);
+
+      return response;
+    },
+    onSettled(response) {
+      queryClient.invalidateQueries({ queryKey: [session, "cooldown"] });
+
+      if (response && response.status === 403) {
+        saveSession(null);
+      }
+    },
+  });
 
   const handleFaucetClaim = async () => {
-    if (!session) return;
-    await claimTokens(session);
+    if (!session) {
+      console.error("Session missing");
 
-    queryClient.invalidateQueries({ queryKey: [session, "cooldown"] });
+      return;
+    }
+
+    faucetClaim();
   };
 
-  const { data: messages, isLoading } = useQuery({
-    queryFn: async () => getMintedMessages(session!),
+  const { data: messages } = useQuery({
+    queryFn: async () => {
+      const { messages, response } = await getMintedMessages(
+        session!,
+        tokenId!.toString()
+      );
+      if (response && response.status === 403) {
+        saveSession(null);
+      }
+
+      return messages;
+    },
     queryKey: [session, "messages"],
-    enabled: Boolean(session),
+    enabled: Boolean(session) && Boolean(tokenId),
     initialData: [],
   });
 
   const {
     data: sessiion,
-    mutate,
-    isPending,
+    mutate: generateSession,
+    isPending: isAuthPending,
   } = useMutation({
     mutationFn: async () => {
       if (!address) return;
-      // Assume you've obtained the SIWE message from your backend
       const message = await getSIWEMessage(address, window.location.origin);
 
       const signature = await signMessageAsync({
@@ -148,7 +213,7 @@ export default function TestnetPage() {
     }
 
     if (onboardingStep === "complete") {
-      mutate();
+      generateSession();
     }
   };
 
@@ -446,13 +511,27 @@ export default function TestnetPage() {
                 <button
                   className="faucet-button"
                   id="faucetButton"
-                  disabled={isPending || (cooldownInSeconds ?? 0) > 0}
+                  disabled={
+                    isFaucetClaimPending ||
+                    isAuthPending ||
+                    (cooldownInSeconds ?? 0) > 0
+                  }
                   onClick={() =>
                     session ? handleFaucetClaim() : handleSignIn()
                   }
                 >
-                  <span className={isPending ? "loading-spinner" : ""}>
-                    {isPending ? "" : session ? "Claim YTEST" : "Sign In"}
+                  <span
+                    className={
+                      isFaucetClaimPending || isAuthPending
+                        ? "loading-spinner"
+                        : ""
+                    }
+                  >
+                    {isFaucetClaimPending || isAuthPending
+                      ? ""
+                      : session
+                      ? "Claim YTEST"
+                      : "Sign In"}
                   </span>
                 </button>
                 <div className="limit-text">
