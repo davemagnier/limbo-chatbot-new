@@ -80,11 +80,23 @@ app.post('/', async (c) => {
 
     await setWalletData(session.walletAddress, { ...walletData, messageCount: ++walletData.messageCount, lastMessaged: getCurrentEpoch() })
 
-    return c.json({ reply, remainingCooldown, remainingInputs: chatLimit - walletData.messageCount })
+    return c.json({ reply, remainingCooldown: remainingCooldown ?? chatCooldownSeconds, remainingInputs: chatLimit - walletData.messageCount })
   } catch (error) {
     console.info({ error })
     return c.json({ reply: "Api's being weird right now, try again" })
   }
+})
+
+app.get('/cooldown', async (c) => {
+  const session = c.get('session')
+  if (!session) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const walletData = await getWalletData(session.walletAddress);
+  const remainingCooldown = (walletData.lastMessaged + chatCooldownSeconds) - getCurrentEpoch()
+
+  return c.json({ remainingCooldown: remainingCooldown ?? chatCooldownSeconds, remainingMessages: chatLimit - walletData.messageCount })
 })
 
 export default async (request: Request, context: Context) => {
