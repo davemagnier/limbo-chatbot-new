@@ -643,8 +643,7 @@ export function connectSocial(platform) {
 				: '<span className="social-icon">💬</span><span>Connected</span>';
 
 		showNotification(
-			`${
-				platform === "x" ? "X" : "Discord"
+			`${platform === "x" ? "X" : "Discord"
 			} account connected! +10 bonus tokens`,
 			"success",
 		);
@@ -1069,7 +1068,7 @@ function resetUI() {
 export async function getSIWEMessage(walletAddress: Address, uri: string) {
 	const response = await fetch(
 		`${CONFIG.API_PROXY_URL}/auth/message/${walletAddress}?` +
-			new URLSearchParams({ uri }),
+		new URLSearchParams({ uri }),
 		{
 			method: "GET",
 			headers: {
@@ -1136,7 +1135,7 @@ export async function getMintedMessages(sessionId: string) {
 }
 
 export async function claimTokens(sessionId: string) {
-	const response = await fetch(`${CONFIG.API_PROXY_URL}/faucet/claim`, {
+	const response = await fetch(`${CONFIG.API_PROXY_URL}/faucet-background/claim`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -1500,7 +1499,7 @@ window.addEventListener("load", () => {
 					connectWallet();
 				}
 			})
-			.catch(() => {});
+			.catch(() => { });
 	}
 });
 

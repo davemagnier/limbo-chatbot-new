@@ -23,7 +23,7 @@ type Variables = {
   session: SessionData | undefined
 }
 
-const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/faucet').use('*', sessionAuth)
+const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/faucet-background').use('*', sessionAuth)
 
 app.post('/claim', async (c) => {
   const session = c.get('session')
@@ -71,5 +71,5 @@ export default async (request: Request, context: Context) => {
 };
 
 export const config: Config = {
-  path: "/api/v1/faucet*",
+  path: "/api/v1/faucet-background*",
 };
