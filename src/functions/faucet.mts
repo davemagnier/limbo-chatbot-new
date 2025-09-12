@@ -43,7 +43,7 @@ app.post('/claim', async (c) => {
     }
   }
 
-  // await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
+  await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
 
   await setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
 
