@@ -11,7 +11,7 @@ import { getCurrentEpoch } from "../utils/time.ts";
 
 const OPEANI_API_KEY = Netlify.env.get("OPEANI_API_KEY");
 const chatCooldownSeconds = parseInt(Netlify.env.get("CHAT_COOLDOWN_SECONDS") || "86400");
-const chatLimit = parseInt(Netlify.env.get("CHAT_LIMIT") || "10");
+const chatLimit = parseInt(Netlify.env.get("CHAT_LIMIT") || "15");
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const SbtContractAddress = Netlify.env.get("SBT_CONTRACT") as Address
 const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youtest/testnet/rpc"
@@ -34,8 +34,8 @@ app.post('/', async (c) => {
 
   const walletData = await getWalletData(session.walletAddress);
 
+  const remainingCooldown = (walletData.lastMessaged + chatCooldownSeconds) - getCurrentEpoch()
   if (walletData.messageCount >= chatLimit) {
-    const remainingCooldown = (walletData.lastMessaged + chatCooldownSeconds) - getCurrentEpoch()
     if (remainingCooldown > 0) {
       return c.json({ error: 'Cannot message', nextMessageIn: remainingCooldown }, 400)
     } else {
@@ -78,9 +78,9 @@ app.post('/', async (c) => {
       throw new Error("No response generated");
     }
 
-    await setWalletData(session.walletAddress, { ...walletData, messageCount: walletData.messageCount++, lastMessaged: getCurrentEpoch() })
+    await setWalletData(session.walletAddress, { ...walletData, messageCount: ++walletData.messageCount, lastMessaged: getCurrentEpoch() })
 
-    return c.json({ reply })
+    return c.json({ reply, remainingCooldown, remainingInputs: chatLimit - walletData.messageCount })
   } catch (error) {
     console.info({ error })
     return c.json({ reply: "Api's being weird right now, try again" })
