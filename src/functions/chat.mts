@@ -37,7 +37,7 @@ app.post('/', async (c) => {
   const remainingCooldown = (walletData.lastMessaged + chatCooldownSeconds) - getCurrentEpoch()
   if (walletData.messageCount >= chatLimit) {
     if (remainingCooldown > 0) {
-      return c.json({ error: 'Cannot message', nextMessageIn: remainingCooldown }, 400)
+      return c.json({ error: 'Cannot message', remainingCooldown, remainingInputs: 0 }, 400)
     } else {
       walletData.messageCount = 0;
     }
