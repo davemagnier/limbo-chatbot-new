@@ -4,7 +4,7 @@ import { useSession } from "../hooks/use-session";
 
 export async function fetchCooldown(session: string | null) {
   if (!session) return 0;
-  const response = await fetch("/api/v1/faucet-background/cooldown", {
+  const response = await fetch("/api/v1/faucet/cooldown", {
     headers: {
       "x-session": session,
     },

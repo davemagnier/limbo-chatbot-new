@@ -1135,21 +1135,13 @@ export async function getMintedMessages(sessionId: string) {
 }
 
 export async function claimTokens(sessionId: string) {
-	const response = await fetch(`${CONFIG.API_PROXY_URL}/faucet-background/claim`, {
+	await fetch(`${CONFIG.API_PROXY_URL}/faucet-background/claim`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
 			"x-session": sessionId,
 		},
 	});
-
-	const { nextClaimIn } = await response.json();
-
-	return nextClaimIn;
-}
-
-export async function mintBadge(session: string) {
-	const signature = await getTakeSignature(session);
 }
 
 async function mintChatToChain(messageData, button) {
