@@ -1,4 +1,3 @@
-
 import { Config, Context } from "@netlify/functions";
 import { Hono } from "hono"
 import { SessionData } from "../utils/auth-store.ts";

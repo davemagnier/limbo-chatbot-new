@@ -5,8 +5,8 @@ import { sessionAuth } from "../utils/middlewares.ts";
 import { SessionData } from "../utils/auth-store.ts";
 import { getWalletData, setWalletData, WalletData } from "../utils/allowlist-store.ts";
 import { getCurrentEpoch } from "../utils/time.ts";
-import { mintNativeCoin } from "../utils/faucet.ts";
 import { Address, Hex } from "viem";
+import { mintNativeCoin } from "../utils/faucet.ts";
 
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const faucetAddress = Netlify.env.get("FAUCET_CONTRACT") as Address
@@ -43,11 +43,11 @@ app.post('/claim', async (c) => {
     }
   }
 
-  const hash = await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
+  await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
 
   await setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
 
-  return c.json({ nextClaimIn: faucetCooldownSeconds, hash })
+  return c.json({ nextClaimIn: faucetCooldownSeconds })
 })
 
 app.get('/cooldown', async (c) => {
@@ -71,5 +71,5 @@ export default async (request: Request, context: Context) => {
 };
 
 export const config: Config = {
-  path: "/api/v1/faucet*",
+  path: "/api/v1/faucet/*",
 };

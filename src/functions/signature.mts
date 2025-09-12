@@ -100,7 +100,7 @@ app.get("/mint", async (c) => {
 		rpcUrl,
 	);
 	if (tokenOwner.toLowerCase() !== session.walletAddress.toLowerCase()) {
-		return c.json({ error: "Session does not own this token" }, 403);
+		return c.json({ error: "Session does not own this token" }, 401);
 	}
 
 	const messageHash = hashChatMessage(message, session.walletAddress);
