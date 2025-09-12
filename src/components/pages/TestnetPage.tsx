@@ -2,8 +2,11 @@ import { useState } from "react";
 import {
   authenticateWallet,
   claimTokens,
+  closeExtensionModal,
   closeMyMints,
   completeOnboarding,
+  copyToClipboard,
+  downloadExtension,
   filterMints,
   getMintedMessages,
   getMintMessageSignature,
@@ -11,6 +14,7 @@ import {
   getSIWEMessage,
   getTakeSignature,
   handleNetworkClick,
+  openExtensionModal,
   openMyMints,
   switchMobileTab,
 } from "./testnet.ts";
@@ -392,6 +396,116 @@ export default function TestnetPage() {
         </div>
       )}
 
+      {/* Chrome Extension Modal */}
+      <div
+        className="extension-modal"
+        id="extensionModal"
+        onClick={closeExtensionModal}
+      >
+        <div className="extension-modal-content">
+          <div className="extension-modal-header">
+            <div className="extension-modal-icon">
+              <img src="/assets/images/youmio-icon.png" alt="Youmio" />
+            </div>
+            <h2>Youmio Verify Extension</h2>
+            <button className="modal-close" onClick={closeExtensionModal}>
+              x
+            </button>
+          </div>
+
+          <div className="extension-modal-body">
+            <div className="extension-description">
+              <p>
+                Mint AI chat conversations directly to blockchain from any AI
+                chat interface!
+              </p>
+              <p className="browser-note">
+                Works with browser-based AI chats only (ChatGPT, Claude, etc.)
+              </p>
+              <div className="extension-features">
+                <div className="feature-badge">
+                  ✓ Works with Claude, ChatGPT & more
+                </div>
+                <div className="feature-badge">✓ One-click minting</div>
+                <div className="feature-badge">✓ Testnet Demo</div>
+              </div>
+            </div>
+
+            <div className="installation-steps">
+              <h3>Quick Installation</h3>
+
+              <div className="step-card">
+                <div className="step-number">1</div>
+                <div className="step-content">
+                  <h4>Download Extension</h4>
+                  <p>Click below to download the extension files</p>
+                  <button className="download-btn" onClick={downloadExtension}>
+                    <span>⬇</span> Download Extension.zip
+                  </button>
+                </div>
+              </div>
+
+              <div className="step-card">
+                <div className="step-number">2</div>
+                <div className="step-content">
+                  <h4>Open Chrome Extensions</h4>
+                  <p>Go to Chrome settings or type in address bar:</p>
+                  <div className="url-copy-box">
+                    <code>chrome://extensions/</code>
+                    <button
+                      onClick={() => copyToClipboard("chrome://extensions/")}
+                      className="copy-btn"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="step-card">
+                <div className="step-number">3</div>
+                <div className="step-content">
+                  <h4>Enable Developer Mode</h4>
+                  <p>Toggle the "Developer mode" switch in the top right</p>
+                </div>
+              </div>
+
+              <div className="step-card">
+                <div className="step-number">4</div>
+                <div className="step-content">
+                  <h4>Load Extension</h4>
+                  <p>Click "Load unpacked" and select the unzipped folder</p>
+                </div>
+              </div>
+
+              <div className="step-card">
+                <div className="step-number">5</div>
+                <div className="step-content">
+                  <h4>Start Minting!</h4>
+                  <p>
+                    Visit any browser-based AI chat (ChatGPT, Claude, etc.) and
+                    you'll see "Mint to Chain" buttons on AI responses
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="extension-footer">
+              <p className="help-text">
+                Need help? The extension adds "Mint to Chain" buttons to AI chat
+                messages
+              </p>
+              <button
+                className="action-button primary"
+                onClick={downloadExtension}
+              >
+                Get Started - Download Extension
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Mints Modal */}
       <div className="mints-modal" id="mintsModal">
         <div className="mints-modal-content">
@@ -463,6 +577,14 @@ export default function TestnetPage() {
             </div>
           </div>
           <div className="network-status">
+            <button className="extension-button" onClick={openExtensionModal}>
+              <div className="extension-button-content">
+                <span className="extension-main-text">
+                  <span>🔗</span> Try our Chrome Extension
+                </span>
+                <span className="extension-sub-text">Demo Only</span>
+              </div>
+            </button>
             <button
               className="network-button"
               id="networkButton"
