@@ -394,7 +394,11 @@ export default function TestnetPage() {
                     id="walletAddressFull"
                   ></div>
                   <div className="wallet-balance">
-                    Balance: <span id="dropdownBalance">{balance}</span> YTEST
+                    Balance:{" "}
+                    <span id="dropdownBalance">
+                      {Number(balance).toFixed(2).toString()}
+                    </span>{" "}
+                    YTEST
                   </div>
                 </div>
                 <button
@@ -433,7 +437,7 @@ export default function TestnetPage() {
                 <div className="token-display">
                   <div>
                     <div className="token-amount" id="tokenBalance">
-                      {balance}
+                      {Number(balance).toFixed(2).toString()}
                     </div>
                     <div className="token-label">$YTEST</div>
                   </div>
@@ -517,7 +521,7 @@ export default function TestnetPage() {
                   <div className="stat-item">
                     <span className="stat-label">Testnet Tokens</span>
                     <span className="stat-value" id="statTokens">
-                      {balance} $YTEST
+                      {Number(balance).toFixed(2).toString()} $YTEST
                     </span>
                   </div>
                   <div className="stat-item">
