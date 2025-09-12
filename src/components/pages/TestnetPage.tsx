@@ -53,7 +53,7 @@ export default function TestnetPage() {
   const { writeContract } = useWriteContract();
   const { data: sbtBalance } = useReadContract({
     chainId: youtest.id,
-    address: "0x7A0A90E71834417ca3be405f1a81685368d516F6",
+    address: import.meta.env.VITE_SBT_CONTRACT_ADDRESS,
     abi: youmioSbtAbi,
     functionName: "balanceOf",
     args: [address!],
@@ -87,11 +87,22 @@ export default function TestnetPage() {
     });
   };
 
-  const handleFaucetClaim = async () => {
-    if (!session) return;
-    await claimTokens(session);
+  const { mutate: faucetClaim, isPending: isFaucetClaimPending } = useMutation({
+    mutationFn: async () => {
+      if (!session) return;
+      await claimTokens(session);
+      queryClient.invalidateQueries({ queryKey: [session, "cooldown"] });
+    },
+  });
 
-    queryClient.invalidateQueries({ queryKey: [session, "cooldown"] });
+  const handleFaucetClaim = async () => {
+    if (!session) {
+      console.error("Session missing");
+
+      return;
+    }
+
+    faucetClaim();
   };
 
   const { data: messages, isLoading } = useQuery({
@@ -103,12 +114,11 @@ export default function TestnetPage() {
 
   const {
     data: sessiion,
-    mutate,
-    isPending,
+    mutate: generateSession,
+    isPending: isAuthPending,
   } = useMutation({
     mutationFn: async () => {
       if (!address) return;
-      // Assume you've obtained the SIWE message from your backend
       const message = await getSIWEMessage(address, window.location.origin);
 
       const signature = await signMessageAsync({
@@ -148,7 +158,7 @@ export default function TestnetPage() {
     }
 
     if (onboardingStep === "complete") {
-      mutate();
+      generateSession();
     }
   };
 
@@ -446,13 +456,27 @@ export default function TestnetPage() {
                 <button
                   className="faucet-button"
                   id="faucetButton"
-                  disabled={isPending || (cooldownInSeconds ?? 0) > 0}
+                  disabled={
+                    isFaucetClaimPending ||
+                    isAuthPending ||
+                    (cooldownInSeconds ?? 0) > 0
+                  }
                   onClick={() =>
                     session ? handleFaucetClaim() : handleSignIn()
                   }
                 >
-                  <span className={isPending ? "loading-spinner" : ""}>
-                    {isPending ? "" : session ? "Claim YTEST" : "Sign In"}
+                  <span
+                    className={
+                      isFaucetClaimPending || isAuthPending
+                        ? "loading-spinner"
+                        : ""
+                    }
+                  >
+                    {isFaucetClaimPending || isAuthPending
+                      ? ""
+                      : session
+                      ? "Claim YTEST"
+                      : "Sign In"}
                   </span>
                 </button>
                 <div className="limit-text">
