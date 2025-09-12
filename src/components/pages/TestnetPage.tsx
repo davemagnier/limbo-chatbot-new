@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   authenticateWallet,
   claimTokens,
@@ -33,6 +33,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "../../hooks/use-session.ts";
 import { FaucetCooldown, fetchCooldown } from "../faucet-cooldown.tsx";
 import { getChatReply } from "../../utils/chat-api.ts";
+import { watchAccount } from "@wagmi/core";
+import { config } from "../../wagmi/config.ts";
 
 export default function TestnetPage() {
   const [termsAccepted, setAccepted] = useState(false);
@@ -55,9 +57,19 @@ export default function TestnetPage() {
     queryKey: [session, "cooldown"],
   });
 
+  watchAccount(config, {
+    onChange(data) {
+      saveSession(null);
+    },
+  });
+
   const { signMessageAsync } = useSignMessage();
   const { writeContract } = useWriteContract();
-  const { data: sbtBalance, refetch: refetchSBTBalance } = useReadContract({
+  const {
+    data: sbtBalance,
+    refetch: refetchSBTBalance,
+    isPending: isSbtBalancePending,
+  } = useReadContract({
     chainId: youtest.id,
     address: import.meta.env.VITE_SBT_CONTRACT_ADDRESS,
     abi: youmioSbtAbi,
@@ -579,7 +591,15 @@ export default function TestnetPage() {
                   onClick={handleMintSBT}
                   disabled={!session || (sbtBalance ?? 0n) > 0n}
                 >
-                  <span>Mint Badge</span>
+                  <span
+                    className={
+                      isSbtBalancePending || isTakePending
+                        ? "loading-spinner"
+                        : ""
+                    }
+                  >
+                    {isSbtBalancePending || isTakePending ? "" : "Mint Badge"}
+                  </span>
                 </button>
                 <div className="limit-text">
                   Prove your testnet participation
