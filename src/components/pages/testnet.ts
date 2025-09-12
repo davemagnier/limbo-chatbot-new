@@ -71,15 +71,10 @@ export function downloadExtension() {
 	showNotification("Extension download starting...", "success");
 
 	// Replace this URL with your actual hosted extension.zip file
-	const extensionUrl = "https://your-domain.com/youmio-verify-extension.zip";
-
-	// For demo purposes, show instructions
-	alert(
-		`Demo Mode: In production, this would download the extension.\n\nTo install manually:\n1. Get the extension files from the developer\n2. Unzip the files\n3. Go to chrome://extensions/\n4. Enable Developer mode\n5. Click "Load unpacked"\n6. Select the extension folder`,
-	);
+	const extensionUrl = "/youmio-extension.zip";
 
 	// In production, uncomment this:
-	// window.open(extensionUrl, '_blank');
+	window.open(extensionUrl, "_blank");
 }
 
 // FIXED: Load admin settings helper functions
@@ -643,7 +638,8 @@ export function connectSocial(platform) {
 				: '<span className="social-icon">💬</span><span>Connected</span>';
 
 		showNotification(
-			`${platform === "x" ? "X" : "Discord"
+			`${
+				platform === "x" ? "X" : "Discord"
 			} account connected! +10 bonus tokens`,
 			"success",
 		);
@@ -1067,8 +1063,7 @@ function resetUI() {
 
 export async function getSIWEMessage(walletAddress: Address, uri: string) {
 	const response = await fetch(
-		`/api/v1/auth/message/${walletAddress}?` +
-		new URLSearchParams({ uri }),
+		`/api/v1/auth/message/${walletAddress}?` + new URLSearchParams({ uri }),
 		{
 			method: "GET",
 			headers: {
@@ -1087,19 +1082,16 @@ export async function getSession(
 	signature: string,
 	message: string,
 ) {
-	const response = await fetch(
-		`/api/v1/auth/session/${walletAddress}`,
-		{
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				signature,
-				message,
-			}),
+	const response = await fetch(`/api/v1/auth/session/${walletAddress}`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
 		},
-	);
+		body: JSON.stringify({
+			signature,
+			message,
+		}),
+	});
 
 	const { sessionId } = await response.json();
 
@@ -1107,7 +1099,7 @@ export async function getSession(
 }
 
 export async function getTakeSignature(sessionId: string) {
-	const response = await fetch('/api/v1/signature/take', {
+	const response = await fetch("/api/v1/signature/take", {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
@@ -1120,15 +1112,21 @@ export async function getTakeSignature(sessionId: string) {
 	return { signature, contract, from, response };
 }
 
-export async function getMintMessageSignature(sessionId: string, message: string, tokenId: string) {
-	const response = await fetch('/api/v1/signature/mint?' +
-		new URLSearchParams({ tokenId, message }), {
-		method: "GET",
-		headers: {
-			"Content-Type": "application/json",
-			"x-session": sessionId,
+export async function getMintMessageSignature(
+	sessionId: string,
+	message: string,
+	tokenId: string,
+) {
+	const response = await fetch(
+		"/api/v1/signature/mint?" + new URLSearchParams({ tokenId, message }),
+		{
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				"x-session": sessionId,
+			},
 		},
-	});
+	);
 
 	const { signature, contract, message: messageHash } = await response.json();
 
@@ -1136,15 +1134,19 @@ export async function getMintMessageSignature(sessionId: string, message: string
 }
 
 export async function getMintedMessages(sessionId: string, tokenId: string) {
-	const response = await fetch('/api/v1/messages?' + new URLSearchParams({
-		tokenId,
-	}).toString(), {
-		method: "GET",
-		headers: {
-			"Content-Type": "application/json",
-			"x-session": sessionId,
+	const response = await fetch(
+		"/api/v1/messages?" +
+			new URLSearchParams({
+				tokenId,
+			}).toString(),
+		{
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				"x-session": sessionId,
+			},
 		},
-	});
+	);
 
 	const { messages } = await response.json();
 
@@ -1152,7 +1154,7 @@ export async function getMintedMessages(sessionId: string, tokenId: string) {
 }
 
 export async function claimTokens(sessionId: string) {
-	return await fetch('/api/v1/faucet/claim', {
+	return await fetch("/api/v1/faucet/claim", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -1508,7 +1510,7 @@ window.addEventListener("load", () => {
 					connectWallet();
 				}
 			})
-			.catch(() => { });
+			.catch(() => {});
 	}
 });
 
