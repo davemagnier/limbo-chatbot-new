@@ -45,7 +45,7 @@ app.post('/claim', async (c) => {
 
   await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
 
-  await setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
+  await setWalletData(session.walletAddress, { ...walletData, lastClaimed: getCurrentEpoch() });
 
   return c.json({ nextClaimIn: faucetCooldownSeconds })
 })
