@@ -11,7 +11,7 @@ import { mintNativeCoin } from "../utils/faucet.ts";
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const faucetAddress = Netlify.env.get("FAUCET_CONTRACT") as Address
 const faucetPrivateKey = Netlify.env.get("FAUCET_PRIVATE_KEY") as Hex
-const faucetAmount = BigInt(Netlify.env.get("FAUCET_AMOUNT") || "10000000000000000000")
+const faucetAmount = BigInt(Netlify.env.get("FAUCET_AMOUNT") || "90000000000000000000")
 const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youtest/testnet/rpc"
 const faucetCooldownSeconds = parseInt(Netlify.env.get("FAUCET_COOLDOWN_SECONDS") || "86400")
 
@@ -45,7 +45,7 @@ app.post('/claim', async (c) => {
 
   await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
 
-  await setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
+  await setWalletData(session.walletAddress, { ...walletData, lastClaimed: getCurrentEpoch() });
 
   return c.json({ nextClaimIn: faucetCooldownSeconds })
 })

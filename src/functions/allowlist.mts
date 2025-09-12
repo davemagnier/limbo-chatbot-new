@@ -30,7 +30,7 @@ app.get('/wallet/:walletAddress', async (c) => {
 app.post('/wallets', async (c) => {
   const { walletAddresses } = await c.req.json();
 
-  const data = await addWallets(walletAddresses, {})
+  const data = await addWallets(walletAddresses, { messageCount: 0 })
 
   return c.json({ data })
 })
