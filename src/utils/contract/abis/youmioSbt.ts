@@ -219,6 +219,13 @@ export const youmioSbtAbi = [
     stateMutability: "nonpayable",
   },
   {
+    type: "function",
+    name: "walletStore",
+    inputs: [{ name: "wallet", type: "address", internalType: "address" }],
+    outputs: [{ name: "tokenIndex", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
     type: "event",
     name: "EIP712DomainChanged",
     inputs: [],

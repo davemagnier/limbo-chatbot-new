@@ -3,17 +3,17 @@ import { useEffect, useState } from "react";
 import { useSession } from "../hooks/use-session";
 
 export async function fetchCooldown(session: string | null) {
-  if (!session) return 0;
+  if (!session) return { nextClaimIn: 0 };
   const response = await fetch("/api/v1/faucet/cooldown", {
     headers: {
       "x-session": session,
     },
   });
   if (!response.ok) {
-    return 0;
+    return { nextClaimIn: 0, response };
   }
   const { nextClaimIn } = await response.json();
-  return nextClaimIn as number;
+  return { nextClaimIn: nextClaimIn as number, response };
 }
 
 interface Props {
@@ -23,7 +23,11 @@ interface Props {
 export function FaucetCooldown({ children }: Props) {
   const { session } = useSession();
   const { data: cooldownInSeconds } = useQuery({
-    queryFn: () => fetchCooldown(session),
+    queryFn: async () => {
+      const { nextClaimIn, response } = await fetchCooldown(session);
+
+      return nextClaimIn;
+    },
     queryKey: [session, "cooldown"],
   });
   const [timer, setTimer] = useState("");

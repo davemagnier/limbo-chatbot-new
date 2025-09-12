@@ -45,19 +45,35 @@ export default function TestnetPage() {
   const { isConnected, address } = useAccount();
   const queryClient = useQueryClient();
   const { data: cooldownInSeconds } = useQuery({
-    queryFn: () => fetchCooldown(session),
+    queryFn: async () => {
+      const { nextClaimIn, response } = await fetchCooldown(session);
+      if (response && response.status === 403) {
+        saveSession(null);
+      }
+      return nextClaimIn;
+    },
     queryKey: [session, "cooldown"],
   });
 
   const { signMessageAsync } = useSignMessage();
   const { writeContract } = useWriteContract();
-  const { data: sbtBalance } = useReadContract({
+  const { data: sbtBalance, refetch: refetchSBTBalance } = useReadContract({
     chainId: youtest.id,
     address: import.meta.env.VITE_SBT_CONTRACT_ADDRESS,
     abi: youmioSbtAbi,
     functionName: "balanceOf",
     args: [address!],
   });
+
+  const { data: tokenId } = useReadContract({
+    chainId: youtest.id,
+    address: import.meta.env.VITE_SBT_CONTRACT_ADDRESS,
+    abi: youmioSbtAbi,
+    functionName: "walletStore",
+
+    args: [address!],
+  });
+
   const { data: balanceData } = useBalance({ chainId: youtest.id, address });
   const [isWalletConnectModalOpen, setIsWalletConnectModalOpen] =
     useState(false);
@@ -75,23 +91,52 @@ export default function TestnetPage() {
 
   const { switchChain } = useSwitchChain();
 
-  const handleMintSBT = async () => {
-    if (!session) return;
-    const { signature, contract, from } = await getTakeSignature(session);
+  const { mutate: mintSBT, isPending: isTakePending } = useMutation({
+    mutationFn: async () => {
+      if (!session) return;
+      const { signature, contract, from, response } = await getTakeSignature(
+        session
+      );
 
-    writeContract({
-      address: contract,
-      abi: youmioSbtAbi,
-      functionName: "take",
-      args: [from, signature],
-    });
+      writeContract({
+        address: contract,
+        abi: youmioSbtAbi,
+        functionName: "take",
+        args: [from, signature],
+      });
+
+      return response;
+    },
+    onSettled(response) {
+      refetchSBTBalance();
+      if (response && response.status === 403) {
+        saveSession(null);
+      }
+    },
+  });
+
+  const handleMintSBT = () => {
+    if (!session) {
+      console.error("Missing Session");
+      return;
+    }
+
+    mintSBT();
   };
 
   const { mutate: faucetClaim, isPending: isFaucetClaimPending } = useMutation({
     mutationFn: async () => {
       if (!session) return;
-      await claimTokens(session);
+      const response = await claimTokens(session);
+
+      return response;
+    },
+    onSettled(response) {
       queryClient.invalidateQueries({ queryKey: [session, "cooldown"] });
+
+      if (response && response.status === 403) {
+        saveSession(null);
+      }
     },
   });
 
@@ -105,10 +150,20 @@ export default function TestnetPage() {
     faucetClaim();
   };
 
-  const { data: messages, isLoading } = useQuery({
-    queryFn: async () => getMintedMessages(session!),
+  const { data: messages } = useQuery({
+    queryFn: async () => {
+      const { messages, response } = await getMintedMessages(
+        session!,
+        tokenId!.toString()
+      );
+      if (response && response.status === 403) {
+        saveSession(null);
+      }
+
+      return messages;
+    },
     queryKey: [session, "messages"],
-    enabled: Boolean(session),
+    enabled: Boolean(session) && Boolean(tokenId),
     initialData: [],
   });
 
