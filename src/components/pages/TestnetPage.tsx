@@ -13,6 +13,7 @@ import {
 	openMyMints,
 	switchMobileTab,
 } from "./testnet.ts";
+import ChatWidget from "../ChatWidget.tsx";
 import "./testnet.css";
 import {
 	useAccount,
@@ -31,6 +32,7 @@ import { formatEther } from "viem";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "../../hooks/use-session.ts";
 import { FaucetCooldown, fetchCooldown } from "../faucet-cooldown.tsx";
+import { getChatReply } from "../../utils/chat-api.ts";
 
 export default function TestnetPage() {
 	const [termsAccepted, setAccepted] = useState(false);
@@ -62,6 +64,14 @@ export default function TestnetPage() {
 	const chainId = useChainId();
 
 	const balance = formatEther(balanceData?.value ?? 0n);
+
+	const [chatMessages, setChatMessages] = useState([
+		{
+			content:
+				"Yo, welcome to the testnet. Mint some tokens and let's test this chain.",
+			isUser: false,
+		},
+	]);
 
 	const { switchChain } = useSwitchChain();
 
@@ -535,48 +545,33 @@ export default function TestnetPage() {
 					</div>
 
 					{/* Desktop & Mobile: Chat Area */}
-					<div className="chatbot-wrapper" id="chatbotWrapper">
-						<div className="chat-header">
-							<div className="limbo-avatar">
-								<img src="/assets/images/limbo-selfie.jpg" alt="Limbo" />
-							</div>
-							<div className="chat-header-info">
-								<div className="chat-header-title">Chat with Limbo</div>
-								<div className="chat-header-subtitle">
-									Test the chain by minting conversations
-								</div>
-							</div>
-							<div className="api-indicator">
-								<span className="api-led" id="apiLed"></span>
-								<span id="apiText">API</span>
-							</div>
-						</div>
-
-						<div className="chat-messages" id="chatMessages">
-							<div className="message assistant">
-								<div className="message-label">Limbo</div>
-								<div className="message-content">
-									yo, welcome to the testnet. mint some tokens and let's test
-									this chain
-								</div>
-							</div>
-						</div>
-
-						<div className="chat-input-container">
-							<div className="chat-input-wrapper">
-								<input
-									type="text"
-									className="chat-input"
-									id="chatInput"
-									placeholder="Type something..."
-									autoComplete="off"
-								/>
-								<button className="send-button" id="sendButton" type="button">
-									→
-								</button>
-							</div>
-						</div>
-					</div>
+					<ChatWidget
+						disabled={!Boolean(session)}
+						messages={chatMessages}
+						onSend={async (message) => {
+							setChatMessages((cm) => [
+								...cm,
+								{ content: message, isUser: true },
+							]);
+							const reply = await getChatReply(
+								{
+									prompt: message,
+									conversationHistory: chatMessages.map(
+										({ content, isUser }) => ({
+											content,
+											role: isUser ? "user" : "assistant",
+										}),
+									),
+								},
+								session!,
+							);
+							if (reply)
+								setChatMessages((cm) => [
+									...cm,
+									{ content: reply, isUser: false },
+								]);
+						}}
+					/>
 				</div>
 
 				{/* Mobile Tab Navigation */}
