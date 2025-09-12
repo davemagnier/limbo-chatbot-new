@@ -3,6 +3,8 @@ import { Address } from "viem";
 
 export type WalletData = {
   lastClaimed?: number;
+  lastMessaged?: number;
+  messageCount: number;
 }
 
 export function getWalletStore() {

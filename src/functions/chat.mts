@@ -6,8 +6,12 @@ import { buildLimboSystemPrompt } from "../utils/prompt.ts";
 import OpenAI from "openai";
 import { Address } from "viem";
 import { getBalance } from "../utils/contract/sbt.ts";
+import { getWalletData, setWalletData } from "../utils/allowlist-store.ts";
+import { getCurrentEpoch } from "../utils/time.ts";
 
 const OPEANI_API_KEY = Netlify.env.get("OPEANI_API_KEY");
+const chatCooldownSeconds = parseInt(Netlify.env.get("CHAT_COOLDOWN_SECONDS") || "86400");
+const chatLimit = parseInt(Netlify.env.get("CHAT_LIMIT") || "15");
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const SbtContractAddress = Netlify.env.get("SBT_CONTRACT") as Address
 const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youtest/testnet/rpc"
@@ -23,26 +27,38 @@ type Variables = {
 const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/chat').use('*', sessionAuth)
 
 app.post('/', async (c) => {
+  const session = c.get('session')
+  if (!session) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const walletData = await getWalletData(session.walletAddress);
+
+  const remainingCooldown = (walletData.lastMessaged + chatCooldownSeconds) - getCurrentEpoch()
+  if (walletData.messageCount >= chatLimit) {
+    if (remainingCooldown > 0) {
+      return c.json({ error: 'Cannot message', remainingCooldown, remainingInputs: 0 }, 400)
+    } else {
+      walletData.messageCount = 0;
+    }
+  }
+
+  const balance = await getBalance(
+    session.walletAddress,
+    SbtContractAddress,
+    chainId,
+    rpcUrl,
+  );
+  if (balance == 0n) {
+    return c.json({ error: "You need to mint Soulbound Badge" }, 400);
+  }
+
+  const chatRequest = await c.req.json();
+
+  const systemPrompt = buildLimboSystemPrompt(chatRequest)
+  const client = new OpenAI({ apiKey: OPEANI_API_KEY });
+
   try {
-    const session = c.get('session')
-    if (!session) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    const balance = await getBalance(
-      session.walletAddress,
-      SbtContractAddress,
-      chainId,
-      rpcUrl,
-    );
-    if (balance == 0n) {
-      return c.json({ error: "You need to mint Soulbound Badge" }, 400);
-    }
-
-    const chatRequest = await c.req.json();
-
-    const systemPrompt = buildLimboSystemPrompt(chatRequest)
-    const client = new OpenAI({ apiKey: OPEANI_API_KEY });
     const response = await client.responses.create({
       model: "gpt-4.1-mini",
       input: systemPrompt,
@@ -61,11 +77,26 @@ app.post('/', async (c) => {
       console.error("No reply in Open AI response:", data);
       throw new Error("No response generated");
     }
-    return c.json({ reply })
+
+    await setWalletData(session.walletAddress, { ...walletData, messageCount: ++walletData.messageCount, lastMessaged: getCurrentEpoch() })
+
+    return c.json({ reply, remainingCooldown: remainingCooldown ?? chatCooldownSeconds, remainingInputs: chatLimit - walletData.messageCount })
   } catch (error) {
     console.info({ error })
     return c.json({ reply: "Api's being weird right now, try again" })
   }
+})
+
+app.get('/cooldown', async (c) => {
+  const session = c.get('session')
+  if (!session) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const walletData = await getWalletData(session.walletAddress);
+  const remainingCooldown = (walletData.lastMessaged + chatCooldownSeconds) - getCurrentEpoch()
+
+  return c.json({ remainingCooldown: remainingCooldown ?? chatCooldownSeconds, remainingMessages: chatLimit - walletData.messageCount })
 })
 
 export default async (request: Request, context: Context) => {
