@@ -1135,7 +1135,7 @@ export async function getMintedMessages(sessionId: string) {
 }
 
 export async function claimTokens(sessionId: string) {
-	await fetch('/api/v1/faucet-background/claim', {
+	await fetch('/api/v1/faucet/claim', {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

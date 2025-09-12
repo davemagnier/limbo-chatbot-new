@@ -3,12 +3,16 @@ import { Config, Context } from "@netlify/functions";
 import { Hono } from "hono"
 import { sessionAuth } from "../utils/middlewares.ts";
 import { SessionData } from "../utils/auth-store.ts";
-import { getWalletData, WalletData } from "../utils/allowlist-store.ts";
+import { getWalletData, setWalletData, WalletData } from "../utils/allowlist-store.ts";
 import { getCurrentEpoch } from "../utils/time.ts";
 import { Address, Hex } from "viem";
+import { mintNativeCoin } from "../utils/faucet.ts";
 
+const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const faucetAddress = Netlify.env.get("FAUCET_CONTRACT") as Address
 const faucetPrivateKey = Netlify.env.get("FAUCET_PRIVATE_KEY") as Hex
+const faucetAmount = BigInt(Netlify.env.get("FAUCET_AMOUNT") || "10000000000000000000")
+const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youtest/testnet/rpc"
 const faucetCooldownSeconds = parseInt(Netlify.env.get("FAUCET_COOLDOWN_SECONDS") || "86400")
 
 if (!faucetAddress || !faucetPrivateKey) {
@@ -20,6 +24,31 @@ type Variables = {
 }
 
 const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/faucet').use('*', sessionAuth)
+
+app.post('/claim', async (c) => {
+  const session = c.get('session')
+  if (!session) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const walletData: WalletData | undefined = await getWalletData(session.walletAddress)
+  if (!walletData) {
+    return c.json({ error: 'Wallet not in allowlist' }, 401)
+  }
+
+  if (walletData.lastClaimed !== undefined) {
+    const remainingCooldown = (walletData.lastClaimed + faucetCooldownSeconds) - getCurrentEpoch()
+    if (remainingCooldown > 0) {
+      return c.json({ error: 'Cannot claim', nextClaimIn: remainingCooldown }, 400)
+    }
+  }
+
+  await mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl })
+
+  await setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
+
+  return c.json({ nextClaimIn: faucetCooldownSeconds })
+})
 
 app.get('/cooldown', async (c) => {
   const session = c.get('session')
