@@ -44,8 +44,14 @@ app.post('/claim', async (c) => {
   }
 
   mintNativeCoin({ walletAddress: session.walletAddress, amount: faucetAmount, chainId, faucetAddress, faucetPrivateKey, rpcUrl }).then(() => {
-    setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
+  }).catch((error) => {
+    // Reset in case of error
+    setWalletData(session.walletAddress, { lastClaimed: walletData.lastClaimed })
+    console.error("Something Went wrong, couldn't claim from faucet", { error })
   })
+
+  // Always set data to avoid race conditions
+  await setWalletData(session.walletAddress, { lastClaimed: getCurrentEpoch() });
 
   return c.json({ nextClaimIn: faucetCooldownSeconds })
 })
