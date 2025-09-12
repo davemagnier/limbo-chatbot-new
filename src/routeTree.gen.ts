@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestnetRouteImport } from './routes/testnet'
 import { Route as LimboChatbotRouteImport } from './routes/limbo-chatbot'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TestnetRoute = TestnetRouteImport.update({
@@ -23,6 +24,11 @@ const LimboChatbotRoute = LimboChatbotRouteImport.update({
   path: '/limbo-chatbot',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +37,34 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/limbo-chatbot': typeof LimboChatbotRoute
   '/testnet': typeof TestnetRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/limbo-chatbot': typeof LimboChatbotRoute
   '/testnet': typeof TestnetRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/limbo-chatbot': typeof LimboChatbotRoute
   '/testnet': typeof TestnetRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/limbo-chatbot' | '/testnet'
+  fullPaths: '/' | '/admin' | '/limbo-chatbot' | '/testnet'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/limbo-chatbot' | '/testnet'
-  id: '__root__' | '/' | '/limbo-chatbot' | '/testnet'
+  to: '/' | '/admin' | '/limbo-chatbot' | '/testnet'
+  id: '__root__' | '/' | '/admin' | '/limbo-chatbot' | '/testnet'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   LimboChatbotRoute: typeof LimboChatbotRoute
   TestnetRoute: typeof TestnetRoute
 }
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LimboChatbotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   LimboChatbotRoute: LimboChatbotRoute,
   TestnetRoute: TestnetRoute,
 }

@@ -43,9 +43,6 @@ export default function HomePage() {
           <a href="testnet-status.html" className="main-button status-button">
             Network Status
           </a>
-          <a href="limbo-admin.html" className="main-button secondary-button">
-            Admin Panel
-          </a>
         </div>
 
         <div className="status">
