@@ -29,5 +29,5 @@ export async function mintNativeCoin({ walletAddress, amount, faucetPrivateKey, 
     args: [walletAddress, amount]
   })
 
-  return walletClient.sendTransaction({ account: walletClient.account, to: faucetAddress, data })
+  await walletClient.sendTransaction({ account: walletClient.account, to: faucetAddress, data })
 }

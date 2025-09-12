@@ -7,13 +7,13 @@ import OpenAI from "openai";
 import { Address } from "viem";
 import { getBalance } from "../utils/contract/sbt.ts";
 
-const GEMINI_API_KEY = Netlify.env.get("GEMINI_API_KEY");
+const OPEANI_API_KEY = Netlify.env.get("OPEANI_API_KEY");
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const SbtContractAddress = Netlify.env.get("SBT_CONTRACT") as Address
 const rpcUrl = Netlify.env.get("RPC_URL") || "https://subnets.avax.network/youtest/testnet/rpc"
 
-if (!GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY not set");
+if (!OPEANI_API_KEY) {
+  throw new Error("OPEANI_API_KEY not set");
 }
 
 type Variables = {
@@ -22,7 +22,7 @@ type Variables = {
 
 const app = new Hono<{ Variables: Variables }>().basePath('/api/v1/chat').use('*', sessionAuth)
 
-app.get('/', async (c) => {
+app.post('/', async (c) => {
   try {
     const session = c.get('session')
     if (!session) {
@@ -42,7 +42,7 @@ app.get('/', async (c) => {
     const chatRequest = await c.req.json();
 
     const systemPrompt = buildLimboSystemPrompt(chatRequest)
-    const client = new OpenAI({ apiKey: GEMINI_API_KEY });
+    const client = new OpenAI({ apiKey: OPEANI_API_KEY });
     const response = await client.responses.create({
       model: "gpt-4.1-mini",
       input: systemPrompt,
@@ -63,6 +63,7 @@ app.get('/', async (c) => {
     }
     return c.json({ reply })
   } catch (error) {
+    console.info({ error })
     return c.json({ reply: "Api's being weird right now, try again" })
   }
 })

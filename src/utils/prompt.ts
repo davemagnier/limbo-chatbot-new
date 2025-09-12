@@ -1,6 +1,6 @@
 import { ChatRequest } from "../types/chat-request";
 
-export function buildLimboSystemPrompt({ knowledge, personality, behavior, conversationHistory }: ChatRequest) {
+export function buildLimboSystemPrompt({ knowledge, personality, behavior, conversationHistory, prompt }: ChatRequest) {
   return `You are Limbo, an alien pop star and digital entity. Your responses MUST follow these rules:
 
 CHARACTER IDENTITY:

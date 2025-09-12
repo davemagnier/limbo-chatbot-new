@@ -1067,7 +1067,7 @@ function resetUI() {
 
 export async function getSIWEMessage(walletAddress: Address, uri: string) {
 	const response = await fetch(
-		`${CONFIG.API_PROXY_URL}/auth/message/${walletAddress}?` +
+		`/api/v1/auth/message/${walletAddress}?` +
 		new URLSearchParams({ uri }),
 		{
 			method: "GET",
@@ -1088,7 +1088,7 @@ export async function getSession(
 	message: string,
 ) {
 	const response = await fetch(
-		`${CONFIG.API_PROXY_URL}/auth/session/${walletAddress}`,
+		`/api/v1/auth/session/${walletAddress}`,
 		{
 			method: "POST",
 			headers: {
@@ -1107,7 +1107,7 @@ export async function getSession(
 }
 
 export async function getTakeSignature(sessionId: string) {
-	const response = await fetch(`${CONFIG.API_PROXY_URL}/signature/take`, {
+	const response = await fetch('/api/v1/signature/take', {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
@@ -1121,7 +1121,7 @@ export async function getTakeSignature(sessionId: string) {
 }
 
 export async function getMintedMessages(sessionId: string) {
-	const response = await fetch(`${CONFIG.API_PROXY_URL}/messages`, {
+	const response = await fetch('/api/v1/messages', {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
@@ -1135,7 +1135,7 @@ export async function getMintedMessages(sessionId: string) {
 }
 
 export async function claimTokens(sessionId: string) {
-	await fetch(`${CONFIG.API_PROXY_URL}/faucet-background/claim`, {
+	await fetch('/api/v1/faucet-background/claim', {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -1215,7 +1215,7 @@ async function callAI(userMessage) {
 	const knowledge = extractKnowledge(settings);
 
 	try {
-		const response = await fetch(`${CONFIG.API_PROXY_URL}/chat`, {
+		const response = await fetch(`/api/v1/chat`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -1468,7 +1468,7 @@ window.addEventListener("load", () => {
 	const apiLed = document.getElementById("apiLed");
 	const apiText = document.getElementById("apiText");
 
-	fetch(`${CONFIG.API_PROXY_URL}/health`)
+	fetch(`/api/v1/health`)
 		.then((response) => {
 			if (response.ok) {
 				apiLed.classList.remove("error");
