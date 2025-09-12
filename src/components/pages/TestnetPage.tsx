@@ -6,6 +6,7 @@ import {
   completeOnboarding,
   filterMints,
   getMintedMessages,
+  getMintMessageSignature,
   getSession,
   getSIWEMessage,
   getTakeSignature,
@@ -127,6 +128,29 @@ export default function TestnetPage() {
     },
   });
 
+  const { mutate: mintMessage } = useMutation({
+    mutationFn: async (message: string) => {
+      if (!session || !tokenId) return;
+      const { signature, contract, messageHash, response } =
+        await getMintMessageSignature(session, message, tokenId?.toString());
+
+      writeContract({
+        address: contract,
+        abi: youmioSbtAbi,
+        functionName: "mintMessage",
+        args: [tokenId, messageHash, signature],
+      });
+
+      return response;
+    },
+    onSettled(response) {
+      refetchMessages();
+      if (response && response.status === 403) {
+        saveSession(null);
+      }
+    },
+  });
+
   const handleMintSBT = () => {
     if (!session) {
       console.error("Missing Session");
@@ -162,7 +186,7 @@ export default function TestnetPage() {
     faucetClaim();
   };
 
-  const { data: messages } = useQuery({
+  const { data: messages, refetch: refetchMessages } = useQuery({
     queryFn: async () => {
       const { messages, response } = await getMintedMessages(
         session!,
