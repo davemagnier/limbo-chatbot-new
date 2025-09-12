@@ -1120,6 +1120,21 @@ export async function getTakeSignature(sessionId: string) {
 	return { signature, contract, from, response };
 }
 
+export async function getMintMessageSignature(sessionId: string, message: string, tokenId: string) {
+	const response = await fetch('/api/v1/signature/mint?' +
+		new URLSearchParams({ tokenId, message }), {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+			"x-session": sessionId,
+		},
+	});
+
+	const { signature, contract, message: messageHash } = await response.json();
+
+	return { signature, contract, messageHash, response };
+}
+
 export async function getMintedMessages(sessionId: string, tokenId: string) {
 	const response = await fetch('/api/v1/messages?' + new URLSearchParams({
 		tokenId,

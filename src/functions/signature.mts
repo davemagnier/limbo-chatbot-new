@@ -112,7 +112,7 @@ app.get("/mint", async (c) => {
 		minted: false,
 	});
 
-	const signaure = await signMintMessageSignature({
+	const { signature } = await signMintMessageSignature({
 		privateKey: messageAuthPrivateKey,
 		contractName: SbtContractName,
 		contractVersion: SbtContractVersion,
@@ -124,7 +124,7 @@ app.get("/mint", async (c) => {
 	});
 
 	return c.json({
-		signaure,
+		signature,
 		walletAddress: session.walletAddress,
 		contract: SbtContractAddress,
 		chainId,
