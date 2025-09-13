@@ -66,11 +66,13 @@ app.post("/session/:walletAddress", async (c) => {
 
 async function initializeUser(walletAddress: Address) {
 	const walletData = await getWalletData(walletAddress);
-	if (!walletData) {
-		// Initialize user record
-		await setWalletData(walletAddress, { lastMessageReset: 0, faucetEnabled: false, messageCount: 0 });
-		console.log(`Initialized ${walletAddress}`);
-	}
+	// Lazily reset
+	await setWalletData(walletAddress, {
+		lastMessageReset: walletData?.lastMessageReset ?? 0,
+		faucetEnabled: walletData?.faucetEnabled ?? false,
+		messageCount: walletData?.messageCount ?? 0,
+		lastClaimed: walletData?.lastClaimed,
+	});
 }
 
 export default async (request: Request, context: Context) => {
@@ -80,4 +82,3 @@ export default async (request: Request, context: Context) => {
 export const config: Config = {
 	path: "/api/v1/auth/*",
 };
-
