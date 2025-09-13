@@ -1,4 +1,4 @@
 export const getCurrentEpoch = (): number => {
-  const now = new Date();
-  return Math.floor(now.getTime() / 1000);
+	const now = Date.now();
+	return Math.floor(now / 1000);
 };
