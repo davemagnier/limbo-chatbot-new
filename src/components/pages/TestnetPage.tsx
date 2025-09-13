@@ -1,45 +1,43 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { watchAccount } from "@wagmi/core";
 import { useState } from "react";
+import { formatEther } from "viem";
 import {
-	closeExtensionModal,
-	copyToClipboard,
-	downloadExtension,
-	openExtensionModal,
+	useAccount,
+	useBalance,
+	useChainId,
+	useDisconnect,
+	useReadContract,
+	useSignMessage,
+	useSwitchChain,
+	useWriteContract,
+} from "wagmi";
+import { useSession } from "../../hooks/use-session.ts";
+import { getChatReply } from "../../utils/chat-api.ts";
+import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
+import { youtest } from "../../wagmi/chain.ts";
+import { config } from "../../wagmi/config.ts";
+import ChatWidget from "../ChatWidget.tsx";
+import { FaucetCooldown, fetchCooldown } from "../faucet-cooldown.tsx";
+import WalletConnectModal from "../WalletConnectModal.tsx";
+import "./testnet.css";
+import {
 	authenticateWallet,
 	claimTokens,
+	closeExtensionModal,
 	closeMyMints,
 	completeOnboarding,
+	copyToClipboard,
+	downloadExtension,
 	filterMints,
 	getMintedMessages,
 	getMintMessageSignature,
 	getSession,
 	getSIWEMessage,
 	getTakeSignature,
-	handleNetworkClick,
+	openExtensionModal,
 	openMyMints,
-	switchMobileTab,
 } from "./testnet.ts";
-import ChatWidget from "../ChatWidget.tsx";
-import "./testnet.css";
-import {
-	useAccount,
-	useSwitchChain,
-	useChainId,
-	useBalance,
-	useDisconnect,
-	useSignMessage,
-	useWriteContract,
-	useReadContract,
-} from "wagmi";
-import { youtest } from "../../wagmi/chain.ts";
-import WalletConnectModal from "../WalletConnectModal.tsx";
-import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
-import { formatEther } from "viem";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "../../hooks/use-session.ts";
-import { FaucetCooldown, fetchCooldown } from "../faucet-cooldown.tsx";
-import { getChatReply } from "../../utils/chat-api.ts";
-import { watchAccount } from "@wagmi/core";
-import { config } from "../../wagmi/config.ts";
 
 export default function TestnetPage() {
 	const [termsAccepted, setAccepted] = useState(false);
@@ -49,20 +47,33 @@ export default function TestnetPage() {
 	const [onboardingStep, setOnboardingStep] = useState<
 		"init" | "in_progress" | "complete"
 	>(session ? "complete" : "init");
+	const [isAllowlisted, setIsAllowlisted] = useState<boolean | null>(null);
 	const { disconnect } = useDisconnect();
 	const { isConnected, address } = useAccount();
 	const queryClient = useQueryClient();
 
-	const { data: cooldownInSeconds } = useQuery({
+	const {
+		data: cooldownInSeconds,
+		isPending: isCooldownPending,
+		error: cooldownError,
+	} = useQuery({
 		queryFn: async () => {
-			const { nextClaimIn, response } = await fetchCooldown(session);
+			const { nextClaimIn, error, response } = await fetchCooldown(session);
 			if (response && response.status === 403) {
 				saveSession(null);
+			}
+			if (error === "NOT_ALLOWLISTED") {
+				setIsAllowlisted(false);
+			} else {
+				setIsAllowlisted(true);
 			}
 			return nextClaimIn;
 		},
 		queryKey: [session, "cooldown"],
 	});
+
+	const { signMessageAsync } = useSignMessage();
+	const { writeContractAsync } = useWriteContract();
 
 	watchAccount(config, {
 		onChange(account, prevAccount) {
@@ -70,8 +81,6 @@ export default function TestnetPage() {
 		},
 	});
 
-	const { signMessageAsync } = useSignMessage();
-	const { writeContractAsync } = useWriteContract();
 	const {
 		data: sbtBalance,
 		refetch: refetchSBTBalance,
@@ -84,6 +93,8 @@ export default function TestnetPage() {
 		args: [address!],
 	});
 
+	const hasSbt = (sbtBalance ?? 0n) > 0n;
+
 	const { data: tokenId } = useReadContract({
 		chainId: youtest.id,
 		address: import.meta.env.VITE_SBT_CONTRACT_ADDRESS,
@@ -92,12 +103,16 @@ export default function TestnetPage() {
 		args: [address!],
 	});
 
-	const { data: balanceData } = useBalance({ chainId: youtest.id, address });
+	const { data: tokenBalanceData } = useBalance({
+		chainId: youtest.id,
+		address,
+	});
 	const [isWalletConnectModalOpen, setIsWalletConnectModalOpen] =
 		useState(false);
 	const chainId = useChainId();
 
-	const balance = formatEther(balanceData?.value ?? 0n);
+	const tokenBalance = formatEther(tokenBalanceData?.value ?? 0n);
+	const hasTokenBalance = Number(tokenBalance) > 0;
 
 	const [chatMessages, setChatMessages] = useState([
 		{
@@ -112,8 +127,9 @@ export default function TestnetPage() {
 	const { mutate: mintSBT, isPending: isTakePending } = useMutation({
 		mutationFn: async () => {
 			if (!session) return;
-			const { signature, contract, from, response } =
-				await getTakeSignature(session);
+			const { signature, contract, from, response } = await getTakeSignature(
+				session
+			);
 
 			await writeContractAsync({
 				address: contract,
@@ -174,7 +190,9 @@ export default function TestnetPage() {
 			return response;
 		},
 		onSettled(response) {
-			queryClient.invalidateQueries({ queryKey: [session, "cooldown"] });
+			queryClient.invalidateQueries({
+				queryKey: [session, "cooldown"],
+			});
 
 			if (response && response.status === 403) {
 				saveSession(null);
@@ -196,7 +214,7 @@ export default function TestnetPage() {
 		queryFn: async () => {
 			const { messages, response } = await getMintedMessages(
 				session!,
-				tokenId!.toString(),
+				tokenId!.toString()
 			);
 			if (response && response.status === 403) {
 				saveSession(null);
@@ -226,6 +244,9 @@ export default function TestnetPage() {
 			else saveSession(null);
 		},
 	});
+
+	const canMint =
+		session && !hasSbt && hasTokenBalance && isAllowlisted === true;
 
 	const handleSignIn = async () => {
 		if (!isConnected) {
@@ -665,7 +686,7 @@ export default function TestnetPage() {
 											<div className="wallet-balance">
 												Balance:{" "}
 												<span id="dropdownBalance">
-													{Number(balance).toFixed(4).toString()}
+													{Number(tokenBalance).toFixed(4).toString()}
 												</span>{" "}
 												YTEST
 											</div>
@@ -706,7 +727,7 @@ export default function TestnetPage() {
 										<div className="token-display">
 											<div>
 												<div className="token-amount" id="tokenBalance">
-													{Number(balance).toFixed(4).toString()}
+													{Number(tokenBalance).toFixed(4).toString()}
 												</div>
 												<div className="token-label">$YTEST</div>
 											</div>
@@ -718,7 +739,9 @@ export default function TestnetPage() {
 											disabled={
 												isFaucetClaimPending ||
 												isAuthPending ||
-												(cooldownInSeconds ?? 0) > 0
+												isCooldownPending ||
+												(cooldownInSeconds ?? 0) > 0 ||
+												isAllowlisted === false
 											}
 											onClick={() =>
 												session ? handleFaucetClaim() : handleSignIn()
@@ -726,16 +749,22 @@ export default function TestnetPage() {
 										>
 											<span
 												className={
-													isFaucetClaimPending || isAuthPending
+													isFaucetClaimPending ||
+													isAuthPending ||
+													isCooldownPending
 														? "loading-spinner"
 														: ""
 												}
 											>
-												{isFaucetClaimPending || isAuthPending
+												{isFaucetClaimPending ||
+												isAuthPending ||
+												isCooldownPending
 													? ""
 													: session
+													? isAllowlisted === true
 														? "Claim YTEST"
-														: "Sign In"}
+														: "Not On Allowlist"
+													: "Sign In"}
 											</span>
 										</button>
 										<div className="limit-text">
@@ -793,8 +822,8 @@ export default function TestnetPage() {
 												{isSbtBalanceLoading || isTakePending
 													? ""
 													: (sbtBalance ?? 0n) > 0n
-														? `Owner of token ${tokenId}`
-														: "Mint Badge"}
+													? `Owner of token ${tokenId}`
+													: "Mint Badge"}
 											</span>
 										</button>
 										<div className="limit-text">
@@ -816,7 +845,7 @@ export default function TestnetPage() {
 											<div className="stat-item">
 												<span className="stat-label">Testnet Tokens</span>
 												<span className="stat-value" id="statTokens">
-													{Number(balance).toFixed(4).toString()} $YTEST
+													{Number(tokenBalance).toFixed(4).toString()} $YTEST
 												</span>
 											</div>
 											<div className="stat-item">
@@ -868,10 +897,10 @@ export default function TestnetPage() {
 												({ content, isUser }) => ({
 													content,
 													role: isUser ? "user" : "assistant",
-												}),
+												})
 											),
 										},
-										session!,
+										session!
 									);
 									if (reply)
 										setChatMessages((cm) => [
@@ -903,10 +932,10 @@ export default function TestnetPage() {
 									({ content, isUser }) => ({
 										content,
 										role: isUser ? "user" : "assistant",
-									}),
+									})
 								),
 							},
-							session!,
+							session!
 						);
 						if (reply)
 							setChatMessages((cm) => [

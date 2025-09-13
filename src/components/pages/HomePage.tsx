@@ -34,9 +34,6 @@ export default function HomePage() {
         </p>
 
         <div className="buttons">
-          <Link to="/limbo-chatbot" className="main-button primary-button">
-            Launch Chatbot
-          </Link>
           <Link to="/testnet" className="main-button testnet-button">
             Testnet Demo
           </Link>
