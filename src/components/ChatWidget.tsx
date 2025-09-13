@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
-import { youtest } from "../wagmi/chain";
 import { youmioSbtAbi } from "../utils/contract/abis/youmioSbt";
+import { youtest } from "../wagmi/chain";
 
 // Define TypeScript interfaces
 interface Message {

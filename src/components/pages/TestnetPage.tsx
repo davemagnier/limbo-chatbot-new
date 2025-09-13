@@ -566,57 +566,60 @@ export default function TestnetPage() {
 					</div>
 				</div>
 			</div>
-			{tab === "modules" && (
-				<>
-					{/* Mints Modal */}
-					<div className="mints-modal" id="mintsModal">
-						<div className="mints-modal-content">
-							<div className="mints-modal-header">
-								<h2>My Minted Conversations</h2>
-								<button className="modal-close" onClick={closeMyMints}>
-									x
+
+			<div id="contentContainer">
+				{/* Mints Modal */}
+				<div className="mints-modal" id="mintsModal">
+					<div className="mints-modal-content">
+						<div className="mints-modal-header">
+							<h2>My Minted Conversations</h2>
+							<button className="modal-close" onClick={closeMyMints}>
+								x
+							</button>
+						</div>
+						<div className="mints-modal-body" id="mintsModalBody">
+							<div className="auth-container" id="authContainer">
+								<div className="auth-icon">🔐</div>
+								<h3>Authenticate to View Your Mints</h3>
+								<p>
+									Sign a message with your wallet to securely access your minted
+									conversations.
+								</p>
+								<button className="auth-button" onClick={authenticateWallet}>
+									Sign & Authenticate
 								</button>
 							</div>
-							<div className="mints-modal-body" id="mintsModalBody">
-								<div className="auth-container" id="authContainer">
-									<div className="auth-icon">🔐</div>
-									<h3>Authenticate to View Your Mints</h3>
-									<p>
-										Sign a message with your wallet to securely access your
-										minted conversations.
-									</p>
-									<button className="auth-button" onClick={authenticateWallet}>
-										Sign & Authenticate
-									</button>
+							<div
+								className="mints-list-container"
+								id="mintsListContainer"
+								style={{ display: "none" }}
+							>
+								<div className="mints-search">
+									<input
+										type="text"
+										id="mintSearch"
+										placeholder="Search your mints..."
+										onKeyUp={filterMints}
+									/>
 								</div>
-								<div
-									className="mints-list-container"
-									id="mintsListContainer"
-									style={{ display: "none" }}
-								>
-									<div className="mints-search">
-										<input
-											type="text"
-											id="mintSearch"
-											placeholder="Search your mints..."
-											onKeyUp={filterMints}
-										/>
-									</div>
-									<div className="mints-list" id="mintsList">
-										{/* Mints will be loaded here */}
-									</div>
+								<div className="mints-list" id="mintsList">
+									{/* Mints will be loaded here */}
 								</div>
 							</div>
 						</div>
 					</div>
+				</div>
 
-					<div className="background-gradient"></div>
+				<div className="background-gradient"></div>
 
+				<div
+					className={`main-container ${
+						onboardingStep === "complete" ? "visible" : ""
+					}`}
+					id="mainContainer"
+				>
 					<div
-						className={`main-container ${
-							onboardingStep === "complete" ? "visible" : ""
-						}`}
-						id="mainContainer"
+						className={`modules-header${tab === "modules" ? " active" : ""}`}
 					>
 						{/* Header */}
 						<div className="header">
@@ -710,175 +713,176 @@ export default function TestnetPage() {
 								</div>
 							</div>
 						</div>
+					</div>
 
-						{/* Main Content */}
-						<div className="content-wrapper">
-							{/* Desktop: Sidebar Modules */}
-							<div className="sidebar-modules" id="desktopModules">
-								{/* Faucet Module */}
-								<div className="module-card compact">
-									<div className="module-header">
-										<div className="module-title">
-											<div className="module-icon">💧</div>
-											<span>Test Faucet</span>
-										</div>
+					{/* Main Content */}
+					<div className="content-wrapper">
+						{/* Desktop: Sidebar Modules */}
+						<div
+							className={`modules-container${
+								tab === "modules" ? " active" : ""
+							}`}
+						>
+							{/* Faucet Module */}
+							<div className="module-card compact">
+								<div className="module-header">
+									<div className="module-title">
+										<div className="module-icon">💧</div>
+										<span>Test Faucet</span>
 									</div>
-									<div className="module-content">
-										<div className="token-display">
-											<div>
-												<div className="token-amount" id="tokenBalance">
-													{Number(tokenBalance).toFixed(4).toString()}
-												</div>
-												<div className="token-label">$YTEST</div>
+								</div>
+								<div className="module-content">
+									<div className="token-display">
+										<div>
+											<div className="token-amount" id="tokenBalance">
+												{Number(tokenBalance).toFixed(4).toString()}
 											</div>
-											<div className="module-icon">🪙</div>
+											<div className="token-label">$YTEST</div>
 										</div>
-										<button
-											className="faucet-button"
-											id="faucetButton"
-											disabled={
+										<div className="module-icon">🪙</div>
+									</div>
+									<button
+										className="faucet-button"
+										id="faucetButton"
+										disabled={
+											isFaucetClaimPending ||
+											isAuthPending ||
+											isCooldownPending ||
+											(cooldownInSeconds ?? 0) > 0 ||
+											isAllowlisted === false
+										}
+										onClick={() =>
+											session ? handleFaucetClaim() : handleSignIn()
+										}
+									>
+										<span
+											className={
 												isFaucetClaimPending ||
 												isAuthPending ||
-												isCooldownPending ||
-												(cooldownInSeconds ?? 0) > 0 ||
-												isAllowlisted === false
-											}
-											onClick={() =>
-												session ? handleFaucetClaim() : handleSignIn()
-											}
-										>
-											<span
-												className={
-													isFaucetClaimPending ||
-													isAuthPending ||
-													isCooldownPending
-														? "loading-spinner"
-														: ""
-												}
-											>
-												{isFaucetClaimPending ||
-												isAuthPending ||
 												isCooldownPending
-													? ""
-													: session
-													? isAllowlisted === true
-														? "Claim YTEST"
-														: "Not On Allowlist"
-													: "Sign In"}
-											</span>
-										</button>
-										<div className="limit-text">
-											<FaucetCooldown>
-												<>
-													Daily limit:{" "}
-													<span id="claimsLeft">
-														{(cooldownInSeconds ?? 0) > 0 ? 1 : 0}
-													</span>
-													/1
-												</>
-											</FaucetCooldown>
-										</div>
+													? "loading-spinner"
+													: ""
+											}
+										>
+											{isFaucetClaimPending ||
+											isAuthPending ||
+											isCooldownPending
+												? ""
+												: session
+												? isAllowlisted === true
+													? "Claim YTEST"
+													: "Not On Allowlist"
+												: "Sign In"}
+										</span>
+									</button>
+									<div className="limit-text">
+										<FaucetCooldown>
+											<>
+												Daily limit:{" "}
+												<span id="claimsLeft">
+													{(cooldownInSeconds ?? 0) > 0 ? 1 : 0}
+												</span>
+												/1
+											</>
+										</FaucetCooldown>
 									</div>
 								</div>
+							</div>
 
-								{/* Badge Module */}
-								<div className="module-card">
-									<div className="module-header">
-										<div className="module-title">
-											<div className="module-icon">🏆</div>
-											<span>Soulbound Badge</span>
-										</div>
+							{/* Badge Module */}
+							<div className="module-card">
+								<div className="module-header">
+									<div className="module-title">
+										<div className="module-icon">🏆</div>
+										<span>Soulbound Badge</span>
 									</div>
-									<div className="module-content">
-										<div className="badge-display-container">
-											<div
-												className="badge-display not-minted"
-												id="badgeDisplayContainer"
-											>
-												<img
-													src={
-														(sbtBalance ?? 0n) > 0n
-															? "/assets/images/youmio-sbt.jpg"
-															: "/assets/images/youmio-sbt-unminted.jpg"
-													}
-													alt="Badge"
-													id="badgeImage"
-												/>
-											</div>
-										</div>
-										<button
-											className="mint-badge-button"
-											id="badgeButton"
-											onClick={handleMintSBT}
-											disabled={!canMint}
+								</div>
+								<div className="module-content">
+									<div className="badge-display-container">
+										<div
+											className="badge-display not-minted"
+											id="badgeDisplayContainer"
 										>
-											<span
-												className={
-													isSbtBalanceLoading || isTakePending
-														? "loading-spinner"
-														: ""
+											<img
+												src={
+													(sbtBalance ?? 0n) > 0n
+														? "/assets/images/youmio-sbt.jpg"
+														: "/assets/images/youmio-sbt-unminted.jpg"
 												}
-											>
-												{isSbtBalanceLoading || isTakePending
-													? ""
-													: (sbtBalance ?? 0n) > 0n
-													? `Owner of token ${tokenId}`
-													: "Mint Badge"}
-											</span>
-										</button>
-										<div className="limit-text">
-											Prove your testnet participation
+												alt="Badge"
+												id="badgeImage"
+											/>
 										</div>
 									</div>
-								</div>
-
-								{/* Stats Module */}
-								<div className="module-card compact">
-									<div className="module-header">
-										<div className="module-title">
-											<div className="module-icon">📊</div>
-											<span>Your Stats</span>
-										</div>
-									</div>
-									<div className="module-content">
-										<div className="stats-list">
-											<div className="stat-item">
-												<span className="stat-label">Testnet Tokens</span>
-												<span className="stat-value" id="statTokens">
-													{Number(tokenBalance).toFixed(4).toString()} $YTEST
-												</span>
-											</div>
-											<div className="stat-item">
-												<span className="stat-label">Badge Status</span>
-												<span className="stat-value" id="statBadge">
-													{(sbtBalance ?? 0n) > 0n ? "Minted" : "Not Minted"}
-												</span>
-											</div>
-											<div className="stat-item">
-												<span className="stat-label">Chats Minted</span>
-												<span className="stat-value" id="statChats">
-													{messages.length}
-												</span>
-											</div>
-										</div>
-										{/* NEW: My Mints Button */}
-										<button
-											className="view-mints-button"
-											id="viewMintsButton"
-											onClick={() => openMyMints(messages)}
+									<button
+										className="mint-badge-button"
+										id="badgeButton"
+										onClick={handleMintSBT}
+										disabled={!canMint}
+									>
+										<span
+											className={
+												isSbtBalanceLoading || isTakePending
+													? "loading-spinner"
+													: ""
+											}
 										>
-											<span>📜</span> View My Minted Chats
-										</button>
+											{isSbtBalanceLoading || isTakePending
+												? ""
+												: (sbtBalance ?? 0n) > 0n
+												? `Owner of token ${tokenId}`
+												: "Mint Badge"}
+										</span>
+									</button>
+									<div className="limit-text">
+										Prove your testnet participation
 									</div>
 								</div>
 							</div>
 
-							{/* Mobile: Tab Content for Modules */}
-							<div className="mobile-content" id="mobileModules">
-								{/* Same modules will be cloned here for mobile */}
+							{/* Stats Module */}
+							<div className="module-card compact">
+								<div className="module-header">
+									<div className="module-title">
+										<div className="module-icon">📊</div>
+										<span>Your Stats</span>
+									</div>
+								</div>
+								<div className="module-content">
+									<div className="stats-list">
+										<div className="stat-item">
+											<span className="stat-label">Testnet Tokens</span>
+											<span className="stat-value" id="statTokens">
+												{Number(tokenBalance).toFixed(4).toString()} $YTEST
+											</span>
+										</div>
+										<div className="stat-item">
+											<span className="stat-label">Badge Status</span>
+											<span className="stat-value" id="statBadge">
+												{(sbtBalance ?? 0n) > 0n ? "Minted" : "Not Minted"}
+											</span>
+										</div>
+										<div className="stat-item">
+											<span className="stat-label">Chats Minted</span>
+											<span className="stat-value" id="statChats">
+												{messages.length}
+											</span>
+										</div>
+									</div>
+									{/* NEW: My Mints Button */}
+									<button
+										className="view-mints-button"
+										id="viewMintsButton"
+										onClick={() => openMyMints(messages)}
+									>
+										<span>📜</span> View My Minted Chats
+									</button>
+								</div>
 							</div>
+						</div>
 
-							{/* Desktop & Mobile: Chat Area */}
+						{/* Desktop & Mobile: Chat Area */}
+						<div className={`chat-container${tab === "chat" ? " active" : ""}`}>
 							<ChatWidget
 								disabled={!Boolean(session)}
 								messages={chatMessages}
@@ -911,54 +915,22 @@ export default function TestnetPage() {
 							/>
 						</div>
 					</div>
-				</>
-			)}
-			{tab === "chat" && (
-				<ChatWidget
-					disabled={!Boolean(session)}
-					messages={chatMessages}
-					onMint={async (message) => {
-						await mintMessage(message);
-					}}
-					onSend={async (message) => {
-						setChatMessages((cm) => [
-							...cm,
-							{ content: message, isUser: true },
-						]);
-						const reply = await getChatReply(
-							{
-								prompt: message,
-								conversationHistory: chatMessages.map(
-									({ content, isUser }) => ({
-										content,
-										role: isUser ? "user" : "assistant",
-									})
-								),
-							},
-							session!
-						);
-						if (reply)
-							setChatMessages((cm) => [
-								...cm,
-								{ content: reply, isUser: false },
-							]);
-					}}
-				/>
-			)}
+				</div>
 
-			{/* Mobile Tab Navigation */}
-			<div className="mobile-tabs" id="mobileTabs">
-				<button
-					className="mobile-tab-button active"
-					onClick={() => setTab("modules")}
-				>
-					<span className="mobile-tab-icon">💎</span>
-					<span>Modules</span>
-				</button>
-				<button className="mobile-tab-button" onClick={() => setTab("chat")}>
-					<span className="mobile-tab-icon">💬</span>
-					<span>Chat</span>
-				</button>
+				{/* Mobile Tab Navigation */}
+				<div className="mobile-tabs" id="mobileTabs">
+					<button
+						className="mobile-tab-button active"
+						onClick={() => setTab("modules")}
+					>
+						<span className="mobile-tab-icon">💎</span>
+						<span>Modules</span>
+					</button>
+					<button className="mobile-tab-button" onClick={() => setTab("chat")}>
+						<span className="mobile-tab-icon">💬</span>
+						<span>Chat</span>
+					</button>
+				</div>
 			</div>
 		</>
 	);
