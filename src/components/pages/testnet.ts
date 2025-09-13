@@ -382,7 +382,7 @@ export function displayUserMints(mints: Array<string>) {
         </div>
             <div className="mint-conversation">
               <div className="mint-user-msg">
-                <strong>You:</strong> ${escapeHtml(truncateText(mint))}`;
+                <strong>Limbo:</strong> ${escapeHtml(mint)}`;
 	});
 
 	mintsList.innerHTML = html;

@@ -30,7 +30,11 @@
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   background: #0a0a0f;
   color: white;
   min-height: 100vh;
@@ -46,7 +50,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at 20% 50%,
       rgba(198, 104, 168, 0.15) 0%,
       transparent 50%
@@ -137,6 +142,10 @@ body {
   display: inline-block;
   transition: all 0.3s ease;
   overflow: hidden;
+}
+
+button {
+  cursor: pointer;
 }
 
 .main-button::before {
