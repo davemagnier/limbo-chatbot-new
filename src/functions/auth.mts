@@ -68,7 +68,7 @@ async function initializeUser(walletAddress: Address) {
 	const walletData = await getWalletData(walletAddress);
 	if (!walletData) {
 		// Initialize user record
-		await setWalletData(walletAddress);
+		await setWalletData(walletAddress, { lastMessageReset: 0, faucetEnabled: false, messageCount: 0 });
 		console.log(`Initialized ${walletAddress}`);
 	}
 }
