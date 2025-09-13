@@ -127,9 +127,8 @@ export default function TestnetPage() {
 	const { mutate: mintSBT, isPending: isTakePending } = useMutation({
 		mutationFn: async () => {
 			if (!session) return;
-			const { signature, contract, from, response } = await getTakeSignature(
-				session
-			);
+			const { signature, contract, from, response } =
+				await getTakeSignature(session);
 
 			await writeContractAsync({
 				address: contract,
@@ -214,7 +213,7 @@ export default function TestnetPage() {
 		queryFn: async () => {
 			const { messages, response } = await getMintedMessages(
 				session!,
-				tokenId!.toString()
+				tokenId!.toString(),
 			);
 			if (response && response.status === 403) {
 				saveSession(null);
@@ -629,17 +628,6 @@ export default function TestnetPage() {
 									alt="Youmio"
 									className="youmio-logo"
 								/>
-								<div className="testnet-badge">
-									<span
-										style={{
-											width: "6px",
-											height: "6px",
-											background: "#4BBFEB",
-											borderRadius: "50%",
-										}}
-									></span>
-									YOUMIO TESTNET
-								</div>
 							</div>
 							<div className="network-status">
 								<button
@@ -769,10 +757,10 @@ export default function TestnetPage() {
 											isCooldownPending
 												? ""
 												: session
-												? isAllowlisted === true
-													? "Claim YTEST"
-													: "Not On Allowlist"
-												: "Sign In"}
+													? isAllowlisted === true
+														? "Claim YTEST"
+														: "Not On Allowlist"
+													: "Sign In"}
 										</span>
 									</button>
 									<div className="limit-text">
@@ -830,8 +818,8 @@ export default function TestnetPage() {
 											{isSbtBalanceLoading || isTakePending
 												? ""
 												: (sbtBalance ?? 0n) > 0n
-												? `Owner of token ${tokenId}`
-												: "Mint Badge"}
+													? `Owner of token ${tokenId}`
+													: "Mint Badge"}
 										</span>
 									</button>
 									<div className="limit-text">
@@ -893,6 +881,7 @@ export default function TestnetPage() {
 									setChatMessages((cm) => [
 										...cm,
 										{ content: message, isUser: true },
+										{ content: "...", isUser: false },
 									]);
 									const reply = await getChatReply(
 										{
@@ -901,14 +890,16 @@ export default function TestnetPage() {
 												({ content, isUser }) => ({
 													content,
 													role: isUser ? "user" : "assistant",
-												})
+												}),
 											),
 										},
-										session!
+										session!,
 									);
 									if (reply)
 										setChatMessages((cm) => [
-											...cm,
+											...cm.filter(
+												(m) => !(m.content === "..." && m.isUser === false),
+											),
 											{ content: reply, isUser: false },
 										]);
 								}}

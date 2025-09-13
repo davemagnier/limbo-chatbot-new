@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { youmioSbtAbi } from "../utils/contract/abis/youmioSbt";
 import { youtest } from "../wagmi/chain";
+import "./pages/testnet.css";
 
 // Define TypeScript interfaces
 interface Message {
@@ -39,15 +40,18 @@ function ChatMessage({
 				<div className="message-content">{message.content}</div>
 				{!message.isUser && onMint && (
 					<button
-						style={{
-							fontSize: "12px",
-							borderRadius: "24px",
-							padding: "0.5rem 0.75rem",
-							background: "transparent",
-							color: "white",
-							border: "1px solid",
-							borderColor: "white",
-						}}
+						style={
+							{
+								// fontSize: "12px",
+								// borderRadius: "24px",
+								// padding: "0.5rem 0.75rem",
+								// background: "transparent",
+								// color: "white",
+								// border: "1px solid",
+								// borderColor: "white",
+							}
+						}
+						className="mint-message-button"
 						onClick={async () => {
 							console.log({ message });
 							await onMint(message.content);
@@ -136,7 +140,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 						value={inputValue}
 						onChange={(e) => setInputValue(e.target.value)}
 						onKeyUp={handleKeyPress}
-						placeholder="Type something..."
+						placeholder={
+							disabled
+								? "Sign in to chat"
+								: sbtBalance === 0n
+									? "Mint your SBT to chat with Limbo"
+									: "Type something..."
+						}
 						autoComplete="off"
 					/>
 					<button
