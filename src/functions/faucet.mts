@@ -1,12 +1,12 @@
 
 import { Config, Context } from "@netlify/functions";
-import { Hono } from "hono"
-import { sessionAuth } from "../utils/middlewares.ts";
-import { SessionData } from "../utils/auth-store.ts";
-import { getWalletData, setWalletData, WalletData } from "../utils/allowlist-store.ts";
-import { getCurrentEpoch } from "../utils/time.ts";
+import { Hono } from "hono";
 import { Address, Hex } from "viem";
+import { getWalletData, setWalletData, WalletData } from "../utils/allowlist-store.ts";
+import { SessionData } from "../utils/auth-store.ts";
 import { mintNativeCoin } from "../utils/faucet.ts";
+import { sessionAuth } from "../utils/middlewares.ts";
+import { getCurrentEpoch } from "../utils/time.ts";
 
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854")
 const faucetAddress = Netlify.env.get("FAUCET_CONTRACT") as Address
@@ -58,7 +58,7 @@ app.get('/cooldown', async (c) => {
 
   const walletData: WalletData | undefined = await getWalletData(session.walletAddress)
   if (!walletData) {
-    return c.json({ error: 'Wallet not in allowlist' }, 401)
+    return c.json({ error: 'NOT_ALLOWLISTED' }, 401)
   }
 
   const remainingCooldown = walletData.lastClaimed ? (walletData.lastClaimed + faucetCooldownSeconds) - getCurrentEpoch() : 0

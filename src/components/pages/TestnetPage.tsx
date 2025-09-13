@@ -1,4 +1,26 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { watchAccount } from "@wagmi/core";
 import { useState } from "react";
+import { formatEther } from "viem";
+import {
+  useAccount,
+  useBalance,
+  useChainId,
+  useDisconnect,
+  useReadContract,
+  useSignMessage,
+  useSwitchChain,
+  useWriteContract,
+} from "wagmi";
+import { useSession } from "../../hooks/use-session.ts";
+import { getChatReply } from "../../utils/chat-api.ts";
+import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
+import { youtest } from "../../wagmi/chain.ts";
+import { config } from "../../wagmi/config.ts";
+import ChatWidget from "../ChatWidget.tsx";
+import { FaucetCooldown, fetchCooldown } from "../faucet-cooldown.tsx";
+import WalletConnectModal from "../WalletConnectModal.tsx";
+import "./testnet.css";
 import {
   authenticateWallet,
   claimTokens,
@@ -18,28 +40,6 @@ import {
   openMyMints,
   switchMobileTab,
 } from "./testnet.ts";
-import ChatWidget from "../ChatWidget.tsx";
-import "./testnet.css";
-import {
-  useAccount,
-  useSwitchChain,
-  useChainId,
-  useBalance,
-  useDisconnect,
-  useSignMessage,
-  useWriteContract,
-  useReadContract,
-} from "wagmi";
-import { youtest } from "../../wagmi/chain.ts";
-import WalletConnectModal from "../WalletConnectModal.tsx";
-import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
-import { formatEther } from "viem";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "../../hooks/use-session.ts";
-import { FaucetCooldown, fetchCooldown } from "../faucet-cooldown.tsx";
-import { getChatReply } from "../../utils/chat-api.ts";
-import { watchAccount } from "@wagmi/core";
-import { config } from "../../wagmi/config.ts";
 
 export default function TestnetPage() {
   const [termsAccepted, setAccepted] = useState(false);
@@ -48,14 +48,25 @@ export default function TestnetPage() {
   const [onboardingStep, setOnboardingStep] = useState<
     "init" | "in_progress" | "complete"
   >(session ? "complete" : "init");
+  const [isAllowlisted, setIsAllowlisted] = useState<boolean | null>(null);
   const { disconnect } = useDisconnect();
   const { isConnected, address } = useAccount();
   const queryClient = useQueryClient();
-  const { data: cooldownInSeconds } = useQuery({
+
+  const {
+    data: cooldownInSeconds,
+    isPending: isCooldownPending,
+    error: cooldownError,
+  } = useQuery({
     queryFn: async () => {
-      const { nextClaimIn, response } = await fetchCooldown(session);
+      const { nextClaimIn, error, response } = await fetchCooldown(session);
       if (response && response.status === 403) {
         saveSession(null);
+      }
+      if (error === "NOT_ALLOWLISTED") {
+        setIsAllowlisted(false);
+      } else {
+        setIsAllowlisted(true);
       }
       return nextClaimIn;
     },
@@ -81,6 +92,7 @@ export default function TestnetPage() {
     functionName: "balanceOf",
     args: [address!],
   });
+  const hasSbt = (sbtBalance ?? 0n) > 0n;
 
   const { data: tokenId } = useReadContract({
     chainId: youtest.id,
@@ -91,12 +103,16 @@ export default function TestnetPage() {
     args: [address!],
   });
 
-  const { data: balanceData } = useBalance({ chainId: youtest.id, address });
+  const { data: tokenBalanceData } = useBalance({
+    chainId: youtest.id,
+    address,
+  });
   const [isWalletConnectModalOpen, setIsWalletConnectModalOpen] =
     useState(false);
   const chainId = useChainId();
 
-  const balance = formatEther(balanceData?.value ?? 0n);
+  const tokenBalance = formatEther(tokenBalanceData?.value ?? 0n);
+  const hasTokenBalance = Number(tokenBalance) > 0;
 
   const [chatMessages, setChatMessages] = useState([
     {
@@ -208,7 +224,7 @@ export default function TestnetPage() {
   });
 
   const {
-    data: sessiion,
+    data: session2,
     mutate: generateSession,
     isPending: isAuthPending,
   } = useMutation({
@@ -228,6 +244,9 @@ export default function TestnetPage() {
       else saveSession(null);
     },
   });
+
+  const canMint =
+    session && !hasSbt && hasTokenBalance && isAllowlisted === true;
 
   const handleSignIn = async () => {
     if (!isConnected) {
@@ -619,7 +638,7 @@ export default function TestnetPage() {
                   <div className="wallet-balance">
                     Balance:{" "}
                     <span id="dropdownBalance">
-                      {Number(balance).toFixed(2).toString()}
+                      {Number(tokenBalance).toFixed(2).toString()}
                     </span>{" "}
                     YTEST
                   </div>
@@ -660,7 +679,7 @@ export default function TestnetPage() {
                 <div className="token-display">
                   <div>
                     <div className="token-amount" id="tokenBalance">
-                      {Number(balance).toFixed(2).toString()}
+                      {Number(tokenBalance).toFixed(2).toString()}
                     </div>
                     <div className="token-label">$YTEST</div>
                   </div>
@@ -672,7 +691,9 @@ export default function TestnetPage() {
                   disabled={
                     isFaucetClaimPending ||
                     isAuthPending ||
-                    (cooldownInSeconds ?? 0) > 0
+                    isCooldownPending ||
+                    (cooldownInSeconds ?? 0) > 0 ||
+                    isAllowlisted === false
                   }
                   onClick={() =>
                     session ? handleFaucetClaim() : handleSignIn()
@@ -680,20 +701,22 @@ export default function TestnetPage() {
                 >
                   <span
                     className={
-                      isFaucetClaimPending || isAuthPending
+                      isFaucetClaimPending || isAuthPending || isCooldownPending
                         ? "loading-spinner"
                         : ""
                     }
                   >
-                    {isFaucetClaimPending || isAuthPending
+                    {isFaucetClaimPending || isAuthPending || isCooldownPending
                       ? ""
                       : session
-                      ? "Claim YTEST"
+                      ? isAllowlisted === true
+                        ? "Claim YTEST"
+                        : "Not On Allowlist"
                       : "Sign In"}
                   </span>
                 </button>
                 <div className="limit-text">
-                  <FaucetCooldown>
+                  <FaucetCooldown cooldownInSeconds={cooldownInSeconds}>
                     <>
                       Daily limit:{" "}
                       <span id="claimsLeft">
@@ -722,7 +745,7 @@ export default function TestnetPage() {
                   >
                     <img
                       src={
-                        (sbtBalance ?? 0n) > 0n
+                        hasSbt
                           ? "/assets/images/youmio-sbt.jpg"
                           : "/assets/images/youmio-sbt-unminted.jpg"
                       }
@@ -735,7 +758,7 @@ export default function TestnetPage() {
                   className="mint-badge-button"
                   id="badgeButton"
                   onClick={handleMintSBT}
-                  disabled={!session || (sbtBalance ?? 0n) > 0n}
+                  disabled={!canMint}
                 >
                   <span
                     className={
@@ -766,13 +789,13 @@ export default function TestnetPage() {
                   <div className="stat-item">
                     <span className="stat-label">Testnet Tokens</span>
                     <span className="stat-value" id="statTokens">
-                      {Number(balance).toFixed(2).toString()} $YTEST
+                      {Number(tokenBalance).toFixed(2).toString()} $YTEST
                     </span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Badge Status</span>
                     <span className="stat-value" id="statBadge">
-                      {(sbtBalance ?? 0n) > 0n ? "Minted" : "Not Minted"}
+                      {hasSbt ? "Minted" : "Not Minted"}
                     </span>
                   </div>
                   <div className="stat-item">

@@ -1,35 +1,38 @@
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useSession } from "../hooks/use-session";
 
 export async function fetchCooldown(session: string | null) {
-  if (!session) return { nextClaimIn: 0 };
-  const response = await fetch("/api/v1/faucet/cooldown", {
+  if (!session) {
+    return { nextClaimIn: 0, error: "NO_SESSION", response: null };
+  }
+
+  return await fetch("/api/v1/faucet/cooldown", {
     headers: {
       "x-session": session,
     },
-  });
-  if (!response.ok) {
-    return { nextClaimIn: 0, response };
-  }
-  const { nextClaimIn } = await response.json();
-  return { nextClaimIn: nextClaimIn as number, response };
+  })
+    .then(async (response) => {
+      const { nextClaimIn = 0, error = "" } = await response.json();
+      return {
+        nextClaimIn: nextClaimIn as number,
+        error: error as string,
+        response,
+      };
+    })
+    .catch((response) => {
+      return {
+        nextClaimIn: 0,
+        error: "Failed to fetch cooldown",
+        response,
+      };
+    });
 }
 
 interface Props {
+  cooldownInSeconds?: number;
   children: React.ReactElement;
 }
 
-export function FaucetCooldown({ children }: Props) {
-  const { session } = useSession();
-  const { data: cooldownInSeconds } = useQuery({
-    queryFn: async () => {
-      const { nextClaimIn } = await fetchCooldown(session);
-      return nextClaimIn;
-    },
-    queryKey: [session, "cooldown"],
-  });
-
+export function FaucetCooldown({ cooldownInSeconds, children }: Props) {
   const [timer, setTimer] = useState("");
 
   useEffect(() => {
