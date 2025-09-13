@@ -3,7 +3,8 @@ import { Config, Context } from "@netlify/functions";
 import { Hono } from "hono"
 import { Address } from "viem"
 import { bearerAuth } from "hono/bearer-auth";
-import { addWallets, getAllowlist, getWalletData, removeWallets } from "../utils/allowlist-store.ts";
+import { addWallets, getAllowlist, getWalletData } from "../utils/allowlist-store.ts";
+import { getCurrentEpoch } from "../utils/time.ts";
 
 const adminToken = Netlify.env.get("ADMIN_TOKEN")
 if (!adminToken) {
@@ -30,17 +31,24 @@ app.get('/wallet/:walletAddress', async (c) => {
 app.post('/wallets', async (c) => {
   const { walletAddresses } = await c.req.json();
 
-  const data = await addWallets(walletAddresses, { messageCount: 0 })
+  const data = await addWallets(walletAddresses, { messageCount: 0, faucetEnabled: true, lastMessageReset: getCurrentEpoch() })
 
   return c.json({ data })
 })
 
-app.delete('/wallets', async (c) => {
-  const { walletAddresses } = await c.req.json();
+app.post('/wallets/:walletAddress/disableFaucet', async (c) => {
+  const { walletAddress } = c.req.param();
 
-  const data = await removeWallets(walletAddresses)
+  const walletData = await getWalletData(walletAddress as Address);
+  if (!walletData) {
+    return c.json({})
+  }
 
-  return c.json({ data })
+  walletData.faucetEnabled = false;
+
+  await addWallets([walletAddress as Address], walletData)
+
+  return c.json({ walletData })
 })
 
 export default async (request: Request, context: Context) => {
