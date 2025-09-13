@@ -13,7 +13,11 @@ import {
 	useWriteContract,
 } from "wagmi";
 import { useSession } from "../../hooks/use-session.ts";
-import { getChatReply } from "../../utils/chat-api.ts";
+import {
+	getChatReply,
+	getChatStatus,
+	sendChatRequest,
+} from "../../utils/chat-api.ts";
 import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
 import { youtest } from "../../wagmi/chain.ts";
 import { config } from "../../wagmi/config.ts";
@@ -246,8 +250,31 @@ export default function TestnetPage() {
 		},
 	});
 
+	const { data: messageStatus, refetch: refetchMessageStatus } = useQuery({
+		queryKey: [session, "messageStatus"],
+		queryFn: async () => {
+			const result = await getChatStatus(session!);
+			if (!result.ok) {
+				return {
+					remainingCooldown: 0,
+					remainingMessages: 0,
+				};
+			}
+			return result.result;
+		},
+		enabled: Boolean(session),
+	});
+
 	const canMint =
 		session && !hasSbt && hasTokenBalance && isAllowlisted === true;
+	const chatDisabledReason =
+		(sbtBalance ?? 0n) === 0n
+			? "not-minted"
+			: !session
+				? "other"
+				: messageStatus?.remainingMessages === 0
+					? "limit-reached"
+					: undefined;
 
 	const handleSignIn = async () => {
 		if (!isConnected) {
@@ -848,6 +875,22 @@ export default function TestnetPage() {
 											</span>
 										</div>
 										<div className="stat-item">
+											<span className="stat-label">Messages Remaining</span>
+											<span className="stat-value">
+												{messageStatus?.remainingMessages ?? "N/A"}
+											</span>
+										</div>
+										<div className="stat-item">
+											<span className="stat-label">Message Limit Reset</span>
+											<span className="stat-value">
+												<FaucetCooldown
+													cooldownInSeconds={messageStatus?.remainingCooldown}
+												>
+													<>None</>
+												</FaucetCooldown>
+											</span>
+										</div>
+										<div className="stat-item">
 											<span className="stat-label">Chats Minted</span>
 											<span className="stat-value" id="statChats">
 												{messages.length}
@@ -869,7 +912,7 @@ export default function TestnetPage() {
 						{/* Desktop & Mobile: Chat Area */}
 						<div className={`chat-container${tab === "chat" ? " active" : ""}`}>
 							<ChatWidget
-								disabled={!Boolean(session)}
+								disabled={chatDisabledReason}
 								messages={chatMessages}
 								onMint={async (message) => {
 									await mintMessage(message);
@@ -880,7 +923,7 @@ export default function TestnetPage() {
 										{ content: message, isUser: true },
 										{ content: "...", isUser: false },
 									]);
-									const reply = await getChatReply(
+									const result = await sendChatRequest(
 										{
 											prompt: message,
 											conversationHistory: chatMessages.map(
@@ -892,13 +935,15 @@ export default function TestnetPage() {
 										},
 										session!,
 									);
-									if (reply)
+									if ("reply" in result) {
 										setChatMessages((cm) => [
 											...cm.filter(
 												(m) => !(m.content === "..." && m.isUser === false),
 											),
-											{ content: reply, isUser: false },
+											{ content: result.reply, isUser: false },
 										]);
+									}
+									refetchMessageStatus();
 								}}
 							/>
 						</div>

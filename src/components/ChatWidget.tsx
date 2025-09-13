@@ -13,7 +13,7 @@ interface Message {
 }
 
 interface ChatWidgetProps {
-	disabled: boolean;
+	disabled?: "limit-reached" | "not-minted" | "other";
 	messages: Message[];
 	onSend: (message: string) => void;
 	onMint: (message: string) => Promise<void>;
@@ -61,13 +61,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 	messages,
 	onSend,
 	onMint,
-	disabled = false,
+	disabled,
 }) => {
 	const [inputValue, setInputValue] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const { address } = useAccount();
 
-	const { data: sbtBalance, refetch: refetchSBTBalance } = useReadContract({
+	const { data: sbtBalance } = useReadContract({
 		chainId: youtest.id,
 		address: import.meta.env.VITE_SBT_CONTRACT_ADDRESS,
 		abi: youmioSbtAbi,
@@ -107,6 +107,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 				</div>
 			</div>
 
+			{disabled === "limit-reached" && (
+				<span
+					style={{
+						width: "100%",
+						display: "block",
+						padding: "0.5rem",
+						background: "salmon",
+						textAlign: "center",
+					}}
+				>
+					DAILY LIMIT REACHED, CHECK BACK TOMORROW
+				</span>
+			)}
+
 			<div className="chat-messages" id="chatMessages">
 				{messages.map((message, index) => (
 					<ChatMessage
@@ -122,24 +136,28 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 				<div className="chat-input-wrapper">
 					<input
 						type="text"
-						disabled={disabled || sbtBalance === 0n}
+						disabled={Boolean(disabled) || sbtBalance === 0n}
 						className="chat-input"
 						value={inputValue}
 						onChange={(e) => setInputValue(e.target.value)}
 						onKeyUp={handleKeyPress}
 						placeholder={
-							disabled
-								? "Sign in to chat"
-								: sbtBalance === 0n
-									? "Mint your SBT to chat with Limbo"
-									: "Type something..."
+							disabled === "limit-reached"
+								? "Limit reached, check back later"
+								: Boolean(disabled)
+									? "Sign in to chat"
+									: sbtBalance === 0n
+										? "Mint your SBT to chat with Limbo"
+										: "Type something..."
 						}
 						autoComplete="off"
 					/>
 					<button
 						className="send-button"
 						onClick={handleSend}
-						disabled={disabled || !inputValue.trim() || sbtBalance === 0n}
+						disabled={
+							Boolean(disabled) || !inputValue.trim() || sbtBalance === 0n
+						}
 						type="button"
 					>
 						→

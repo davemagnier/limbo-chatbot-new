@@ -10,7 +10,10 @@ import { ChatRequest } from "../types/chat-request";
 export async function sendChatRequest(
 	params: ChatRequest,
 	session: string,
-): Promise<{ reply: string } | { error: string }> {
+): Promise<
+	| { reply: string; remainingCooldown: number; remainingInputs: number }
+	| { error: string }
+> {
 	try {
 		const response = await fetch("/api/v1/chat", {
 			method: "POST",
@@ -58,3 +61,23 @@ export async function getChatReply(
 	return result.reply;
 }
 
+export async function getChatStatus(session: string) {
+	const response = await fetch("/api/v1/chat/cooldown", {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+			"x-session": session,
+		},
+	});
+	if (!response.ok) {
+		return { ok: false } as const;
+	}
+	const result = (await response.json()) as {
+		remainingCooldown: number;
+		remainingMessages: number;
+	};
+	return {
+		ok: true,
+		result,
+	} as const;
+}
