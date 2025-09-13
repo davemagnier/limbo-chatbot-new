@@ -810,7 +810,7 @@ export default function TestnetPage() {
 											className="mint-badge-button"
 											id="badgeButton"
 											onClick={handleMintSBT}
-											disabled={!session || (sbtBalance ?? 0n) > 0n}
+											disabled={!canMint}
 										>
 											<span
 												className={
