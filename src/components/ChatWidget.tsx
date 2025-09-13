@@ -16,7 +16,7 @@ interface ChatWidgetProps {
 	disabled: boolean;
 	messages: Message[];
 	onSend: (message: string) => void;
-	onMint: (message: string) => void | Promise<void>;
+	onMint: (message: string) => Promise<void>;
 }
 
 function ChatMessage({
@@ -24,8 +24,9 @@ function ChatMessage({
 	onMint,
 }: {
 	message: Message;
-	onMint?: (message: string) => void | Promise<void>;
+	onMint?: (message: string) => Promise<void>;
 }) {
+	const [isLoading, setIsLoading] = useState(false);
 	return (
 		<div className={`message ${message.isUser ? "user" : "assistant"}`}>
 			<div className="message-label">{message.isUser ? "You" : "Limbo"}</div>
@@ -38,26 +39,17 @@ function ChatMessage({
 				}}
 			>
 				<div className="message-content">{message.content}</div>
-				{!message.isUser && onMint && (
+				{!message.isUser && onMint && message.content !== "..." && (
 					<button
-						style={
-							{
-								// fontSize: "12px",
-								// borderRadius: "24px",
-								// padding: "0.5rem 0.75rem",
-								// background: "transparent",
-								// color: "white",
-								// border: "1px solid",
-								// borderColor: "white",
-							}
-						}
-						className="mint-message-button"
+						type="button"
+						className={`mint-message-button`}
 						onClick={async () => {
-							console.log({ message });
-							await onMint(message.content);
+							setIsLoading(true);
+							await onMint(message.content).catch(() => setIsLoading(false));
+							setIsLoading(false);
 						}}
 					>
-						Mint
+						{!isLoading ? "Mint" : <span className="loading-spinner" />}
 					</button>
 				)}
 			</div>
@@ -82,11 +74,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 		functionName: "balanceOf",
 		args: [address!],
 	});
-
-	// Scroll to bottom when messages change
-	useEffect(() => {
-		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [messages]);
 
 	const handleSend = () => {
 		if (inputValue.trim()) {

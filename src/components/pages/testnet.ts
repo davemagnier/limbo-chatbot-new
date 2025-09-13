@@ -426,41 +426,6 @@ function exportUserMints() {
 	showNotification("Mints exported successfully!", "success");
 }
 
-// FIXED: Mobile tab switching
-export function switchMobileTab(tab) {
-	currentMobileTab = tab;
-
-	// Update tab buttons
-	document.querySelectorAll(".mobile-tab-button").forEach((btn) => {
-		btn.classList.remove("active");
-	});
-	event.target.closest(".mobile-tab-button").classList.add("active");
-
-	// Show/hide content - FIXED VISIBILITY
-	const modulesContent = document.getElementById("mobileModules");
-	const chatWrapper = document.getElementById("chatbotWrapper");
-
-	if (tab === "modules") {
-		if (modulesContent) {
-			modulesContent.classList.add("active");
-			modulesContent.style.display = "block";
-		}
-		if (chatWrapper) {
-			chatWrapper.classList.remove("active");
-			chatWrapper.style.display = "none";
-		}
-	} else {
-		if (modulesContent) {
-			modulesContent.classList.remove("active");
-			modulesContent.style.display = "none";
-		}
-		if (chatWrapper) {
-			chatWrapper.classList.add("active");
-			chatWrapper.style.display = "flex";
-		}
-	}
-}
-
 // FIXED: Setup mobile content properly
 function setupMobileContent() {
 	const isMobile = window.innerWidth <= 768;

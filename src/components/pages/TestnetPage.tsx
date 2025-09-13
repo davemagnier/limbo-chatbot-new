@@ -52,6 +52,8 @@ export default function TestnetPage() {
 	const { isConnected, address } = useAccount();
 	const queryClient = useQueryClient();
 
+	const formattedAddress = `${address?.substring(0, 6)}...${address?.substring(address.length - 4, address.length)}`;
+
 	const {
 		data: cooldownInSeconds,
 		isPending: isCooldownPending,
@@ -661,7 +663,7 @@ export default function TestnetPage() {
 											}
 										}}
 									>
-										{isConnected ? address : "Connect Wallet"}
+										{isConnected ? formattedAddress : "Connect Wallet"}
 									</button>
 									<div
 										className={
@@ -713,12 +715,6 @@ export default function TestnetPage() {
 						>
 							{/* Faucet Module */}
 							<div className="module-card compact">
-								<div className="module-header">
-									<div className="module-title">
-										<div className="module-icon">💧</div>
-										<span>Test Faucet</span>
-									</div>
-								</div>
 								<div className="module-content">
 									<div className="token-display">
 										<div>
@@ -782,15 +778,15 @@ export default function TestnetPage() {
 								<div className="module-header">
 									<div className="module-title">
 										<div className="module-icon">🏆</div>
-										<span>Soulbound Badge</span>
+										<span>
+											Soulbound Badge
+											{(sbtBalance ?? 0n) > 0n && `: Owner of token ${tokenId}`}
+										</span>
 									</div>
 								</div>
 								<div className="module-content">
 									<div className="badge-display-container">
-										<div
-											className="badge-display not-minted"
-											id="badgeDisplayContainer"
-										>
+										<div className="badge-display" id="badgeDisplayContainer">
 											<img
 												src={
 													(sbtBalance ?? 0n) > 0n
@@ -798,30 +794,31 @@ export default function TestnetPage() {
 														: "/assets/images/youmio-sbt-unminted.jpg"
 												}
 												alt="Badge"
-												id="badgeImage"
 											/>
 										</div>
 									</div>
-									<button
-										className="mint-badge-button"
-										id="badgeButton"
-										onClick={handleMintSBT}
-										disabled={!canMint}
-									>
-										<span
-											className={
-												isSbtBalanceLoading || isTakePending
-													? "loading-spinner"
-													: ""
-											}
+									{(sbtBalance ?? 0n) === 0n && (
+										<button
+											className="mint-badge-button"
+											id="badgeButton"
+											onClick={handleMintSBT}
+											disabled={!canMint}
 										>
-											{isSbtBalanceLoading || isTakePending
-												? ""
-												: (sbtBalance ?? 0n) > 0n
-													? `Owner of token ${tokenId}`
-													: "Mint Badge"}
-										</span>
-									</button>
+											<span
+												className={
+													isSbtBalanceLoading || isTakePending
+														? "loading-spinner"
+														: ""
+												}
+											>
+												{isSbtBalanceLoading || isTakePending
+													? ""
+													: (sbtBalance ?? 0n) > 0n
+														? `Owner of token ${tokenId}`
+														: "Mint Badge"}
+											</span>
+										</button>
+									)}
 									<div className="limit-text">
 										Prove your testnet participation
 									</div>
