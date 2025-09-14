@@ -3,6 +3,7 @@ import { useAccount, useReadContract } from "wagmi";
 import { youmioSbtAbi } from "../utils/contract/abis/youmioSbt";
 import { youtest } from "../wagmi/chain";
 import "./pages/testnet.css";
+import "./pages/limbo-chatbot.css";
 
 // Define TypeScript interfaces
 interface Message {
@@ -121,7 +122,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 				</span>
 			)}
 
-			<div className="chat-messages" id="chatMessages">
+			<div className="chat-messages">
 				{messages.map((message, index) => (
 					<ChatMessage
 						key={message.id || index}

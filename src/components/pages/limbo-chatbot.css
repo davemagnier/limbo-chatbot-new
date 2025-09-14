@@ -7,7 +7,11 @@
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   background: #0a0a0f;
   color: white;
   height: 100vh;
@@ -19,7 +23,7 @@ body {
 .chat-container {
   width: 90%;
   max-width: 800px;
-  height: 85vh;
+  height: 1000px;
   background: #1a1a2e;
   border-radius: 24px;
   display: flex;
