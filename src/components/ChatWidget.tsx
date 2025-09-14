@@ -90,6 +90,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 		}
 	};
 
+	useEffect(() => {
+		if (messagesEndRef.current != null) {
+			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+		}
+	}, [messages]);
+
 	return (
 		<div className="chatbot-wrapper">
 			<div className="chat-header">
