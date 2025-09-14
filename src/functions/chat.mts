@@ -47,6 +47,7 @@ app.post("/", async (c) => {
 		(walletData.lastMessageReset ?? currentEpoch) +
 		chatCooldownSeconds -
 		currentEpoch;
+
 	if (walletData.messageCount >= chatLimit) {
 		if (remainingCooldown > 0) {
 			return c.json(

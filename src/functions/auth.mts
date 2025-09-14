@@ -6,6 +6,7 @@ import { setSessionData } from "../utils/auth-store.ts";
 import { generateSessionId } from "../utils/hash.ts";
 import { generateSiweNonce } from "viem/siwe";
 import { getWalletData, setWalletData } from "../utils/allowlist-store.ts";
+import { getCurrentEpoch } from "../utils/time.ts";
 
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854");
 const domain = Netlify.env.get("DOMAIN");
@@ -68,7 +69,7 @@ async function initializeUser(walletAddress: Address) {
 	const walletData = await getWalletData(walletAddress);
 	// Lazily reset
 	await setWalletData(walletAddress, {
-		lastMessageReset: walletData?.lastMessageReset ?? 0,
+		lastMessageReset: walletData?.lastMessageReset ?? getCurrentEpoch(),
 		faucetEnabled: walletData?.faucetEnabled ?? false,
 		messageCount: walletData?.messageCount ?? 0,
 		lastClaimed: walletData?.lastClaimed,
