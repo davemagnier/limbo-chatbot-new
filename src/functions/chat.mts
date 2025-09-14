@@ -59,6 +59,10 @@ app.post("/", async (c) => {
 			walletData.lastMessageReset = currentEpoch;
 		}
 	}
+	// Start counter from first message being sent (cold start case)
+	if (walletData.messageCount === 0) {
+		walletData.lastMessageReset = currentEpoch;
+	}
 
 	const balance = await getBalance(
 		session.walletAddress,
