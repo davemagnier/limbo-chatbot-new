@@ -71,7 +71,7 @@ export function downloadExtension() {
 	showNotification("Extension download starting...", "success");
 
 	// Replace this URL with your actual hosted extension.zip file
-	const extensionUrl = "/youmio-extension.zip";
+	const extensionUrl = "/assets/youmio-extension.zip";
 
 	// In production, uncomment this:
 	window.open(extensionUrl, "_blank");
