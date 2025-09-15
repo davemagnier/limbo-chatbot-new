@@ -50,7 +50,7 @@ export default function TestnetPage() {
 	>(session ? "complete" : "init");
 	const [isAllowlisted, setIsAllowlisted] = useState<boolean | null>(null);
 	const { disconnect } = useDisconnect();
-	const { isConnected, address } = useAccount();
+	const { isConnected, address, chainId } = useAccount();
 	const queryClient = useQueryClient();
 
 	const formattedAddress = `${address?.substring(0, 6)}...${address?.substring(
@@ -111,7 +111,6 @@ export default function TestnetPage() {
 	});
 	const [isWalletConnectModalOpen, setIsWalletConnectModalOpen] =
 		useState(false);
-	const chainId = useChainId();
 
 	const tokenBalance = formatEther(tokenBalanceData?.value ?? 0n);
 	const hasTokenBalance = Number(tokenBalance) > 0;
@@ -305,6 +304,7 @@ export default function TestnetPage() {
 					: undefined;
 
 	const handleSignIn = async () => {
+		console.log({ chainId });
 		if (!isConnected) {
 			setIsWalletConnectModalOpen(true);
 			console.log("Opening modal");
