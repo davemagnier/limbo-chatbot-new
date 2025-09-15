@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { youmioSbtAbi } from "../utils/contract/abis/youmioSbt";
 import { youtest } from "../wagmi/chain";
-import "./pages/testnet.css";
 import "./pages/limbo-chatbot.css";
+import "./pages/testnet.css";
 
 // Define TypeScript interfaces
 interface Message {
@@ -50,7 +50,11 @@ function ChatMessage({
 							setIsLoading(false);
 						}}
 					>
-						{!isLoading ? "Mint" : <span className="loading-spinner" />}
+						{!isLoading ? (
+							"Mint to chain"
+						) : (
+							<span className="loading-spinner" />
+						)}
 					</button>
 				)}
 			</div>
@@ -152,10 +156,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 							disabled === "limit-reached"
 								? "Limit reached, check back later"
 								: Boolean(disabled)
-									? "Sign in to chat"
-									: sbtBalance === 0n
-										? "Mint your SBT to chat with Limbo"
-										: "Type something..."
+								? "Sign in to chat"
+								: sbtBalance === 0n
+								? "Mint your SBT to chat with Limbo"
+								: "Type something..."
 						}
 						autoComplete="off"
 					/>
