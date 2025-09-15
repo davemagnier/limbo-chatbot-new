@@ -36,7 +36,7 @@ function ChatMessage({
 					display: "flex",
 					flexDirection: "column",
 					gap: "0.5rem",
-					alignItems: "end",
+					alignItems: "start",
 				}}
 			>
 				<div className="message-content">{message.content}</div>
@@ -46,7 +46,10 @@ function ChatMessage({
 						className={`mint-message-button`}
 						onClick={async () => {
 							setIsLoading(true);
-							await onMint(message.content).catch(() => setIsLoading(false));
+							await onMint(message.content).catch((e) => {
+								console.log(e);
+								setIsLoading(false);
+							});
 							setIsLoading(false);
 						}}
 					>

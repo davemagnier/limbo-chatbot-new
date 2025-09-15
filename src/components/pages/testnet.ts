@@ -270,7 +270,9 @@ async function generateImage(prompt) {
 // MY MINTS FUNCTIONS
 
 // Open My Mints Modal
-export function openMyMints(mints: Array<string>) {
+export function openMyMints(
+	mints: Array<{ message: string; mintedAt?: number }>,
+) {
 	const modal = document.getElementById("mintsModal");
 	modal.classList.add("show");
 
@@ -344,7 +346,9 @@ export async function authenticateWallet() {
 }
 
 // Load User Mints
-async function loadUserMints(userMints: Array<string>) {
+async function loadUserMints(
+	userMints: Array<{ message: string; mintedAt?: number }>,
+) {
 	// Show loading state
 	document.getElementById("authContainer").style.display = "none";
 	document.getElementById("mintsListContainer").style.display = "block";
@@ -355,7 +359,9 @@ async function loadUserMints(userMints: Array<string>) {
 }
 
 // Display User Mints
-export function displayUserMints(mints: Array<string>) {
+export function displayUserMints(
+	mints: Array<{ message: string; mintedAt?: number }>,
+) {
 	const mintsList = document.getElementById("mintsList");
 
 	if (!mints || mints.length === 0) {
@@ -367,22 +373,17 @@ export function displayUserMints(mints: Array<string>) {
 	let html = `
                 <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
                     <span style="color: #94969C; font-size: 13px;">Total Mints: ${mints.length}</span>
-                    <button className="export-button" onclick="exportUserMints()">Export My Mints</button>
                 </div>
             `;
 
 	mints.forEach((mint) => {
-		const truncateText = (text, maxLength = 200) => {
-			return text.length > maxLength
-				? text.substring(0, maxLength) + "..."
-				: text;
-		};
-
-		html += `</span>
-        </div>
+		html += `
             <div className="mint-conversation">
               <div className="mint-user-msg">
-                <strong>Limbo:</strong> ${escapeHtml(mint)}`;
+            ${mint.mintedAt ? `<span>[${new Date(mint.mintedAt * 1000).toDateString()}]<span> ` : ""}
+                <strong>Limbo:</strong> ${escapeHtml(mint.message)}
+              </div>
+            </div>`;
 	});
 
 	mintsList.innerHTML = html;
@@ -1115,7 +1116,10 @@ export async function getMintedMessages(sessionId: string, tokenId: string) {
 
 	const { messages } = await response.json();
 
-	return { messages: (messages ?? []) as string[], response };
+	return {
+		messages: (messages ?? []) as { message: string; mintedAt: string }[],
+		response,
+	};
 }
 
 export async function claimTokens(sessionId: string) {

@@ -11,6 +11,7 @@ import { sessionAuth } from "../utils/middlewares.ts";
 import { SessionData } from "../utils/auth-store.ts";
 import { encryptMessage, setMessageData } from "../utils/message-store.ts";
 import { getBalance, getTokenOwner } from "../utils/contract/sbt.ts";
+import { getCurrentEpoch } from "../utils/time.ts";
 
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854");
 const SbtContractAddress = Netlify.env.get("SBT_CONTRACT") as Address;
@@ -110,6 +111,7 @@ app.get("/mint", async (c) => {
 		iv: encryptedMessage.iv,
 		owner: session.walletAddress,
 		minted: false,
+		mintedAt: getCurrentEpoch(),
 	});
 
 	const { signature } = await signMintMessageSignature({
@@ -140,4 +142,3 @@ export default async (request: Request, context: Context) => {
 export const config: Config = {
 	path: "/api/v1/signature/*",
 };
-

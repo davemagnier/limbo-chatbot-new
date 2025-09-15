@@ -53,7 +53,7 @@ app.get("/", async (c) => {
 		chainId,
 	);
 
-	return c.json({ messages: messages.filter((m) => Boolean(m)) });
+	return c.json({ messages: messages.filter((m) => Boolean(m?.message)) });
 });
 
 export default async (request: Request, context: Context) => {
@@ -63,4 +63,3 @@ export default async (request: Request, context: Context) => {
 export const config: Config = {
 	path: "/api/v1/messages*",
 };
-

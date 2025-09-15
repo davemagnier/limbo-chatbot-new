@@ -703,7 +703,10 @@ export default function TestnetPage() {
 									id="networkButton"
 									onClick={() => switchChain({ chainId: youtest.id })}
 								>
-									<span className="network-led" id="networkLed"></span>
+									<span
+										className={`network-led ${chainId !== youtest.id ? "wrong" : ""}`}
+										id="networkLed"
+									></span>
 									<span id="networkText">YOUMIO Testnet</span>
 								</button>
 								<div style={{ position: "relative" }}>
