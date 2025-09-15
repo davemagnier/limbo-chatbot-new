@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { watchAccount } from "@wagmi/core";
+import { waitForTransactionReceipt, watchAccount } from "@wagmi/core";
 import { useState } from "react";
+import { toast } from "react-toastify";
 import { formatEther } from "viem";
 import {
 	useAccount,
@@ -13,11 +14,7 @@ import {
 	useWriteContract,
 } from "wagmi";
 import { useSession } from "../../hooks/use-session.ts";
-import {
-	getChatReply,
-	getChatStatus,
-	sendChatRequest,
-} from "../../utils/chat-api.ts";
+import { getChatStatus, sendChatRequest } from "../../utils/chat-api.ts";
 import { youmioSbtAbi } from "../../utils/contract/abis/youmioSbt.ts";
 import { youtest } from "../../wagmi/chain.ts";
 import { config } from "../../wagmi/config.ts";
@@ -56,13 +53,12 @@ export default function TestnetPage() {
 	const { isConnected, address } = useAccount();
 	const queryClient = useQueryClient();
 
-	const formattedAddress = `${address?.substring(0, 6)}...${address?.substring(address.length - 4, address.length)}`;
+	const formattedAddress = `${address?.substring(0, 6)}...${address?.substring(
+		address.length - 4,
+		address.length
+	)}`;
 
-	const {
-		data: cooldownInSeconds,
-		isPending: isCooldownPending,
-		error: cooldownError,
-	} = useQuery({
+	const { data: cooldownInSeconds, isPending: isCooldownPending } = useQuery({
 		queryFn: async () => {
 			const { nextClaimIn, error, response } = await fetchCooldown(session);
 			if (response && response.status === 403) {
@@ -109,7 +105,7 @@ export default function TestnetPage() {
 		args: [address!],
 	});
 
-	const { data: tokenBalanceData } = useBalance({
+	const { data: tokenBalanceData, refetch: refetchTokenBalance } = useBalance({
 		chainId: youtest.id,
 		address,
 	});
@@ -133,20 +129,33 @@ export default function TestnetPage() {
 	const { mutate: mintSBT, isPending: isTakePending } = useMutation({
 		mutationFn: async () => {
 			if (!session) return;
-			const { signature, contract, from, response } =
-				await getTakeSignature(session);
+			const { signature, contract, from, response } = await getTakeSignature(
+				session
+			);
 
-			await writeContractAsync({
+			const hash = await writeContractAsync({
 				address: contract,
 				abi: youmioSbtAbi,
 				functionName: "take",
 				args: [from, signature],
 			});
 
+			if (!hash) {
+				toast.error("Error minting SBT. Please try again.");
+			} else {
+				const receipt = await waitForTransactionReceipt(config, { hash });
+
+				if (receipt.status === "success") {
+					await refetchSBTBalance();
+					toast.success("Successfully minted SBT!");
+				} else {
+					toast.error(`Error minting SBT. Please try again.`);
+				}
+			}
+
 			return response;
 		},
 		async onSettled(response) {
-			await refetchSBTBalance();
 			if (response && response.status === 403) {
 				saveSession(null);
 			}
@@ -161,17 +170,25 @@ export default function TestnetPage() {
 			const { signature, contract, messageHash, response } =
 				await getMintMessageSignature(session, message, tokenId?.toString());
 
-			await writeContractAsync({
+			const hash = await writeContractAsync({
 				address: contract,
 				abi: youmioSbtAbi,
 				functionName: "mintMessage",
 				args: [tokenId, messageHash, signature],
 			});
 
+			const receipt = await waitForTransactionReceipt(config, { hash });
+
+			if (receipt.status === "success") {
+				toast.success("Successfully minted message!");
+				await refetchMessages();
+			} else {
+				toast.error("Error minting message. Please try again.");
+			}
+
 			return response;
 		},
 		async onSettled(response) {
-			await refetchMessages();
 			if (response && response.status === 403) {
 				saveSession(null);
 			}
@@ -191,6 +208,11 @@ export default function TestnetPage() {
 		mutationFn: async () => {
 			if (!session) return;
 			const response = await claimTokens(session);
+
+			if (response.ok) {
+				await refetchTokenBalance();
+				toast.success("Successfully claimed YTEST tokens!");
+			}
 
 			return response;
 		},
@@ -219,7 +241,7 @@ export default function TestnetPage() {
 		queryFn: async () => {
 			const { messages, response } = await getMintedMessages(
 				session!,
-				tokenId!.toString(),
+				tokenId!.toString()
 			);
 			if (response && response.status === 403) {
 				saveSession(null);
@@ -271,10 +293,10 @@ export default function TestnetPage() {
 		(sbtBalance ?? 0n) === 0n
 			? "not-minted"
 			: !session
-				? "other"
-				: messageStatus?.remainingMessages === 0
-					? "limit-reached"
-					: undefined;
+			? "other"
+			: messageStatus?.remainingMessages === 0
+			? "limit-reached"
+			: undefined;
 
 	const handleSignIn = async () => {
 		if (!isConnected) {
@@ -780,10 +802,10 @@ export default function TestnetPage() {
 											isCooldownPending
 												? ""
 												: session
-													? isAllowlisted === true
-														? "Claim YTEST"
-														: "Not On Allowlist"
-													: "Sign In"}
+												? isAllowlisted === true
+													? "Claim YTEST"
+													: "Not On Allowlist"
+												: "Sign In"}
 										</span>
 									</button>
 									<div className="limit-text">
@@ -841,8 +863,8 @@ export default function TestnetPage() {
 												{isSbtBalanceLoading || isTakePending
 													? ""
 													: (sbtBalance ?? 0n) > 0n
-														? `Owner of token ${tokenId}`
-														: "Mint Badge"}
+													? `Owner of token ${tokenId}`
+													: "Mint Badge"}
 											</span>
 										</button>
 									)}
@@ -930,15 +952,15 @@ export default function TestnetPage() {
 												({ content, isUser }) => ({
 													content,
 													role: isUser ? "user" : "assistant",
-												}),
+												})
 											),
 										},
-										session!,
+										session!
 									);
 									if ("reply" in result) {
 										setChatMessages((cm) => [
 											...cm.filter(
-												(m) => !(m.content === "..." && m.isUser === false),
+												(m) => !(m.content === "..." && m.isUser === false)
 											),
 											{ content: result.reply, isUser: false },
 										]);

@@ -60,7 +60,7 @@ app.post("/claim", async (c) => {
 		}
 	}
 
-	await mintNativeCoin({
+	const success = await mintNativeCoin({
 		walletAddress: session.walletAddress,
 		amount: faucetAmount,
 		chainId,
@@ -68,6 +68,10 @@ app.post("/claim", async (c) => {
 		faucetPrivateKey,
 		rpcUrl,
 	});
+
+	if (!success) {
+		return c.json({ error: "Failed to mint native coin" }, 500);
+	}
 
 	await setWalletData(session.walletAddress, {
 		...walletData,

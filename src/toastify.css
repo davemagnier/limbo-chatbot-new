@@ -1,0 +1,22 @@
+:root {
+	--toastify-color-success: #bf68ae;
+	--toastify-color-light: #1a1828;
+	--toastify-icon-color-success: #bf68ae;
+}
+
+.Toastify__close-button {
+	color: white;
+}
+
+.Toastify__toast-icon:after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: calc(100% - 2px);
+	height: calc(100% - 2px);
+	background: white;
+	border-radius: 99999px;
+	z-index: -1;
+}
