@@ -158,9 +158,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 						placeholder={
 							disabled === "limit-reached"
 								? "Limit reached, check back later"
-								: Boolean(disabled)
+								: disabled === "other"
 									? "Sign in to chat"
-									: sbtBalance === 0n
+									: disabled === "not-minted"
 										? "Mint your SBT to chat with Limbo"
 										: "Type something..."
 						}
