@@ -1,17 +1,17 @@
 import { Config, Context } from "@netlify/functions";
 import { Hono } from "hono";
-import { SessionData } from "../utils/auth-store.ts";
-import { sessionAuth } from "../utils/middlewares.ts";
-import { buildLimboSystemPrompt } from "../utils/prompt.ts";
 import OpenAI from "openai";
 import { Address } from "viem";
-import { getBalance } from "../utils/contract/sbt.ts";
 import { getWalletData, setWalletData } from "../utils/allowlist-store.ts";
+import { SessionData } from "../utils/auth-store.ts";
+import { getBalance } from "../utils/contract/sbt.ts";
+import { sessionAuth } from "../utils/middlewares.ts";
+import { buildLimboSystemPrompt } from "../utils/prompt.ts";
 import { getCurrentEpoch } from "../utils/time.ts";
 
 const OPENAI_API_KEY = Netlify.env.get("OPENAI_API_KEY");
 const chatCooldownSeconds = parseInt(
-	Netlify.env.get("CHAT_COOLDOWN_SECONDS") || "86400",
+	Netlify.env.get("CHAT_COOLDOWN_SECONDS") || "86400"
 );
 const chatLimit = parseInt(Netlify.env.get("CHAT_LIMIT") || "15");
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854");
@@ -21,7 +21,7 @@ const rpcUrl =
 	"https://subnets.avax.network/youtest/testnet/rpc";
 
 if (!OPENAI_API_KEY) {
-	throw new Error("OPEAPI_API_KEY not set");
+	throw new Error("OPENAI_API_KEY not set");
 }
 
 type Variables = {
@@ -52,7 +52,7 @@ app.post("/", async (c) => {
 		if (remainingCooldown > 0) {
 			return c.json(
 				{ error: "Cannot message", remainingCooldown, remainingMessages: 0 },
-				400,
+				400
 			);
 		} else {
 			walletData.messageCount = 0;
@@ -68,7 +68,7 @@ app.post("/", async (c) => {
 		session.walletAddress,
 		SbtContractAddress,
 		chainId,
-		rpcUrl,
+		rpcUrl
 	);
 	if (balance === 0n) {
 		return c.json({ error: "You need to mint Soulbound Badge" }, 400);
