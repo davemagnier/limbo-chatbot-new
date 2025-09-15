@@ -435,11 +435,8 @@ export default function TestnetPage() {
 									onChange={(e) => setAccepted(e.target.checked)}
 								></input>
 								<div className="checkbox-label">
-									I acknowledge that I have read and agree to the{" "}
-									<a href="#" target="_blank">
-										Terms of Service
-									</a>{" "}
-									and understand that testnet tokens have no real value.
+									I acknowledge that testnet tokens are for development purposes
+									only & they do not have real value.
 								</div>
 							</div>
 
