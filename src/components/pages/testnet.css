@@ -912,7 +912,7 @@ body {
 
 /* IMPROVED LAYOUT - Fixed Module Cutting */
 .content-wrapper {
-  max-height: 1000px;
+  max-height: min(80dvh, 1000px);
   display: grid;
   grid-template-columns: 440px 1fr;
   gap: 20px;
