@@ -30,6 +30,7 @@ import {
 	completeOnboarding,
 	copyToClipboard,
 	downloadExtension,
+	escapeHtml,
 	filterMints,
 	getMintedMessages,
 	getMintMessageSignature,
@@ -52,6 +53,8 @@ export default function TestnetPage() {
 	const { disconnect } = useDisconnect();
 	const { isConnected, address, chainId } = useAccount();
 	const queryClient = useQueryClient();
+	const [searchTerm, setSearchTerm] = useState("");
+	const [showMessageDialog, setShowMessageDialog] = useState(false);
 
 	const formattedAddress = `${address?.substring(0, 6)}...${address?.substring(
 		address.length - 4,
@@ -579,41 +582,60 @@ export default function TestnetPage() {
 			</div>
 
 			{/* Mints Modal */}
-			<div className="mints-modal" id="mintsModal">
-				<div className="mints-modal-content">
+			<div
+				className="mints-modal"
+				id="mintsModal"
+				style={{
+					display: showMessageDialog ? "inherit" : "none",
+					height: "100%",
+					background: "rgba(0,0,0,0.2);",
+				}}
+			>
+				<div
+					className="mints-modal-content"
+					style={{
+						margin: "0 auto",
+						marginTop: "30dvh",
+					}}
+				>
 					<div className="mints-modal-header">
 						<h2>My Minted Conversations</h2>
-						<button className="modal-close" onClick={closeMyMints}>
+						<button
+							className="modal-close"
+							onClick={() => setShowMessageDialog(false)}
+						>
 							x
 						</button>
 					</div>
 					<div className="mints-modal-body" id="mintsModalBody">
-						<div className="auth-container" id="authContainer">
-							<div className="auth-icon">🔐</div>
-							<h3>Authenticate to View Your Mints</h3>
-							<p>
-								Sign a message with your wallet to securely access your minted
-								conversations.
-							</p>
-							<button className="auth-button" onClick={authenticateWallet}>
-								Sign & Authenticate
-							</button>
-						</div>
-						<div
-							className="mints-list-container"
-							id="mintsListContainer"
-							style={{ display: "none" }}
-						>
+						<div className="mints-list-container" id="mintsListContainer">
 							<div className="mints-search">
 								<input
 									type="text"
 									id="mintSearch"
 									placeholder="Search your mints..."
-									onKeyUp={filterMints}
+									onChange={(e) => {
+										setSearchTerm(e.currentTarget.value);
+									}}
 								/>
 							</div>
 							<div className="mints-list" id="mintsList">
-								{/* Mints will be loaded here */}
+								{filterMints(messages, searchTerm).map((mint) => (
+									<div key={mint.message} className="mint-conversation">
+										<div className="mint-user-msg">
+											{mint.mintedAt ? (
+												<span style={{ display: "block" }}>
+													<em>
+														{new Date(mint.mintedAt * 1000).toDateString()}
+													</em>
+												</span>
+											) : (
+												""
+											)}
+											<strong>Limbo:</strong> {escapeHtml(mint.message)}
+										</div>
+									</div>
+								))}
 							</div>
 						</div>
 					</div>
@@ -621,48 +643,6 @@ export default function TestnetPage() {
 			</div>
 
 			<div id="contentContainer">
-				{/* Mints Modal */}
-				<div className="mints-modal" id="mintsModal">
-					<div className="mints-modal-content">
-						<div className="mints-modal-header">
-							<h2>My Minted Conversations</h2>
-							<button className="modal-close" onClick={closeMyMints}>
-								x
-							</button>
-						</div>
-						<div className="mints-modal-body" id="mintsModalBody">
-							<div className="auth-container" id="authContainer">
-								<div className="auth-icon">🔐</div>
-								<h3>Authenticate to View Your Mints</h3>
-								<p>
-									Sign a message with your wallet to securely access your minted
-									conversations.
-								</p>
-								<button className="auth-button" onClick={authenticateWallet}>
-									Sign & Authenticate
-								</button>
-							</div>
-							<div
-								className="mints-list-container"
-								id="mintsListContainer"
-								style={{ display: "none" }}
-							>
-								<div className="mints-search">
-									<input
-										type="text"
-										id="mintSearch"
-										placeholder="Search your mints..."
-										onKeyUp={filterMints}
-									/>
-								</div>
-								<div className="mints-list" id="mintsList">
-									{/* Mints will be loaded here */}
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
 				<div className="background-gradient"></div>
 
 				<div
@@ -923,7 +903,7 @@ export default function TestnetPage() {
 									<button
 										className="view-mints-button"
 										id="viewMintsButton"
-										onClick={() => openMyMints(messages)}
+										onClick={() => setShowMessageDialog(true)}
 									>
 										<span>📜</span> View My Minted Chats
 									</button>

@@ -141,7 +141,7 @@ function generateReferenceNumber() {
 }
 
 // Escape HTML for security
-function escapeHtml(text) {
+export function escapeHtml(text) {
 	const map = {
 		"&": "&amp;",
 		"<": "&lt;",
@@ -390,15 +390,18 @@ export function displayUserMints(
 }
 
 // Filter Mints
-export function filterMints() {
-	const searchTerm = document.getElementById("mintSearch").value.toLowerCase();
-	const filteredMints = userMints.filter(
-		(mint) =>
-			mint.referenceNumber.toLowerCase().includes(searchTerm) ||
-			mint.userMessage.toLowerCase().includes(searchTerm) ||
-			mint.aiResponse.toLowerCase().includes(searchTerm),
+export function filterMints(
+	messages: Array<{ message: string; mintedAt?: number }>,
+	searchTerm: string,
+) {
+	if (searchTerm.length === 0) return messages;
+
+	const formattedSearchTerm = searchTerm.toLowerCase();
+	const filteredMints = messages.filter(({ message }) =>
+		message.toLowerCase().includes(formattedSearchTerm),
 	);
-	displayUserMints(filteredMints);
+	return filteredMints;
+	// displayUserMints(filteredMints);
 }
 
 // Export User Mints
@@ -1117,7 +1120,7 @@ export async function getMintedMessages(sessionId: string, tokenId: string) {
 	const { messages } = await response.json();
 
 	return {
-		messages: (messages ?? []) as { message: string; mintedAt: string }[],
+		messages: (messages ?? []) as { message: string; mintedAt?: number }[],
 		response,
 	};
 }
