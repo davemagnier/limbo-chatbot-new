@@ -9,16 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TestnetRouteImport } from './routes/testnet'
 import { Route as LimboChatbotRouteImport } from './routes/limbo-chatbot'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
-const TestnetRoute = TestnetRouteImport.update({
-  id: '/testnet',
-  path: '/testnet',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LimboChatbotRoute = LimboChatbotRouteImport.update({
   id: '/limbo-chatbot',
   path: '/limbo-chatbot',
@@ -39,45 +33,34 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/limbo-chatbot': typeof LimboChatbotRoute
-  '/testnet': typeof TestnetRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/limbo-chatbot': typeof LimboChatbotRoute
-  '/testnet': typeof TestnetRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/limbo-chatbot': typeof LimboChatbotRoute
-  '/testnet': typeof TestnetRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/limbo-chatbot' | '/testnet'
+  fullPaths: '/' | '/admin' | '/limbo-chatbot'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/limbo-chatbot' | '/testnet'
-  id: '__root__' | '/' | '/admin' | '/limbo-chatbot' | '/testnet'
+  to: '/' | '/admin' | '/limbo-chatbot'
+  id: '__root__' | '/' | '/admin' | '/limbo-chatbot'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   LimboChatbotRoute: typeof LimboChatbotRoute
-  TestnetRoute: typeof TestnetRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/testnet': {
-      id: '/testnet'
-      path: '/testnet'
-      fullPath: '/testnet'
-      preLoaderRoute: typeof TestnetRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/limbo-chatbot': {
       id: '/limbo-chatbot'
       path: '/limbo-chatbot'
@@ -106,7 +89,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   LimboChatbotRoute: LimboChatbotRoute,
-  TestnetRoute: TestnetRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

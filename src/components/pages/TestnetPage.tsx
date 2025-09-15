@@ -287,8 +287,14 @@ export default function TestnetPage() {
 		enabled: Boolean(session),
 	});
 
-	const canMint =
-		session && !hasSbt && hasTokenBalance && isAllowlisted === true;
+	const faucetDisabled =
+		isFaucetClaimPending ||
+		isAuthPending ||
+		isCooldownPending ||
+		(cooldownInSeconds ?? 0) > 0 ||
+		isAllowlisted === false;
+	const canMint = session && !hasSbt && hasTokenBalance;
+
 	const chatDisabledReason =
 		(sbtBalance ?? 0n) === 0n
 			? "not-minted"
@@ -777,13 +783,7 @@ export default function TestnetPage() {
 									<button
 										className="faucet-button"
 										id="faucetButton"
-										disabled={
-											isFaucetClaimPending ||
-											isAuthPending ||
-											isCooldownPending ||
-											(cooldownInSeconds ?? 0) > 0 ||
-											isAllowlisted === false
-										}
+										disabled={faucetDisabled}
 										onClick={() =>
 											session ? handleFaucetClaim() : handleSignIn()
 										}
