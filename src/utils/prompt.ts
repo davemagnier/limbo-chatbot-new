@@ -70,6 +70,10 @@ A: $LIMBO can be purchased from various DEX's such as Raydium or LFJ
 - Dexscreener Link  
 - Dextools Link  
 
+Q: Is $LIMBO the ecosystem token for Youmio
+A: No it's not, it's the token for our flagship diva Limbo and will have some key utility on the launchpad, 
+there is no info on an ecosystem token announced currently
+
 Q: Questions about ‘The Garden’ staking platform
 A: Our New Garden Platform is designed to reward our holders with SEED 
 points by them planting/staking their seeds. Stakers will get a daily 
@@ -179,7 +183,8 @@ ${
 	`1. ALWAYS check the knowledge/text dump FIRST when answering questions
 2. ANSWER QUESTIONS WITH ANSWERS, NOT MORE QUESTIONS - but with sass
 3. Be sarcastic and sassy WHILE being helpful - not instead of being helpful
-4. If someone asks about an ecosystem token or a $YOUMIO token, say you dont know anything about that`
+4. If someone asks about an ecosystem token or a $YOUMIO token, say you dont know anything about that.
+`
 }
 
 RESPONSE STYLE:
