@@ -55,7 +55,7 @@ export default function TestnetPage() {
 
 	const formattedAddress = `${address?.substring(0, 6)}...${address?.substring(
 		address.length - 4,
-		address.length
+		address.length,
 	)}`;
 
 	const { data: cooldownInSeconds, isPending: isCooldownPending } = useQuery({
@@ -129,9 +129,8 @@ export default function TestnetPage() {
 	const { mutate: mintSBT, isPending: isTakePending } = useMutation({
 		mutationFn: async () => {
 			if (!session) return;
-			const { signature, contract, from, response } = await getTakeSignature(
-				session
-			);
+			const { signature, contract, from, response } =
+				await getTakeSignature(session);
 
 			const hash = await writeContractAsync({
 				address: contract,
@@ -241,7 +240,7 @@ export default function TestnetPage() {
 		queryFn: async () => {
 			const { messages, response } = await getMintedMessages(
 				session!,
-				tokenId!.toString()
+				tokenId!.toString(),
 			);
 			if (response && response.status === 403) {
 				saveSession(null);
@@ -284,6 +283,7 @@ export default function TestnetPage() {
 			}
 			return result.result;
 		},
+		refetchInterval: 10_000,
 		enabled: Boolean(session),
 	});
 
@@ -293,10 +293,10 @@ export default function TestnetPage() {
 		(sbtBalance ?? 0n) === 0n
 			? "not-minted"
 			: !session
-			? "other"
-			: messageStatus?.remainingMessages === 0
-			? "limit-reached"
-			: undefined;
+				? "other"
+				: messageStatus?.remainingMessages === 0
+					? "limit-reached"
+					: undefined;
 
 	const handleSignIn = async () => {
 		if (!isConnected) {
@@ -802,10 +802,10 @@ export default function TestnetPage() {
 											isCooldownPending
 												? ""
 												: session
-												? isAllowlisted === true
-													? "Claim YTEST"
-													: "Not On Allowlist"
-												: "Sign In"}
+													? isAllowlisted === true
+														? "Claim YTEST"
+														: "Not On Allowlist"
+													: "Sign In"}
 										</span>
 									</button>
 									<div className="limit-text">
@@ -863,8 +863,8 @@ export default function TestnetPage() {
 												{isSbtBalanceLoading || isTakePending
 													? ""
 													: (sbtBalance ?? 0n) > 0n
-													? `Owner of token ${tokenId}`
-													: "Mint Badge"}
+														? `Owner of token ${tokenId}`
+														: "Mint Badge"}
 											</span>
 										</button>
 									)}
@@ -952,15 +952,15 @@ export default function TestnetPage() {
 												({ content, isUser }) => ({
 													content,
 													role: isUser ? "user" : "assistant",
-												})
+												}),
 											),
 										},
-										session!
+										session!,
 									);
 									if ("reply" in result) {
 										setChatMessages((cm) => [
 											...cm.filter(
-												(m) => !(m.content === "..." && m.isUser === false)
+												(m) => !(m.content === "..." && m.isUser === false),
 											),
 											{ content: result.reply, isUser: false },
 										]);

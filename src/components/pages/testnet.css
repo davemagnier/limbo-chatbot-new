@@ -1088,9 +1088,9 @@ body {
 }
 
 .mint-message-button {
-  padding: 0.5rem 0.75rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  min-width: 60px;
+  min-width: 110px;
   min-height: 48px;
   font-size: 14px;
   font-weight: 400;

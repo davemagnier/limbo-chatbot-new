@@ -34,9 +34,9 @@ function ChatMessage({
 			<div
 				style={{
 					display: "flex",
-					flexDirection: "row",
+					flexDirection: "column",
 					gap: "0.5rem",
-					alignItems: "center",
+					alignItems: "end",
 				}}
 			>
 				<div className="message-content">{message.content}</div>
@@ -156,10 +156,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 							disabled === "limit-reached"
 								? "Limit reached, check back later"
 								: Boolean(disabled)
-								? "Sign in to chat"
-								: sbtBalance === 0n
-								? "Mint your SBT to chat with Limbo"
-								: "Type something..."
+									? "Sign in to chat"
+									: sbtBalance === 0n
+										? "Mint your SBT to chat with Limbo"
+										: "Type something..."
 						}
 						autoComplete="off"
 					/>

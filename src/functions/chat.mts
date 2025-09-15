@@ -11,7 +11,7 @@ import { getCurrentEpoch } from "../utils/time.ts";
 
 const OPENAI_API_KEY = Netlify.env.get("OPENAI_API_KEY");
 const chatCooldownSeconds = parseInt(
-	Netlify.env.get("CHAT_COOLDOWN_SECONDS") || "86400"
+	Netlify.env.get("CHAT_COOLDOWN_SECONDS") || "86400",
 );
 const chatLimit = parseInt(Netlify.env.get("CHAT_LIMIT") || "15");
 const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854");
@@ -43,16 +43,16 @@ app.post("/", async (c) => {
 		return c.json({ error: "Cannot message", remainingMessages: 0 }, 400);
 	}
 	const currentEpoch = getCurrentEpoch();
-	const remainingCooldown =
-		(walletData.lastMessageReset ?? currentEpoch) +
-		chatCooldownSeconds -
-		currentEpoch;
+	const remainingCooldown = calculateRemainingCooldown(
+		walletData?.lastMessageReset ?? currentEpoch,
+		currentEpoch,
+	);
 
 	if (walletData.messageCount >= chatLimit) {
 		if (remainingCooldown > 0) {
 			return c.json(
 				{ error: "Cannot message", remainingCooldown, remainingMessages: 0 },
-				400
+				400,
 			);
 		} else {
 			walletData.messageCount = 0;
@@ -68,7 +68,7 @@ app.post("/", async (c) => {
 		session.walletAddress,
 		SbtContractAddress,
 		chainId,
-		rpcUrl
+		rpcUrl,
 	);
 	if (balance === 0n) {
 		return c.json({ error: "You need to mint Soulbound Badge" }, 400);
@@ -106,10 +106,10 @@ app.post("/", async (c) => {
 
 		return c.json({
 			reply,
-			remainingCooldown:
-				(walletData.lastMessageReset ?? currentEpoch) +
-				chatCooldownSeconds -
+			remainingCooldown: calculateRemainingCooldown(
+				walletData?.lastMessageReset ?? currentEpoch,
 				currentEpoch,
+			),
 			remainingInputs: chatLimit - walletData.messageCount,
 		});
 	} catch (error) {
@@ -127,10 +127,10 @@ app.get("/cooldown", async (c) => {
 	const walletData = await getWalletData(session.walletAddress);
 	console.log(walletData);
 	const currentEpoch = getCurrentEpoch();
-	const remainingCooldown =
-		(walletData?.lastMessageReset ?? currentEpoch) +
-		chatCooldownSeconds -
-		currentEpoch;
+	const remainingCooldown = calculateRemainingCooldown(
+		walletData?.lastMessageReset ?? currentEpoch,
+		currentEpoch,
+	);
 
 	const onCooldown = remainingCooldown > 0;
 
@@ -141,6 +141,14 @@ app.get("/cooldown", async (c) => {
 			: chatLimit,
 	});
 });
+
+function calculateRemainingCooldown(
+	lastReset: number,
+	currentTimestamp: number,
+	cooldownPeriod: number = chatCooldownSeconds,
+) {
+	return lastReset + cooldownPeriod - currentTimestamp;
+}
 
 export default async (request: Request, context: Context) => {
 	return app.fetch(request, context);
