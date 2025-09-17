@@ -35,13 +35,15 @@ app.get("/wallet/:walletAddress", async (c) => {
 app.post("/wallets", async (c) => {
 	const { walletAddresses } = await c.req.json();
 
-	const data = await addWallets(walletAddresses, {
-		messageCount: 0,
-		faucetEnabled: true,
-		lastMessageReset: getCurrentEpoch(),
-	});
+	c.executionCtx.waitUntil(
+		addWallets(walletAddresses, {
+			messageCount: 0,
+			faucetEnabled: true,
+			lastMessageReset: getCurrentEpoch(),
+		}),
+	);
 
-	return c.json({ data });
+	return c.json({ status: "success" }, { status: 202 });
 });
 
 app.post("/wallets/:walletAddress/disableFaucet", async (c) => {
@@ -66,4 +68,3 @@ export default async (request: Request, context: Context) => {
 export const config: Config = {
 	path: "/api/v1/allowlist*",
 };
-
