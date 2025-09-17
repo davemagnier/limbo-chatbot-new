@@ -15,13 +15,13 @@ const chainId = parseInt(Netlify.env.get("CHAIN_ID") || "68854");
 const faucetAddress = Netlify.env.get("FAUCET_CONTRACT") as Address;
 const faucetPrivateKey = Netlify.env.get("FAUCET_PRIVATE_KEY") as Hex;
 const faucetAmount = BigInt(
-	Netlify.env.get("FAUCET_AMOUNT") || "90000000000000000000"
+	Netlify.env.get("FAUCET_AMOUNT") || "90000000000000000000",
 );
 const rpcUrl =
 	Netlify.env.get("RPC_URL") ||
 	"https://subnets.avax.network/youtest/testnet/rpc";
 const faucetCooldownSeconds = parseInt(
-	Netlify.env.get("FAUCET_COOLDOWN_SECONDS") || "86400"
+	Netlify.env.get("FAUCET_COOLDOWN_SECONDS") || "86400",
 );
 
 if (!faucetAddress || !faucetPrivateKey) {
@@ -42,9 +42,7 @@ app.post("/claim", async (c) => {
 		return c.json({ error: "Unauthorized" }, 401);
 	}
 
-	const walletData: WalletData | undefined = await getWalletData(
-		session.walletAddress
-	);
+	const walletData = await getWalletData(session.walletAddress);
 	if (!walletData?.faucetEnabled) {
 		return c.json({ error: "NOT_ALLOWLISTED" }, 401);
 	}
@@ -55,7 +53,7 @@ app.post("/claim", async (c) => {
 		if (remainingCooldown > 0) {
 			return c.json(
 				{ error: "Cannot claim", nextClaimIn: remainingCooldown },
-				400
+				400,
 			);
 		}
 	}
@@ -88,7 +86,7 @@ app.get("/cooldown", async (c) => {
 	}
 
 	const walletData: WalletData | undefined = await getWalletData(
-		session.walletAddress
+		session.walletAddress,
 	);
 	if (!walletData || !walletData.faucetEnabled) {
 		return c.json({ error: "NOT_ALLOWLISTED" }, 401);
