@@ -35,15 +35,13 @@ app.get("/wallet/:walletAddress", async (c) => {
 app.post("/wallets", async (c) => {
 	const { walletAddresses } = await c.req.json();
 
-	c.executionCtx.waitUntil(
-		addWallets(walletAddresses, {
-			messageCount: 0,
-			faucetEnabled: true,
-			lastMessageReset: getCurrentEpoch(),
-		}),
-	);
+	const data = await addWallets(walletAddresses, {
+		messageCount: 0,
+		faucetEnabled: true,
+		lastMessageReset: getCurrentEpoch(),
+	});
 
-	return c.json({ status: "success" }, { status: 202 });
+	return c.json({ data });
 });
 
 app.post("/wallets/:walletAddress/disableFaucet", async (c) => {
