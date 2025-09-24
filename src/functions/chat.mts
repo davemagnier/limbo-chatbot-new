@@ -60,7 +60,7 @@ app.post("/", async (c) => {
 		}
 	}
 	// Start counter from first message being sent (cold start case)
-	if (walletData.messageCount === 0) {
+	if (walletData.messageCount === 0 || remainingCooldown < currentEpoch) {
 		walletData.lastMessageReset = currentEpoch;
 	}
 
