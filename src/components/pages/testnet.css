@@ -1765,7 +1765,9 @@ body {
 /* Mobile Tab Navigation (hidden on desktop) */
 .mobile-tabs {
   display: none;
-  position: sticky;
+  position: absolute;
+  left: 0;
+  right: 0;
   bottom: 0;
   background: rgba(26, 26, 46, 0.98);
   backdrop-filter: blur(10px);
