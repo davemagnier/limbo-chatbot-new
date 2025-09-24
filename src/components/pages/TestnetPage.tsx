@@ -945,7 +945,10 @@ export default function TestnetPage() {
 											{ content: result.reply, isUser: false },
 										]);
 									}
-									refetchMessageStatus();
+									queryClient.invalidateQueries({
+										queryKey: ["messageStatus"],
+										exact: false,
+									});
 								}}
 							/>
 						</div>
