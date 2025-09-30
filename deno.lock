@@ -24,6 +24,7 @@
         "npm:@types/react-dom@^19.1.9",
         "npm:@types/react@^19.1.12",
         "npm:@uidotdev/usehooks@^2.4.1",
+        "npm:@upstash/qstash@^2.8.3",
         "npm:@vitejs/plugin-react@^5.0.2",
         "npm:@wagmi/core@^2.20.3",
         "npm:eslint-plugin-react-hooks@^5.2.0",
